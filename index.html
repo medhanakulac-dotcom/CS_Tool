@@ -297,6 +297,28 @@ details.guide>summary::after{order:1}
 .ownerf select{font:600 14px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:#fff;border:0;border-radius:12px;padding:9px 34px 9px 14px;box-shadow:var(--shadow);cursor:pointer;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#8a8178 50%),linear-gradient(135deg,#8a8178 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat}
 .ownerf.on select{background-color:var(--mint);color:var(--teal)}
 @media(max-width:700px){.ownerf span{display:none}}
+
+/* ── guide (compact) ── */
+.gcols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+@media(max-width:820px){.gcols{grid-template-columns:1fr}}
+.gcard{background:#fff;border-radius:22px;padding:22px 24px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.gcard .lab{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan);margin-bottom:8px}
+.gcard .lab span{font-weight:600;letter-spacing:.02em;text-transform:none;margin-left:6px;color:#cbbda6}
+.gcard .gi{font-size:14px;line-height:1.6;color:var(--mute);margin:0 0 12px}
+.grow{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center;padding:12px 0;border-top:1px solid #f0e9de}
+.grow p{margin:0;font-size:14px;line-height:1.5;color:#5d554b}
+.grow .seg{justify-self:start;font-size:13px;padding:5px 12px;border-radius:11px}
+.grow.head{grid-template-columns:96px 130px 1fr;font:800 11px var(--sans);letter-spacing:.1em;color:var(--tan);padding:8px 0}
+.grow.h3{grid-template-columns:96px 130px 1fr;font-size:14px;color:#5d554b}
+.grow.h3 b{font:800 22px var(--sans);letter-spacing:-.02em;color:var(--ink)}
+.grow.h3 .hl{justify-self:start;font-size:13px;padding:5px 12px;border-radius:11px}
+.gcard .wao{margin:auto 0 0;align-self:flex-start;font-size:14px;padding:10px 16px;border-radius:14px}
+.gcard .waonote{margin-top:8px;min-height:0}
+.grow.head span{white-space:nowrap}.grow.head{grid-template-columns:110px 130px 1fr}.grow.h3{grid-template-columns:110px 130px 1fr}
+.gcard .wao{margin-top:18px!important}
+.grow.head{align-items:start!important;padding:4px 0 8px!important;line-height:1.2}.grow.head+.grow.h3{border-top:1px solid #f0e9de}
+.gnote{margin-top:16px;background:#fff;border-radius:22px;padding:16px 24px;font-size:14px;line-height:1.6;color:#5d554b;box-shadow:inset 6px 0 0 #63d3bf,var(--shadow)}
+.gnote b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -334,35 +356,28 @@ details.guide>summary::after{order:1}
     <div class="wrapt"><table id="sigtable"></table></div>
 
     <details class="guide"><summary class="sec"><i>05</i>How playbooks are picked<span class="r">two inputs · tap to expand</span></summary>
-
-    <div class="grid g2" style="gap:28px;align-items:start">
-      <div class="card">
+    <div class="gcols">
+      <div class="gcard">
         <div class="lab">Input 1 · Commercial segment</div>
-        <p>How valuable an account is to seatOS — based on contract value, growth potential and strategic fit. It answers “how much should we invest here?” and sets the <b>priority and depth</b> of the motion. Segment is set commercially and reviewed each quarter; it doesn't change week to week.</p>
-        <div class="seglist">
-          <div class="row"><span class="seg High">High</span><p>Strategic, top-value accounts — largest contracts or strongest growth and reference potential. They earn the most hands-on attention, and we actively push them toward full adoption.</p></div>
-          <div class="row"><span class="seg Mid">Mid</span><p>Solid, mid-value accounts worth proactive care, but on a lighter touch than High. Three active features is treated as an acceptable baseline rather than a problem to fix.</p></div>
-          <div class="row"><span class="seg Low">Low</span><p>Smaller accounts handled mostly through automated, scalable motions — activation journeys, nudges and self-service — so the team's time stays focused on higher-value segments.</p></div>
-          <div class="row"><span class="seg Dormant">Dormant</span><p>Inactive or at-risk accounts with no live engagement. Reactive only — we respond to inbound requests but run no proactive outreach until they re-engage.</p></div>
-        </div>
+        <p class="gi">How valuable an account is to seatOS. Set commercially and reviewed each quarter.</p>
+        <div class="grow"><span class="seg High">High</span><p>Strategic, top-value accounts. Most hands-on attention, pushed toward full adoption.</p></div>
+        <div class="grow"><span class="seg Mid">Mid</span><p>Solid mid-value accounts. Lighter touch; 3 active features is an acceptable baseline.</p></div>
+        <div class="grow"><span class="seg Low">Low</span><p>Smaller accounts served by automated motions: activation journeys, nudges, self-service.</p></div>
+        <div class="grow"><span class="seg Dormant">Dormant</span><p>Inactive or at-risk, no live engagement. Reactive only.</p></div>
       </div>
-      <div class="card">
-        <div class="lab">Input 2 · Product health <span>— by Weekly Active Operators</span></div>
-        <p>A simple, objective score: count how many of the six core seatOS features have a <b>Weekly Active Operator</b> — a real user driving that feature each week. That feature count maps directly to a health state and what it means commercially.</p>
+      <div class="gcard">
+        <div class="lab">Input 2 · Product health <span>by Weekly Active Operators</span></div>
+        <p class="gi">Count how many of the 6 core seatOS features have a Weekly Active Operator: a real user driving that feature each week.</p>
+        <div class="grow head"><span>FEATURE COUNT</span><span>HEALTH</span><span>MEANING</span></div>
+        <div class="grow h3"><b>5–6</b><span class="hl Healthy">Healthy</span><span>Strong adoption</span></div>
+        <div class="grow h3"><b>3–4</b><span class="hl Adopted">Adopted</span><span>Acceptable / usable</span></div>
+        <div class="grow h3"><b>0–2</b><span class="hl Unhealthy">Unhealthy</span><span>Low adoption</span></div>
         <button class="wao" data-wao="1">📈 Check this account's Weekly Active Operators <span>↗</span></button>
         <div class="waonote" id="waonote"></div>
-        <table class="ft"><tr><th>FEATURE COUNT</th><th>PRODUCT HEALTH</th><th>COMMERCIAL MEANING</th></tr>
-          <tr><td class="big">5–6</td><td><span class="hl Healthy">Healthy</span></td><td>Strong adoption</td></tr>
-          <tr><td class="big">3–4</td><td><span class="hl Adopted">Adopted</span></td><td>Acceptable / usable</td></tr>
-          <tr><td class="big">0–2</td><td><span class="hl Unhealthy">Unhealthy</span></td><td>Low adoption</td></tr></table>
       </div>
     </div>
-
-    
-<div class="callout" style="margin-top:28px"><div class="k">WHY “ADOPTED” MEANS DIFFERENT THINGS BY SEGMENT</div>We recognize <b>3-feature adoption as an acceptable Product Health baseline</b> — but <b>Commercial Segment determines the level of ambition</b>. For a High-value account, 3 features means the account is usable, but not yet strategic enough for growth, so its playbook keeps pushing toward 5–6 features. Mid and Low accounts, by contrast, are treated as acceptable at 3+ features and shift into maintain / self-serve motions.</div>
-
-    
-</details>
+    <div class="gnote"><b>Why “Adopted” differs by segment:</b> 3 features is an acceptable baseline, but <b>segment sets the ambition</b>. High accounts keep pushing toward 5–6; Mid and Low shift to maintain / self-serve at 3+.</div>
+  </details>
   </section>
 
   <!-- ══════ PAGE 2 : DRAFT & APPROVE ══════ -->
