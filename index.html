@@ -16,7 +16,23 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
-.wrap{max-width:1080px;margin:0 auto;padding:28px 16px 64px}
+.app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+.side{border-right:1.5px solid var(--line);padding:24px 14px;position:sticky;top:0;height:100vh}
+.brand{font-weight:700;font-size:16px;margin:0 6px 2px}.brand-s{font:10.5px var(--mono);color:var(--mute);margin:0 6px 24px;display:block}
+.nav a{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;margin-bottom:4px;border:1.5px solid transparent;border-radius:4px;color:var(--ink);text-decoration:none;font-size:13px}
+.nav a small{font:10px var(--mono);color:var(--mute)}
+.nav a:hover{border-color:var(--line)}
+.nav a.on{border-color:var(--teal);color:var(--teal);font-weight:700}
+.nav a .badge{font:10px var(--mono);background:var(--amber-bg);color:var(--amber);border-radius:22px;padding:1px 8px}
+.wrap{max-width:1000px;width:100%;padding:28px 28px 64px}
+.view{display:none}.view.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi .n{font:700 28px var(--sans);text-align:left;margin:6px 0 0}
+.kpi .desc{text-align:left}
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+.list .it{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1.5px dashed var(--line);font-size:13px}
+.list .it:last-child{border:0}
+@media(max-width:760px){.app{grid-template-columns:1fr}.side{position:static;height:auto;border-right:0;border-bottom:1.5px solid var(--line);padding:14px 16px}.nav{display:flex;gap:4px;overflow-x:auto}.nav a{white-space:nowrap}.brand-s{margin-bottom:10px}.wrap{padding:20px 16px 64px}.kpis{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
 .mono,.tag,.time{font-family:var(--mono)}
 header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:28px}
 h1{font-size:22px;margin:0}
@@ -75,13 +91,38 @@ textarea{width:100%;min-height:120px;font:13px var(--sans);background:var(--bg);
 </style>
 </head>
 <body>
+<div class="app">
+<aside class="side">
+  <div class="brand">CS Tool</div><span class="brand-s">weekly customer success</span>
+  <nav class="nav">
+    <a href="#dashboard">Dashboard <small>01</small></a>
+    <a href="#queue">Approval queue <span class="badge" id="nav-badge"></span></a>
+    <a href="#pipeline">Pipeline <small>03</small></a>
+    <a href="#log">Send log <small>04</small></a>
+  </nav>
+</aside>
 <div class="wrap">
-  <header>
-    <div><h1>Weekly Run</h1><div class="sub">week 2026-W40 · run_manifest ok · generated Mon 03:30</div></div>
-    <div class="sub" id="counts"></div>
-  </header>
+  <section class="view" id="v-dashboard">
+    <header><div><h1>Dashboard</h1><div class="sub">week 2026-W40 · run_manifest ok</div></div></header>
+    <div class="kpis">
+      <div class="box kpi"><div class="tag"><span>SIGNALS</span><span>SQL</span></div><div class="n">38</div><div class="desc">detectors fired</div></div>
+      <div class="box kpi"><div class="tag"><span>CASES</span><span>CODE + LLM</span></div><div class="n" id="k-cases">5</div><div class="desc">one per operator</div></div>
+      <div class="box kpi human"><div class="tag"><span>GATE-1</span><span>HUMAN</span></div><div class="n" id="k-wait">5</div><div class="desc">awaiting you</div></div>
+      <div class="box kpi"><div class="tag"><span>QA</span><span>CODE + LLM</span></div><div class="n">12/12</div><div class="desc">checks pass</div></div>
+    </div>
+    <h2>Needs attention</h2>
+    <div class="two">
+      <div class="box"><div class="tag"><span>TOP RISK</span></div><div class="list" id="top"></div></div>
+      <div class="box dashed"><div class="tag"><span>NEXT</span></div><div class="list">
+        <div class="it"><span>Approval deadline</span><span class="mono">Mon 09:00</span></div>
+        <div class="it"><span>Deterministic send</span><span class="mono">Tue 09:00</span></div>
+        <div class="it"><span>Token TTL</span><span class="mono">72h</span></div></div></div>
+    </div>
+  </section>
 
-  <h2>Pipeline</h2>
+  <section class="view" id="v-pipeline">
+  <header>
+    <div><h1>Pipeline</h1><div class="sub">generated Mon 03:30</div></div></header>
   <div class="box dashed"><div class="tag"><span>SOURCE</span></div><div class="title">Data warehouse</div><div class="desc">fct_ticket · fct_ticket_weekly_by_route · fct_feature_event</div></div>
   <div class="arrow"></div>
   <div class="stage"><div class="row">
@@ -121,14 +162,22 @@ textarea{width:100%;min-height:120px;font:13px var(--sans);background:var(--bg);
   </div><div class="time">Tue 09:00</div></div>
   <div class="arrow"></div>
   <div class="pill">send_log — case · token · hash · message_id · outcome</div>
+  </section>
 
-  <h2>GATE-1 · Approval queue</h2>
+  <section class="view" id="v-queue">
+  <header><div><h1>Approval queue</h1><div class="sub">GATE-1 · approve, edit, reject or hold</div></div><div class="sub" id="counts"></div></header>
+  <span id="gate-anchor"></span>
   <div class="toolbar filters" id="filters"></div>
   <div class="toolbar" id="bulk"></div>
   <div id="cases"></div>
 
-  <h2>send_log</h2>
+  </section>
+
+  <section class="view" id="v-log">
+  <header><div><h1>Send log</h1><div class="sub">case · token · hash · message_id · outcome</div></div></header>
   <div class="pill" id="log" style="text-align:left;border-radius:8px;white-space:pre-wrap">— nothing sent yet —</div>
+  </section>
+</div>
 </div>
 
 <script>
@@ -175,6 +224,8 @@ function render(){
   $("#counts").textContent=`${cases.length-p} / ${cases.length} decided`;
   $("#gate-status").textContent=p?`${p} awaiting you`:"all decided";
   $("#gate-status").className="status "+(p?"wait":"");
+  $("#nav-badge").textContent=p||"";$("#k-wait").textContent=p;
+  $("#top").innerHTML=cases.filter(c=>c.state==="pending").sort((a,b)=>b.risk-a.risk).slice(0,4).map(c=>`<div class="it"><span><b>${c.op}</b> <span class="mono" style="color:var(--mute);font-size:11px">${c.play}</span></span><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span></div>`).join("")||'<div class="it">All cases decided</div>';
 }
 document.addEventListener("click",e=>{
   const f=e.target.closest("[data-f]");if(f){filter=f.dataset.f;return render()}
@@ -191,7 +242,11 @@ document.addEventListener("click",e=>{
   else if(act==="cancel"){c.editing=false;render()}
   else if(act==="save"){c.draft=el.querySelector("textarea").value;c.hash=Math.random().toString(16).slice(2,10);c.editing=false;set(c,"approved")}
 });
-render();
+function route(){const v=(location.hash||"#dashboard").slice(1);
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
+  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.hash==="#"+v));}
+addEventListener("hashchange",route);
+render();route();
 </script>
 </body>
 </html>
