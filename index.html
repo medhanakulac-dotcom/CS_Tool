@@ -322,7 +322,7 @@ details.guide>summary::after{order:1}
     <h2 class="sec"><i>02</i>Cases<span class="r">one per operator, ranked by risk_score</span></h2>
     <div class="wrapt"><table id="casetable"></table></div>
   <h2 class="sec"><i>03</i>Playbook matrix<span class="r">segment × product health</span></h2>
-    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different cadence depending on segment value. A <b>High + Unhealthy</b> account gets a weekly Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
+    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different motion depending on segment value. A <b>High + Unhealthy</b> account gets a hands-on Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. Every account is reviewed <b>weekly</b> by the tool, so there is no per-segment schedule. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
     <div class="mx" id="matrix"></div>
     <h2 class="sec"><i>04</i>Signals<span class="r bar" id="sigfilter"></span></h2>
     <div class="wrapt"><table id="sigtable"></table></div>
@@ -332,9 +332,9 @@ details.guide>summary::after{order:1}
     <div class="grid g2" style="gap:28px;align-items:start">
       <div class="card">
         <div class="lab">Input 1 · Commercial segment</div>
-        <p>How valuable an account is to seatOS — based on contract value, growth potential and strategic fit. It answers “how much should we invest here?” and sets the <b>priority and cadence</b> of the motion. Segment is set commercially and reviewed each quarter; it doesn't change week to week.</p>
+        <p>How valuable an account is to seatOS — based on contract value, growth potential and strategic fit. It answers “how much should we invest here?” and sets the <b>priority and depth</b> of the motion. Segment is set commercially and reviewed each quarter; it doesn't change week to week.</p>
         <div class="seglist">
-          <div class="row"><span class="seg High">High</span><p>Strategic, top-value accounts — largest contracts or strongest growth and reference potential. They earn the most hands-on attention and the fastest cadence, and we actively push them toward full adoption.</p></div>
+          <div class="row"><span class="seg High">High</span><p>Strategic, top-value accounts — largest contracts or strongest growth and reference potential. They earn the most hands-on attention, and we actively push them toward full adoption.</p></div>
           <div class="row"><span class="seg Mid">Mid</span><p>Solid, mid-value accounts worth proactive care, but on a lighter touch than High. Three active features is treated as an acceptable baseline rather than a problem to fix.</p></div>
           <div class="row"><span class="seg Low">Low</span><p>Smaller accounts handled mostly through automated, scalable motions — activation journeys, nudges and self-service — so the team's time stays focused on higher-value segments.</p></div>
           <div class="row"><span class="seg Dormant">Dormant</span><p>Inactive or at-risk accounts with no live engagement. Reactive only — we respond to inbound requests but run no proactive outreach until they re-engage.</p></div>
@@ -390,11 +390,11 @@ const DET={"Volume":"ANL-1","Route peer":"ANL-2","Fare index":"ANL-3","Adoption"
 const SEG=["High","Mid","Low"], HEALTH=["Unhealthy","Adopted","Healthy"];
 const healthOf=f=>f>=5?"Healthy":f>=3?"Adopted":"Unhealthy";
 const MATRIX={
- High:{Unhealthy:["Rescue","Weekly","Move Unhealthy → Adopted → Healthy."],Adopted:["Push to Healthy","Every 2 weeks","Move Adopted → Healthy."],Healthy:["Grow","Monthly","Expand value and partnership."]},
- Mid:{Unhealthy:["Adoption Push","Every 2 weeks","Improve adoption."],Adopted:["Maintain / Light Push","Monthly","Acceptable baseline — light push on remaining features."],Healthy:["Maintain","Quarterly","Maintain engagement."]},
- Low:{Unhealthy:["Automated Activation","4-week journey","Automated activation sequence."],Adopted:["Self-Service / Nudge","Monthly","Self-serve, with the occasional automated nudge."],Healthy:["Self-Service","Monthly","Monthly self-service engagement."]}
+ High:{Unhealthy:["Rescue","Move Unhealthy → Adopted → Healthy."],Adopted:["Push to Healthy","Move Adopted → Healthy."],Healthy:["Grow","Expand value and partnership."]},
+ Mid:{Unhealthy:["Adoption Push","Improve adoption."],Adopted:["Maintain / Light Push","Acceptable baseline — light push on remaining features."],Healthy:["Maintain","Maintain engagement."]},
+ Low:{Unhealthy:["Automated Activation","Automated activation sequence."],Adopted:["Self-Service / Nudge","Self-serve, with the occasional automated nudge."],Healthy:["Self-Service","Self-service engagement."]}
 };
-const playbookOf=c=>c.segment==="Dormant"?["Reactive Only","Inbound only","No proactive touchpoints — respond to inbound requests only."]:MATRIX[c.segment][healthOf(c.features)];
+const playbookOf=c=>c.segment==="Dormant"?["Reactive Only","No proactive touchpoints — respond to inbound requests only."]:MATRIX[c.segment][healthOf(c.features)];
 const cases=[
  {id:"C-101",op:"Aero Nusantara",segment:"High",features:1,owner:"Rina P.",email:"rina@aero-nusantara.example",play:"Retention",risk:87,sig:[["Volume","Volume −23% WoW"],["Route peer","Route peer −11 pts"]],subject:"Booking drop on your top routes",draft:"Hi Rina,\n\nBookings on your top three routes dropped 23% week over week, while the market on the same routes moved −4%. Could we find 20 minutes this week to look at what changed?\n\nChris"},
  {id:"C-102",op:"Blue Kestrel Air",segment:"High",features:4,owner:"Tom W.",email:"tom@bluekestrel.example",play:"Commercial",risk:74,sig:[["Fare index","Fare index 1.18 vs peer median"]],subject:"Fare position on CNX–BKK",draft:"Hi Tom,\n\nYour average fare on CNX–BKK sits 18% above the peer median this week. Here is the breakdown by fare class, and two options we could test.\n\nChris"},
@@ -423,8 +423,8 @@ function analysis(){
   const HC={Unhealthy:"#cc3f6e",Adopted:"#c98a2b",Healthy:"#3f9a5b"};
   let mxh=`<div></div>${HEALTH.map(h=>`<div class="mxhead" style="color:${HC[h]}"><i style="background:${HC[h]}"></i>${h} <small>${h==="Unhealthy"?"0–2":h==="Adopted"?"3–4":"5–6"}</small></div>`).join("")}`;
   SEG.forEach(g=>{mxh+=`<div class="rh"><b>${g}</b><span class="seg ${g}">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+
-    HEALTH.map(h=>{const [n,cad,desc]=MATRIX[g][h];const ops=cases.filter(c=>c.segment===g&&healthOf(c.features)===h);
-    return `<div class="cell ${h}"><b>${n}</b><div class="mono">⏱ ${cad}</div><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
+    HEALTH.map(h=>{const [n,desc]=MATRIX[g][h];const ops=cases.filter(c=>c.segment===g&&healthOf(c.features)===h);
+    return `<div class="cell ${h}"><b>${n}</b><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
   mxh+=`<div class="rh"><b>Dormant</b><span class="seg Dormant">Reactive</span></div><div class="cell Dormant"><b style="display:inline;color:#4a4238">Reactive Only</b> <span class="d" style="margin-left:10px">No proactive touchpoints — respond to inbound requests only, regardless of health.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
   $("#matrix").innerHTML=mxh;
   $("#riskbars").innerHTML=[...cases].sort((a,b)=>b.risk-a.risk).map(c=>`<div class="r" data-case="${c.id}"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><span class="mono">${c.risk}</span></div>`).join("");
@@ -434,7 +434,7 @@ function analysis(){
   $("#sigtable").innerHTML=`<tr><th>Operator</th><th>Detector</th><th>Signal</th><th>Risk</th></tr>`+
     sigs.filter(s=>sigF==="All"||s.d===sigF).sort((a,b)=>b.c.risk-a.c.risk).map(s=>`<tr data-case="${s.c.id}"><td><b>${esc(s.c.op)}</b></td><td class="mono">${DET[s.d]} · ${s.d}</td><td>${esc(s.t)}</td><td><span class="risk ${s.c.risk>70?"hi":""}">${s.c.risk}</span></td></tr>`).join("");
   $("#casetable").innerHTML=`<tr><th>#</th><th>Operator</th><th>Segment</th><th>Health</th><th>Playbook</th><th>Signals</th><th>Risk</th><th>Status</th><th></th></tr>`+
-    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr data-case="${c.id}"><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b><div class="d">⏱ ${playbookOf(c)[1]}</div></td>
+    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr data-case="${c.id}"><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b></td>
     <td>${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</td><td><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></td>
     <td><span class="st ${c.state}">${c.state}</span>${c.reason?`<div class="d bad" style="color:var(--red)">↩ ${esc(c.reason)}</div>`:""}</td>
     <td>${c.dormant?"":`<button class=\"b tl\" data-open=\"${c.id}\">Draft →</button>`}</td></tr>`).join("");
@@ -457,7 +457,7 @@ function approve(){
    <div class="box ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"border-color:var(--ok)":""}">
     <div class="tag"><span>${c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span>${c.state.toUpperCase()}</span></div>
     <div class="t" style="font-size:18px">${esc(c.op)}</div>
-    <div style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span> <span class="hl ${healthOf(c.features)}">${healthOf(c.features)} · ${c.features}/6</span> <span class="chip" style="margin-left:4px"><b>${playbookOf(c)[0]}</b> · ⏱ ${playbookOf(c)[1]}</span></div>
+    <div style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span> <span class="hl ${healthOf(c.features)}">${healthOf(c.features)} · ${c.features}/6</span> <span class="chip" style="margin-left:4px"><b>${playbookOf(c)[0]}</b></span></div>
     <div style="margin-top:8px">${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
     <div class="mail" style="margin-top:10px">To: ${esc(c.owner)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(c.subject)}</div>
     ${c.editing?`<textarea id="ta">${esc(c.draft)}</textarea>`:`<div class="draft">${esc(c.draft)}</div>`}
@@ -514,7 +514,7 @@ function drawer(){
     const c=cases.find(x=>x.id===DR.id), pb=playbookOf(c);
     dr.innerHTML=`<div class="dh"><div><div class="k">${c.id}${DR.back?` · <button class="b" data-dback="1" style="padding:2px 9px;font-size:11px">← ${esc(DR.back)}</button>`:""}</div><h3>${esc(c.op)}</h3><div style="margin-top:8px">${tags(c)} <span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="st ${c.state}">${c.state}</span></div></div><button class="x" data-dclose="1" aria-label="Close">✕</button></div>
      <div class="ds">Playbook</div>
-     <div class="dbox"><b style="font-size:16px">${pb[0]}</b> <span class="d">· ⏱ ${pb[1]}</span><div class="d" style="margin-top:4px">${pb[2]}</div></div>
+     <div class="dbox"><b style="font-size:16px">${pb[0]}</b> <div class="d" style="margin-top:4px">${pb[1]}</div></div>
      <div class="ds">Product health</div>
      <div class="dbox">${c.dormant?"No live engagement — reactive only.":`<div class="dots">${[1,2,3,4,5,6].map(i=>`<i class="${i<=c.features?"on":""}"></i>`).join("")}</div>${c.features}/6 core features have a Weekly Active Operator`}</div>
      <div class="ds">Signals</div>
