@@ -99,8 +99,7 @@ tbody tr[data-open]{cursor:pointer}tbody tr[data-open]:hover td{background:#faf6
 /* record */
 .rh{display:flex;gap:16px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
 .rh .av{width:56px;height:56px;font-size:20px;border-radius:18px}
-.rl{display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:18px;align-items:start}
-@media(max-width:1100px){.rl{grid-template-columns:1fr}}
+.rl{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start;max-width:900px}
 .prop{display:grid;grid-template-columns:104px 1fr;gap:10px 8px;font-size:14px;align-items:center}
 .prop b{font:600 12.5px var(--sans);color:var(--mute)}
 .dots{display:flex;gap:5px}.dots i{width:16px;height:16px;border-radius:50%;background:var(--pill)}.dots i.on{background:#5bbfae}
