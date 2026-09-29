@@ -152,6 +152,13 @@ details.h>summary small{font:500 13px var(--sans);color:var(--mute)}
 .gl{display:grid;grid-template-columns:1fr;gap:14px}
 .gr{display:grid;grid-template-columns:100px 1fr;gap:14px;align-items:center;padding:10px 0;border-top:1px solid #f0e9de;font-size:14px;color:#5d554b}
 .gr3{grid-template-columns:100px 130px 1fr}
+body.nosb .app{grid-template-columns:minmax(0,1fr)}
+body.nosb .side{display:none}
+.sbbtn{border:0;background:#fff;box-shadow:var(--shadow);border-radius:12px;width:40px;height:40px;font-size:18px;color:#6f665c;cursor:pointer;flex:none}
+.sbbtn:hover{background:var(--mint);color:var(--teal)}
+.brandrow{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.brandrow .sbbtn{width:32px;height:32px;font-size:14px;box-shadow:none;background:var(--bg)}
+body.nosb .topbar{padding-left:24px}
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){
@@ -165,12 +172,13 @@ details.h>summary small{font:500 13px var(--sans);color:var(--mute)}
 <body>
 <div class="app">
   <aside class="side">
-    <div class="brand">CS Tool<small>customer success</small></div>
+    <div class="brandrow"><div class="brand">CS Tool<small>customer success</small></div><button class="sbbtn" data-sb="1" title="Hide sidebar" aria-label="Hide sidebar">«</button></div>
     <nav id="snav"></nav>
     <div class="me"><span class="av">C</span><div><b>Chris</b><span>Customer Success lead</span></div></div>
   </aside>
   <div>
     <header class="topbar">
+      <button class="sbbtn" data-sb="1" id="sbtop" title="Show / hide sidebar" aria-label="Toggle sidebar">☰</button>
       <div class="search"><input id="gsearch" placeholder="Search accounts…" autocomplete="off"><div id="gres"></div></div>
       <label class="ownerf"><span>Owner</span><select id="ownersel"></select></label>
       <span class="week">Week 2026-W40 · run_manifest ok</span>
@@ -463,12 +471,16 @@ function llmRewrite(c,mode){
   const k={shorter:"short",warmer:"warm",direct:"direct"}[mode];
   llmApply(c,c=>{c.custom[c.lang]="";if(mode==="regen")c.alt=((c.alt||0)+1)%3;else c.mods[k]=!c.mods[k]},mode==="regen"?"AI regenerated the draft":`AI rewrote the draft (${mode})`);
 }
+function setSb(hide){document.body.classList.toggle("nosb",hide);try{localStorage.setItem("cs.sb",hide?"1":"0")}catch(e){}$("#sbtop").title=hide?"Show sidebar":"Hide sidebar"}
+try{if(localStorage.getItem("cs.sb")==="1")setSb(true)}catch(e){}
+addEventListener("keydown",e=>{if((e.key==="\\"||e.key==="[")&&!/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||"")))setSb(!document.body.classList.contains("nosb"))});
 function openRecord(id,tab){view="record";recId=id;rtab=tab||"overview";$("#gres").style.display="none";$("#gsearch").value="";scrollTo(0,0);render()}
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
+  const t=e.target.closest("[data-sb],[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
   if(!t){if(!e.target.closest(".search"))$("#gres").style.display="none";return}
   const D=t.dataset;
+  if(D.sb)return setSb(!document.body.classList.contains("nosb"));
   if(D.nav){view=D.nav;scrollTo(0,0);return render()}
   if(D.open)return openRecord(D.open);
   if(D.review){cur=D.review;apr.pb="All";view="approvals";scrollTo(0,0);return render()}
