@@ -99,7 +99,8 @@ tbody tr[data-open]{cursor:pointer}tbody tr[data-open]:hover td{background:#faf6
 /* record */
 .rh{display:flex;gap:16px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
 .rh .av{width:56px;height:56px;font-size:20px;border-radius:18px}
-.rl{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start;max-width:900px}
+.rl{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start;max-width:1180px}
+@media(max-width:1000px){.rl{grid-template-columns:minmax(0,1fr)}}
 .prop{display:grid;grid-template-columns:104px 1fr;gap:10px 8px;font-size:14px;align-items:center}
 .prop b{font:600 12.5px var(--sans);color:var(--mute)}
 .dots{display:flex;gap:5px}.dots i{width:16px;height:16px;border-radius:50%;background:var(--pill)}.dots i.on{background:#5bbfae}
@@ -474,7 +475,7 @@ function Record(){
   <div class="rh"><span class="av">${initials(c.op)}</span><div><h1 style="margin:0">${esc(c.op)}</h1><div class="row" style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="tg st ${c.state}">${c.state}</span></div></div>
     <div class="row" style="margin-left:auto">${c.noSend||c.state==="closed"?"":c.drafted?`<button class="b pri" data-review="${c.id}">Review draft</button>`:`<button class="b pri" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}<button class="b" data-rtab="activity">Log note</button></div></div>
   <div class="tabs">${tabs.map(([k,l,n])=>`<button data-rtab="${k}" class="${rtab===k?"on":""}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>
-  <div class="rl">${props}<div>${center}</div>${right}</div>`;
+  <div class="rl">${props}<div class="grid" style="gap:18px;min-width:0"><div>${center}</div>${right}</div></div>`;
 }
 const toLine=c=>c.hs?`<i>contact not synced from HubSpot yet</i>`:`${esc(c.contact)} &lt;${esc(c.email)}&gt;`;
 /* ── Ask-about-this-account chat ──
