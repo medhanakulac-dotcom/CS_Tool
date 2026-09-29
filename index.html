@@ -250,6 +250,15 @@ details.guide>summary::after{order:1}
 .mx .cell .ops span{font-size:11px;padding:1px 8px}
 .mx .cell.Dormant b{font-size:15px}
 @media(max-width:900px){.mx{grid-template-columns:70px repeat(3,minmax(150px,1fr))}}
+
+/* chips never break inside the capsule */
+.chip,.chips span,.mx .cell .ops span,.cb .chip{white-space:nowrap}
+#casetable td:nth-child(6){min-width:190px}
+#casetable td,#casetable th{white-space:nowrap}
+#casetable td:nth-child(2),#casetable td:nth-child(5){white-space:normal;min-width:120px}
+#casetable td:nth-child(6){white-space:normal}
+#sigtable td{white-space:nowrap}
+.wrapt{overflow-x:auto}
 </style>
 </head>
 <body>
