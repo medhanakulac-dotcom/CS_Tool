@@ -199,7 +199,7 @@ const MATRIX={
  Mid:{Unhealthy:["Adoption Push","Improve adoption."],Adopted:["Maintain / Light Push","Acceptable baseline — light push on remaining features."],Healthy:["Maintain","Maintain engagement."]},
  Low:{Unhealthy:["Automated Activation","Automated activation sequence."],Adopted:["Self-Service / Nudge","Self-serve, with the occasional automated nudge."],Healthy:["Self-Service","Self-service engagement."]}
 };
-const hOf=c=>c.hs?c.hs.health:hOf(c);
+const hOf=c=>c.hs?c.hs.health:healthOf(c.features);
 const LIVE=!!window.HS_ACCOUNTS;
 const playbookOf=c=>c.segment==="Dormant"?["Reactive Only","No proactive touchpoints — respond to inbound requests only."]:MATRIX[c.segment][hOf(c)];
 const ALLC=[
