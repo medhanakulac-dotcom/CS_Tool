@@ -253,10 +253,10 @@ details.guide>summary::after{order:1}
 
 /* chips never break inside the capsule */
 .chip,.chips span,.mx .cell .ops span,.cb .chip{white-space:nowrap}
-#casetable td:nth-child(6){min-width:190px}
+#casetable td:nth-child(7){min-width:190px}
 #casetable td,#casetable th{white-space:nowrap}
-#casetable td:nth-child(2),#casetable td:nth-child(5){white-space:normal;min-width:120px}
-#casetable td:nth-child(6){white-space:normal}
+#casetable td:nth-child(2),#casetable td:nth-child(6){white-space:normal;min-width:120px}
+#casetable td:nth-child(7){white-space:normal}
 #sigtable td{white-space:nowrap}
 .wrapt{overflow-x:auto}
 
@@ -292,6 +292,11 @@ details.guide>summary::after{order:1}
 .kvs b{font:600 12px var(--sans);color:var(--mute);padding-top:2px}
 .dfoot{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
 .dfoot .b{padding:10px 18px}
+
+.ownerf{display:flex;align-items:center;gap:8px;font:700 11.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--tan)}
+.ownerf select{font:600 14px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:#fff;border:0;border-radius:12px;padding:9px 34px 9px 14px;box-shadow:var(--shadow);cursor:pointer;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#8a8178 50%),linear-gradient(135deg,#8a8178 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.ownerf.on select{background-color:var(--mint);color:var(--teal)}
+@media(max-width:700px){.ownerf span{display:none}}
 </style>
 </head>
 <body>
@@ -301,6 +306,7 @@ details.guide>summary::after{order:1}
     <button data-v="analysis" id="t-analysis">1 · Analysis</button>
     <button data-v="approve" id="t-approve" class="gate">2 · Draft &amp; Approve <span class="cnt" id="t-cnt"></span></button>
   </div>
+  <label class="ownerf"><span>Case owner</span><select id="ownersel"></select></label>
   <div class="week">week 2026-W40 · run_manifest ok</div>
 </div></div>
 
@@ -395,7 +401,7 @@ const MATRIX={
  Low:{Unhealthy:["Automated Activation","Automated activation sequence."],Adopted:["Self-Service / Nudge","Self-serve, with the occasional automated nudge."],Healthy:["Self-Service","Self-service engagement."]}
 };
 const playbookOf=c=>c.segment==="Dormant"?["Reactive Only","No proactive touchpoints — respond to inbound requests only."]:MATRIX[c.segment][healthOf(c.features)];
-const cases=[
+const ALLC=[
  {id:"C-101",op:"Aero Nusantara",segment:"High",features:1,owner:"Rina P.",email:"rina@aero-nusantara.example",play:"Retention",risk:87,sig:[["Volume","Volume −23% WoW"],["Route peer","Route peer −11 pts"]],subject:"Booking drop on your top routes",draft:"Hi Rina,\n\nBookings on your top three routes dropped 23% week over week, while the market on the same routes moved −4%. Could we find 20 minutes this week to look at what changed?\n\nChris"},
  {id:"C-102",op:"Blue Kestrel Air",segment:"High",features:4,owner:"Tom W.",email:"tom@bluekestrel.example",play:"Commercial",risk:74,sig:[["Fare index","Fare index 1.18 vs peer median"]],subject:"Fare position on CNX–BKK",draft:"Hi Tom,\n\nYour average fare on CNX–BKK sits 18% above the peer median this week. Here is the breakdown by fare class, and two options we could test.\n\nChris"},
  {id:"C-103",op:"Coral Jet",segment:"Mid",features:2,owner:"Mei L.",email:"mei@coraljet.example",play:"Adoption",risk:61,sig:[["Adoption","WAO 12%"],["Adoption","2 features unused"]],subject:"Getting more from ancillary bundling",draft:"Hi Mei,\n\nOnly 12% of your agents used ancillary bundling last week. Teams that switch it on see a lift in attach rate — happy to walk through setup.\n\nChris"},
@@ -403,10 +409,13 @@ const cases=[
  {id:"C-105",op:"Ember Wings",segment:"Low",features:3,owner:"Lia T.",email:"lia@emberwings.example",play:"Adoption",risk:42,sig:[["Adoption","WAO 21%"]],subject:"Two features worth trying",draft:"Hi Lia,\n\nA short guide to the two features your team hasn't tried yet is attached.\n\nChris"},
  {id:"C-106",op:"Fjord Air",segment:"Dormant",features:0,owner:"—",email:"",play:"Retention",risk:30,sig:[["Volume","No bookings in 6 weeks"]],subject:"",draft:"",dormant:1}
 ].map(c=>({...c,state:c.dormant?"reactive":"pending",hash:rid()}));
+let cases=ALLC, ownerF="All";
+const ownerName=o=>o==="—"?"Unassigned":o;
+function applyOwner(){cases=ownerF==="All"?ALLC:ALLC.filter(c=>c.owner===ownerF);rev=cases.filter(c=>!c.dormant)}
 const sendLog=[];
 let view="analysis", sigF="All", playF="All", cur="C-101";
 
-const rev=cases.filter(c=>!c.dormant);
+let rev=cases.filter(c=>!c.dormant);
 const count=s=>cases.filter(c=>c.state===s).length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
 const kpi=(tag,kind,title,n,desc,cls="",act="")=>`<div class="box ${cls} ${act?"click":""}" ${act?`data-kpi="${act}" tabindex="0" role="button"`:""}><div class="tag"><span>${tag}</span><span>${kind}</span></div><div class="d" style="margin-top:6px">${title}</div><div class="n">${n}</div><div class="d">${desc}${act?' <span class="go">view →</span>':""}</div></div>`;
@@ -431,10 +440,10 @@ function analysis(){
   const mx=Math.max(...Object.keys(DET).map(d=>sigs.filter(s=>s.d===d).length));
   $("#detbars").innerHTML=Object.keys(DET).map(d=>{const n=sigs.filter(s=>s.d===d).length;return `<div class="r" data-det="${d}"><span>${d}</span><div class="tr"><div class="fl" style="width:${n/mx*100}%"></div></div><span class="mono">${n}</span></div>`}).join("");
   $("#sigfilter").innerHTML=["All",...Object.keys(DET)].map(d=>`<button class="b ${d===sigF?"on":""}" data-sf="${d}">${d}</button>`).join("");
-  $("#sigtable").innerHTML=`<tr><th>Operator</th><th>Detector</th><th>Signal</th><th>Risk</th></tr>`+
-    sigs.filter(s=>sigF==="All"||s.d===sigF).sort((a,b)=>b.c.risk-a.c.risk).map(s=>`<tr data-case="${s.c.id}"><td><b>${esc(s.c.op)}</b></td><td class="mono">${DET[s.d]} · ${s.d}</td><td>${esc(s.t)}</td><td><span class="risk ${s.c.risk>70?"hi":""}">${s.c.risk}</span></td></tr>`).join("");
-  $("#casetable").innerHTML=`<tr><th>#</th><th>Operator</th><th>Segment</th><th>Health</th><th>Playbook</th><th>Signals</th><th>Risk</th><th>Status</th><th></th></tr>`+
-    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr data-case="${c.id}"><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b></td>
+  $("#sigtable").innerHTML=`<tr><th>Operator</th><th>Owner</th><th>Detector</th><th>Signal</th><th>Risk</th></tr>`+
+    sigs.filter(s=>sigF==="All"||s.d===sigF).sort((a,b)=>b.c.risk-a.c.risk).map(s=>`<tr data-case="${s.c.id}"><td><b>${esc(s.c.op)}</b></td><td>${esc(ownerName(s.c.owner))}</td><td class="mono">${DET[s.d]} · ${s.d}</td><td>${esc(s.t)}</td><td><span class="risk ${s.c.risk>70?"hi":""}">${s.c.risk}</span></td></tr>`).join("");
+  $("#casetable").innerHTML=`<tr><th>#</th><th>Operator</th><th>Owner</th><th>Segment</th><th>Health</th><th>Playbook</th><th>Signals</th><th>Risk</th><th>Status</th><th></th></tr>`+
+    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr data-case="${c.id}"><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b></td>
     <td>${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</td><td><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></td>
     <td><span class="st ${c.state}">${c.state}</span>${c.reason?`<div class="d bad" style="color:var(--red)">↩ ${esc(c.reason)}</div>`:""}</td>
     <td>${c.dormant?"":`<button class=\"b tl\" data-open=\"${c.id}\">Draft →</button>`}</td></tr>`).join("");
@@ -451,7 +460,7 @@ function approve(){
     (playF!=="All"&&cases.some(c=>c.play===playF&&c.state==="pending")?`<button class="b ap" data-bulk="1" style="margin-left:8px">Approve all ${playF} (${cases.filter(c=>c.play===playF&&c.state==="pending").length})</button>`:"");
   const vis=rev.filter(c=>playF==="All"||c.play===playF);
   if(!vis.find(c=>c.id===cur)&&vis[0])cur=vis[0].id;
-  $("#queue").innerHTML=vis.map(c=>`<button class="qi ${c.id===cur?"on":""}" data-cur="${c.id}"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></div><div class="l2"><span>${c.id} · ${c.segment} · ${healthOf(c.features)}</span><span class="st ${c.state}">${c.state}</span></div></button>`).join("")||`<div class="empty">no cases</div>`;
+  $("#queue").innerHTML=vis.map(c=>`<button class="qi ${c.id===cur?"on":""}" data-cur="${c.id}"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></div><div class="l2"><span>${esc(ownerName(c.owner))} · ${c.segment} · ${healthOf(c.features)}</span><span class="st ${c.state}">${c.state}</span></div></button>`).join("")||`<div class="empty">no cases</div>`;
   const c=cases.find(x=>x.id===cur);
   $("#detail").innerHTML=!c?`<div class="empty">select a case</div>`:`
    <div class="box ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"border-color:var(--ok)":""}">
@@ -474,6 +483,7 @@ function approve(){
 
 /* ══ shell ══ */
 function render(){
+  applyOwner();
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+view));
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
   const p=count("pending");$("#t-cnt").textContent=p||"";$("#t-cnt").style.display=p?"":"none";
@@ -560,6 +570,11 @@ document.addEventListener("click",e=>{
    case"save":c.draft=$("#ta").value;c.hash=rid();c.editing=false;return decide(c,"approved");
   }
 });
+(function(){
+  const sel=$("#ownersel"),owners=[...new Set(ALLC.map(c=>c.owner))];
+  sel.innerHTML=`<option value="All">All owners (${ALLC.length})</option>`+owners.map(o=>`<option value="${esc(o)}">${esc(ownerName(o))} (${ALLC.filter(c=>c.owner===o).length})</option>`).join("");
+  sel.addEventListener("change",()=>{ownerF=sel.value;sel.parentNode.classList.toggle("on",ownerF!=="All");DR=null;drawer();playF="All";render()});
+})();
 render();
 </script>
 </body>
