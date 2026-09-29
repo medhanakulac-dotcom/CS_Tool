@@ -318,6 +318,17 @@ details.guide>summary::after{order:1}
 .grow.head{align-items:start!important;padding:10px 0 6px!important;line-height:1.2;border-top:1px solid #f0e9de}.grow.head+.grow.h3{border-top:1px solid #f0e9de}
 .gnote{margin-top:16px;background:#fff;border-radius:22px;padding:16px 24px;font-size:14px;line-height:1.6;color:#5d554b;box-shadow:inset 6px 0 0 #63d3bf,var(--shadow)}
 .gnote b{color:var(--ink)}
+
+.llmtag{background:#efe9fb;color:#7a5cf0;border-radius:999px;padding:3px 11px;font:700 12px var(--sans);white-space:nowrap}
+.llmbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0 0}
+.llmbar .b{padding:5px 12px;font-size:12px}
+.llmbar .b:disabled{opacity:.5;cursor:default}
+.brief{list-style:none;padding:0;margin:10px 0 8px}
+.brief li{padding:10px 12px;border-radius:14px;cursor:pointer;font-size:14px;line-height:1.55;color:#5d554b}
+.brief li:hover{background:var(--bg)}
+.brief li b{color:var(--ink)}
+.void{font:600 12.5px var(--sans);color:var(--red);background:#fbe9ec;border-radius:12px;padding:8px 12px;margin-top:10px}
+.gen{font:600 13px var(--sans);color:#7a5cf0}
 </style>
 </head>
 <body>
@@ -338,6 +349,7 @@ details.guide>summary::after{order:1}
       <button class="b ap" data-v="approve">Go to Draft &amp; Approve →</button></div>
 
     <div class="grid g4" id="kpis"></div>
+    <div id="brief" style="margin-top:14px"></div>
 
     <h2 class="sec"><i>01</i>Dashboard</h2>
     <div class="grid g2">
@@ -346,15 +358,16 @@ details.guide>summary::after{order:1}
         <div class="d" style="margin-top:8px">ANL-1 Volume · ANL-2 Route peer · ANL-3 Fare index · ANL-4 Adoption</div></div>
     </div>
 
-    <h2 class="sec"><i>02</i>Cases<span class="r">one per operator, ranked by risk_score</span></h2>
+    <h2 class="sec"><i>02</i>Cases<span class="r">scored by code · explained by LLM</span></h2>
     <div class="wrapt"><table id="casetable"></table></div>
-  <h2 class="sec"><i>03</i>Playbook matrix<span class="r">segment × product health</span></h2>
-    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different motion depending on segment value. A <b>High + Unhealthy</b> account gets a hands-on Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. Every account is reviewed <b>weekly</b> by the tool, so there is no per-segment schedule. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
-    <div class="mx" id="matrix"></div>
-    <h2 class="sec"><i>04</i>Signals<span class="r bar" id="sigfilter"></span></h2>
+  <h2 class="sec"><i>03</i>Signals<span class="r bar" id="sigfilter"></span></h2>
     <div class="wrapt"><table id="sigtable"></table></div>
 
-    <details class="guide"><summary class="sec"><i>05</i>How playbooks are picked<span class="r">two inputs · tap to expand</span></summary>
+    <details class="guide" id="mxdetails"><summary class="sec"><i>04</i>Playbook matrix<span class="r">segment × product health · hidden · tap to show</span></summary>
+    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different motion depending on segment value. A <b>High + Unhealthy</b> account gets a hands-on Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. Every account is reviewed <b>weekly</b> by the tool, so there is no per-segment schedule. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
+    <div class="mx" id="matrix"></div>
+    </details>
+  <details class="guide"><summary class="sec"><i>05</i>How playbooks are picked<span class="r">two inputs · tap to expand</span></summary>
     <div class="gcols">
       <div class="gcard">
         <div class="lab">Input 1 · Commercial segment</div>
@@ -423,6 +436,63 @@ const ALLC=[
  {id:"C-105",op:"Ember Wings",segment:"Low",features:3,owner:"Lia T.",email:"lia@emberwings.example",play:"Adoption",risk:42,sig:[["Adoption","WAO 21%"]],subject:"Two features worth trying",draft:"Hi Lia,\n\nA short guide to the two features your team hasn't tried yet is attached.\n\nChris"},
  {id:"C-106",op:"Fjord Air",segment:"Dormant",features:0,owner:"—",email:"",play:"Retention",risk:30,sig:[["Volume","No bookings in 6 weeks"]],subject:"",draft:"",dormant:1}
 ].map(c=>({...c,state:c.dormant?"reactive":"pending",hash:rid()}));
+const WHY={
+ "C-101":["Bookings on the top 3 routes fell 23% WoW while the market moved only −4%, and the route-peer gap widened 11 pts. This looks account-specific, not seasonal, and only 1 of 6 core features is in weekly use.","Book a call with Rina this week; lead with route-level booking data and offer a Rescue plan."],
+ "C-102":["Average fare on CNX–BKK is 18% above the peer median, which may be costing share. The account already uses 4 of 6 features, so the commercial gap is the main blocker to Healthy.","Share the fare-class breakdown and propose two pricing tests."],
+ "C-103":["Only 12% of agents were active weekly and 2 features are unused. With just 2 of 6 features in use, adoption is the issue, not volume.","Walk through ancillary bundling setup; target one new feature in 2 weeks."],
+ "C-104":["Volume is down 14% WoW but 3 of 6 features are active, so the account is usable. Worth a light check-in before the dip becomes a trend.","Send a short check-in; no escalation needed yet."],
+ "C-105":["Low-segment account at 3 features with 21% weekly activity. Self-service is the right motion here.","Send the two-feature guide; no owner time needed."],
+ "C-106":["No bookings for 6 weeks and no live engagement. Per the playbook this account is reactive only.","Do not reach out; respond only if they contact us."]
+};
+/* ── detailed email drafts, 4 languages (LLM output, simulated in this prototype) ── */
+const LANGS={en:"English",th:"ไทย",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
+const LP={
+ en:{warm:"I hope your week is going well.",warmSign:"Warm regards,\nChris",direct:"Could you let me know a time that works this week?",signs:["Best regards,\nChris","Best,\nChris","Thanks,\nChris"]},
+ th:{warm:"หวังว่าสัปดาห์นี้ของคุณเป็นไปได้ด้วยดี",warmSign:"ด้วยความปรารถนาดี\nChris",direct:"รบกวนแจ้งเวลาที่สะดวกในสัปดาห์นี้",signs:["ขอแสดงความนับถือ\nChris","ด้วยความเคารพ\nChris","ขอบคุณ\nChris"]},
+ vi:{warm:"Chúc bạn một tuần làm việc thuận lợi.",warmSign:"Thân mến,\nChris",direct:"Xin bạn cho biết thời gian phù hợp trong tuần này.",signs:["Trân trọng,\nChris","Kính chào,\nChris","Cảm ơn bạn,\nChris"]},
+ id:{warm:"Semoga minggu Anda berjalan lancar.",warmSign:"Salam hangat,\nChris",direct:"Mohon informasikan waktu yang sesuai minggu ini.",signs:["Hormat kami,\nChris","Salam,\nChris","Terima kasih,\nChris"]}
+};
+const EM={
+"C-101":{
+ en:{subj:"Bookings on your top routes are down 23%",greet:"Hi Rina,",intro:"The seatOS team reviewed Aero Nusantara's weekly data and found a few signals we wanted to flag:",pts:["Bookings on your top three routes fell 23% week over week, while the market on the same routes moved only −4%.","The gap versus peer airlines widened by 11 points.","Only 1 of 6 core features has a Weekly Active Operator."],ask:"Could we find 20 minutes this week to go through the route-level data together, work out what changed and agree a recovery plan you can start on right away?",sign:"Best regards,\nChris"},
+ th:{subj:"ยอดจองบนเส้นทางหลัก 3 เส้นทางลดลง 23% — ขอเวลาคุยสั้นๆ",greet:"เรียนคุณ Rina,",intro:"ทีม seatOS ตรวจสอบข้อมูลประจำสัปดาห์ของ Aero Nusantara แล้วพบสัญญาณที่อยากแจ้งให้ทราบ:",pts:["ยอดจองบน 3 เส้นทางหลักลดลง 23% เมื่อเทียบกับสัปดาห์ก่อน ขณะที่ตลาดบนเส้นทางเดียวกันเปลี่ยนแปลงเพียง −4%","ช่องว่างเมื่อเทียบกับสายการบินคู่เทียบกว้างขึ้น 11 จุด","มีเพียง 1 จาก 6 ฟีเจอร์หลักที่มีผู้ใช้งานรายสัปดาห์ (Weekly Active Operator)"],ask:"เราอยากขอเวลา 20 นาทีในสัปดาห์นี้ เพื่อดูข้อมูลระดับเส้นทางร่วมกัน หาสาเหตุ และวางแผนแก้ไขที่เริ่มทำได้ทันที",sign:"ขอแสดงความนับถือ\nChris"},
+ vi:{subj:"Lượt đặt chỗ trên 3 đường bay chính giảm 23% — xin 20 phút trao đổi",greet:"Kính gửi Rina,",intro:"Đội ngũ seatOS đã xem xét dữ liệu tuần này của Aero Nusantara và có một vài tín hiệu chúng tôi muốn chia sẻ:",pts:["Lượt đặt chỗ trên 3 đường bay chính giảm 23% so với tuần trước, trong khi thị trường trên cùng các đường bay chỉ thay đổi −4%.","Khoảng cách so với các hãng cùng nhóm đã nới rộng thêm 11 điểm.","Chỉ có 1 trong 6 tính năng cốt lõi có người dùng hoạt động hằng tuần (Weekly Active Operator)."],ask:"Chúng tôi xin 20 phút trong tuần này để cùng xem dữ liệu theo từng đường bay, tìm nguyên nhân và thống nhất một kế hoạch khắc phục có thể bắt tay vào ngay.",sign:"Trân trọng,\nChris"},
+ id:{subj:"Pemesanan di 3 rute utama turun 23% — mohon waktu 20 menit",greet:"Yth. Rina,",intro:"Tim seatOS telah meninjau data mingguan Aero Nusantara dan menemukan beberapa sinyal yang ingin kami sampaikan:",pts:["Pemesanan di 3 rute utama turun 23% dibandingkan minggu lalu, sementara pasar di rute yang sama hanya bergerak −4%.","Selisih dengan maskapai pembanding melebar 11 poin.","Hanya 1 dari 6 fitur inti yang memiliki pengguna aktif mingguan (Weekly Active Operator)."],ask:"Kami ingin meminta waktu 20 menit minggu ini untuk meninjau data per rute bersama, mencari penyebabnya, dan menyepakati rencana pemulihan yang bisa segera dijalankan.",sign:"Hormat kami,\nChris"}},
+"C-102":{
+ en:{subj:"Your CNX–BKK fares vs. the peer median",greet:"Hi Tom,",intro:"We reviewed Blue Kestrel Air's fare position this week and wanted to share what we found:",pts:["Your average fare on CNX–BKK is 18% above the peer median (fare index 1.18).","That premium may be costing share on price-sensitive itineraries; the breakdown by fare class is attached.","You already use 4 of 6 core features, so pricing is the main gap left."],ask:"Could we take 30 minutes this week to walk through the breakdown and choose between two pricing tests we'd suggest?",sign:"Best regards,\nChris"},
+ th:{subj:"ราคาตั๋วเส้นทาง CNX–BKK เทียบกับค่ามัธยฐานของคู่เทียบ",greet:"เรียนคุณ Tom,",intro:"ทีม seatOS ตรวจสอบตำแหน่งราคาของ Blue Kestrel Air ในสัปดาห์นี้ และมีข้อมูลที่อยากแบ่งปัน:",pts:["ราคาตั๋วเฉลี่ยบนเส้นทาง CNX–BKK สูงกว่าค่ามัธยฐานของคู่เทียบ 18% (ดัชนีราคา 1.18)","ส่วนต่างนี้อาจทำให้เสียส่วนแบ่งในกลุ่มผู้โดยสารที่อ่อนไหวต่อราคา เราแนบรายละเอียดแยกตามชั้นราคามาด้วยแล้ว","คุณใช้ฟีเจอร์หลักไปแล้ว 4 จาก 6 ฟีเจอร์ ราคาจึงเป็นช่องว่างหลักที่เหลืออยู่"],ask:"ขอเวลา 30 นาทีในสัปดาห์นี้ เพื่อร่วมดูรายละเอียดและเลือกแนวทางทดสอบราคาที่เราเสนอไว้ 2 แบบ",sign:"ขอแสดงความนับถือ\nChris"},
+ vi:{subj:"Giá vé CNX–BKK so với trung vị của các hãng cùng nhóm",greet:"Kính gửi Tom,",intro:"Đội ngũ seatOS đã xem xét vị thế giá của Blue Kestrel Air trong tuần này và muốn chia sẻ những gì chúng tôi nhận thấy:",pts:["Giá vé trung bình trên đường bay CNX–BKK cao hơn trung vị của các hãng cùng nhóm 18% (chỉ số giá 1,18).","Mức chênh này có thể khiến bạn mất thị phần ở nhóm khách nhạy cảm về giá; chúng tôi đã đính kèm bảng phân tích theo hạng vé.","Bạn đã sử dụng 4 trong 6 tính năng cốt lõi, nên giá là khoảng cách chính còn lại."],ask:"Chúng tôi xin 30 phút trong tuần này để cùng xem bảng phân tích và chọn một trong hai phương án thử nghiệm giá mà chúng tôi đề xuất.",sign:"Trân trọng,\nChris"},
+ id:{subj:"Tarif CNX–BKK dibandingkan median pesaing",greet:"Yth. Tom,",intro:"Tim seatOS telah meninjau posisi tarif Blue Kestrel Air minggu ini dan ingin membagikan temuan kami:",pts:["Tarif rata-rata di rute CNX–BKK 18% di atas median pesaing (indeks tarif 1,18).","Selisih ini berpotensi mengurangi pangsa pasar pada penumpang yang sensitif harga; rincian per kelas tarif kami lampirkan.","Anda sudah memakai 4 dari 6 fitur inti, sehingga harga menjadi kesenjangan utama yang tersisa."],ask:"Bisakah kita meluangkan 30 menit minggu ini untuk membahas rincian tersebut dan memilih salah satu dari dua opsi uji coba harga yang kami usulkan?",sign:"Hormat kami,\nChris"}},
+"C-103":{
+ en:{subj:"Getting more from ancillary bundling",greet:"Hi Mei,",intro:"Looking at Coral Jet's usage last week, we see a clear opportunity on adoption:",pts:["Only 12% of your agents were active on seatOS each week.","2 features are not in use yet, including ancillary bundling.","Teams that switch bundling on typically see a lift in attach rate."],ask:"We'd be happy to run a short setup walkthrough and aim to get one new feature live within the next two weeks. Does a 30-minute session work for you?",sign:"Best regards,\nChris"},
+ th:{subj:"ใช้ประโยชน์จากการขายแบบบันเดิลบริการเสริมให้มากขึ้น",greet:"เรียนคุณ Mei,",intro:"จากการใช้งานของ Coral Jet ในสัปดาห์ที่ผ่านมา เราเห็นโอกาสชัดเจนด้านการใช้งานฟีเจอร์:",pts:["มีเอเจนต์เพียง 12% ที่ใช้งาน seatOS เป็นประจำทุกสัปดาห์","ยังมี 2 ฟีเจอร์ที่ยังไม่ได้เปิดใช้ รวมถึงการขายแบบบันเดิลบริการเสริม","ทีมที่เปิดใช้บันเดิลมักมีอัตราการขายพ่วง (attach rate) เพิ่มขึ้น"],ask:"เรายินดีจัดเซสชันตั้งค่าสั้นๆ และตั้งเป้าเปิดใช้ฟีเจอร์ใหม่อย่างน้อย 1 ฟีเจอร์ภายใน 2 สัปดาห์ สะดวกให้เวลา 30 นาทีหรือไม่",sign:"ขอแสดงความนับถือ\nChris"},
+ vi:{subj:"Khai thác tốt hơn tính năng bán gói dịch vụ bổ sung",greet:"Kính gửi Mei,",intro:"Xem xét việc sử dụng của Coral Jet tuần trước, chúng tôi thấy một cơ hội rõ ràng về mức độ áp dụng tính năng:",pts:["Chỉ 12% đại lý hoạt động trên seatOS mỗi tuần.","Còn 2 tính năng chưa được sử dụng, trong đó có bán gói dịch vụ bổ sung (bundling).","Các đội bật bundling thường ghi nhận tỷ lệ bán kèm (attach rate) tăng lên."],ask:"Chúng tôi sẵn sàng thực hiện một buổi hướng dẫn cài đặt ngắn và đặt mục tiêu đưa ít nhất một tính năng mới vào sử dụng trong vòng hai tuần tới. Buổi làm việc 30 phút có phù hợp với bạn không?",sign:"Trân trọng,\nChris"},
+ id:{subj:"Manfaatkan bundling layanan tambahan lebih optimal",greet:"Yth. Mei,",intro:"Dari penggunaan Coral Jet minggu lalu, kami melihat peluang yang jelas pada adopsi fitur:",pts:["Hanya 12% agen yang aktif menggunakan seatOS setiap minggu.","Masih ada 2 fitur yang belum digunakan, termasuk bundling layanan tambahan.","Tim yang mengaktifkan bundling umumnya mengalami kenaikan attach rate."],ask:"Kami siap mengadakan sesi panduan pengaturan singkat dengan target minimal satu fitur baru aktif dalam dua minggu ke depan. Apakah sesi 30 menit sesuai untuk Anda?",sign:"Hormat kami,\nChris"}},
+"C-104":{
+ en:{subj:"Quick check-in on this week's volume",greet:"Hi Sam,",intro:"A short note from the seatOS team on Delta Meridian's numbers this week:",pts:["Booking volume is down 14% versus last week.","Overall usage looks healthy: 3 of 6 core features are active, so this doesn't look like a product issue.","We'd rather ask early than let a one-week dip turn into a trend."],ask:"Is there anything on your side, such as a schedule change, a partner change or a system issue, that we should know about? A quick reply is enough.",sign:"Best regards,\nChris"},
+ th:{subj:"สอบถามเรื่องปริมาณการจองสัปดาห์นี้",greet:"เรียนคุณ Sam,",intro:"ทีม seatOS ขอแจ้งข้อมูลสั้นๆ เกี่ยวกับตัวเลขของ Delta Meridian ในสัปดาห์นี้:",pts:["ปริมาณการจองลดลง 14% เมื่อเทียบกับสัปดาห์ก่อน","การใช้งานโดยรวมยังดี มี 3 จาก 6 ฟีเจอร์หลักที่ใช้งานอยู่ จึงไม่น่าเป็นปัญหาจากตัวผลิตภัณฑ์","เราอยากสอบถามตั้งแต่เนิ่นๆ ก่อนที่การลดลงในสัปดาห์เดียวจะกลายเป็นแนวโน้ม"],ask:"มีอะไรทางฝั่งคุณที่เราควรทราบหรือไม่ เช่น การเปลี่ยนตารางบิน การเปลี่ยนพันธมิตร หรือปัญหาระบบ ตอบกลับสั้นๆ ก็เพียงพอ",sign:"ขอแสดงความนับถือ\nChris"},
+ vi:{subj:"Hỏi thăm nhanh về lượng đặt chỗ tuần này",greet:"Kính gửi Sam,",intro:"Đội ngũ seatOS xin gửi vài dòng ngắn về số liệu tuần này của Delta Meridian:",pts:["Lượng đặt chỗ giảm 14% so với tuần trước.","Mức sử dụng chung vẫn tốt: 3 trong 6 tính năng cốt lõi đang hoạt động, nên có vẻ đây không phải vấn đề của sản phẩm.","Chúng tôi muốn hỏi sớm để mức giảm trong một tuần không trở thành xu hướng."],ask:"Có điều gì ở phía bạn mà chúng tôi nên biết không, chẳng hạn thay đổi lịch bay, đối tác hoặc sự cố hệ thống? Chỉ cần phản hồi ngắn là đủ.",sign:"Trân trọng,\nChris"},
+ id:{subj:"Sekilas tanya soal volume pemesanan minggu ini",greet:"Yth. Sam,",intro:"Berikut catatan singkat dari tim seatOS mengenai angka Delta Meridian minggu ini:",pts:["Volume pemesanan turun 14% dibandingkan minggu lalu.","Penggunaan secara umum masih baik: 3 dari 6 fitur inti aktif, sehingga ini tampaknya bukan masalah produk.","Kami memilih bertanya lebih awal agar penurunan satu minggu tidak berkembang menjadi tren."],ask:"Adakah hal di pihak Anda yang perlu kami ketahui, misalnya perubahan jadwal, perubahan mitra, atau kendala sistem? Balasan singkat sudah cukup.",sign:"Hormat kami,\nChris"}},
+"C-105":{
+ en:{subj:"Two features worth trying",greet:"Hi Lia,",intro:"A quick note on how Ember Wings is using seatOS:",pts:["About 21% of your agents are active each week, and 3 of 6 core features are in use, a solid baseline.","There are two more features your team hasn't tried yet; a short guide is attached.","Both can be switched on self-service, in a few minutes."],ask:"If you'd like a walkthrough, just reply to this email and we'll set one up. Otherwise, no action is needed.",sign:"Best regards,\nChris"},
+ th:{subj:"2 ฟีเจอร์ที่น่าลองใช้",greet:"เรียนคุณ Lia,",intro:"ทีม seatOS ขอแจ้งสั้นๆ เกี่ยวกับการใช้งาน seatOS ของ Ember Wings:",pts:["ประมาณ 21% ของเอเจนต์ใช้งานเป็นประจำทุกสัปดาห์ และมี 3 จาก 6 ฟีเจอร์หลักที่ใช้อยู่ ถือเป็นพื้นฐานที่ดี","ยังมีอีก 2 ฟีเจอร์ที่ทีมของคุณยังไม่เคยลอง เราแนบคู่มือฉบับสั้นมาให้แล้ว","ทั้งสองฟีเจอร์เปิดใช้เองได้ในไม่กี่นาที"],ask:"หากต้องการให้เราพาดูขั้นตอน เพียงตอบกลับอีเมลนี้ เราจะนัดให้ หรือถ้าไม่ต้องการก็ไม่ต้องดำเนินการใดๆ",sign:"ขอแสดงความนับถือ\nChris"},
+ vi:{subj:"Hai tính năng đáng thử",greet:"Kính gửi Lia,",intro:"Đội ngũ seatOS xin gửi vài dòng về việc Ember Wings đang sử dụng seatOS:",pts:["Khoảng 21% đại lý hoạt động mỗi tuần và 3 trong 6 tính năng cốt lõi đang được sử dụng, đây là nền tảng tốt.","Còn hai tính năng mà đội ngũ của bạn chưa thử; chúng tôi đã đính kèm hướng dẫn ngắn.","Cả hai đều có thể tự bật chỉ trong vài phút."],ask:"Nếu muốn được hướng dẫn trực tiếp, bạn chỉ cần trả lời email này và chúng tôi sẽ sắp xếp. Nếu không, bạn không cần làm gì thêm.",sign:"Trân trọng,\nChris"},
+ id:{subj:"Dua fitur yang layak dicoba",greet:"Yth. Lia,",intro:"Berikut catatan singkat tentang penggunaan seatOS oleh Ember Wings:",pts:["Sekitar 21% agen aktif setiap minggu dan 3 dari 6 fitur inti sudah digunakan, ini fondasi yang baik.","Masih ada dua fitur yang belum dicoba tim Anda; panduan singkat kami lampirkan.","Keduanya dapat diaktifkan sendiri dalam beberapa menit."],ask:"Jika ingin didampingi, cukup balas email ini dan kami akan mengaturnya. Jika tidak, tidak ada tindakan yang diperlukan.",sign:"Hormat kami,\nChris"}}
+};
+const DEFAULT_LANG={"C-101":"id","C-102":"th","C-103":"vi","C-104":"id","C-105":"th"};
+function draftText(c){
+  if(c.dormant||!EM[c.id])return "";
+  if(c.custom&&c.custom[c.lang])return c.custom[c.lang];
+  const P=EM[c.id][c.lang],L=LP[c.lang],m=c.mods||{};
+  const greet=P.greet+(m.warm?" "+L.warm:"");
+  const pts=(m.short?P.pts.slice(0,1):P.pts).map(x=>"• "+x).join("\n");
+  const ask=m.direct?L.direct:P.ask;
+  const sign=m.warm?L.warmSign:(c.alt?L.signs[c.alt%3]:P.sign);
+  return [greet,P.intro,pts,ask,sign].join("\n\n");
+}
+const subjOf=c=>c.dormant||!EM[c.id]?"":EM[c.id][c.lang].subj;
+
+ALLC.forEach(c=>{[c.why,c.next]=WHY[c.id]||["",""];c.ver=1;c.lang=DEFAULT_LANG[c.id]||"en";c.mods={};c.custom={};c.alt=0});
 let cases=ALLC, ownerF="All";
 const ownerName=o=>o==="—"?"Unassigned":o;
 function applyOwner(){cases=ownerF==="All"?ALLC:ALLC.filter(c=>c.owner===ownerF);rev=cases.filter(c=>!c.dormant)}
@@ -450,6 +520,10 @@ function analysis(){
     return `<div class="cell ${h}"><b>${n}</b><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
   mxh+=`<div class="rh"><b>Dormant</b><span class="seg Dormant">Reactive</span></div><div class="cell Dormant"><b style="display:inline;color:#4a4238">Reactive Only</b> <span class="d" style="margin-left:10px">No proactive touchpoints — respond to inbound requests only, regardless of health.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
   $("#matrix").innerHTML=mxh;
+  const top3=[...cases].sort((a,b)=>b.risk-a.risk).filter(c=>!c.dormant).slice(0,3);
+  $("#brief").innerHTML=top3.length?`<div class="box teal"><div class="tag"><span>AI BRIEFING · WEEK 2026-W40</span><span class="llmtag">✦ LLM</span></div>
+    <ul class="brief">${top3.map(c=>`<li data-case="${c.id}" tabindex="0"><b>${esc(c.op)}</b> <span class="risk ${c.risk>70?"hi":""}">${c.risk}</span> — ${esc(c.why)}</li>`).join("")}</ul>
+    <div class="d">Written from this week's signals by the LLM; every figure is re-checked against the data by QA before anything is sent.</div></div>`:"";
   $("#riskbars").innerHTML=[...cases].sort((a,b)=>b.risk-a.risk).map(c=>`<div class="r" data-case="${c.id}"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><span class="mono">${c.risk}</span></div>`).join("");
   const mx=Math.max(...Object.keys(DET).map(d=>sigs.filter(s=>s.d===d).length));
   $("#detbars").innerHTML=Object.keys(DET).map(d=>{const n=sigs.filter(s=>s.d===d).length;return `<div class="r" data-det="${d}"><span>${d}</span><div class="tr"><div class="fl" style="width:${n/mx*100}%"></div></div><span class="mono">${n}</span></div>`}).join("");
@@ -484,9 +558,13 @@ function approve(){
     <div class="t" style="font-size:18px">${esc(c.op)}</div>
     <div style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span> <span class="hl ${healthOf(c.features)}">${healthOf(c.features)} · ${c.features}/6</span> <span class="chip" style="margin-left:4px"><b>${playbookOf(c)[0]}</b></span></div>
     <div style="margin-top:8px">${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
-    <div class="mail" style="margin-top:10px">To: ${esc(c.owner)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(c.subject)}</div>
-    ${c.editing?`<textarea id="ta">${esc(c.draft)}</textarea>`:`<div class="draft">${esc(c.draft)}</div>`}
+    <div class="mail" style="margin-top:10px">To: ${esc(c.owner)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(subjOf(c))}</div>
+    ${c.editing?`<textarea id="ta">${esc(draftText(c))}</textarea>`:`<div class="draft">${esc(draftText(c))}</div>`}
     <div class="d">draft_hash ${c.hash} · QA 12/12 pass · token TTL 72h</div>
+    ${c.note?`<div class="void">${c.note}</div>`:""}
+    ${(c.rejecting||c.editing)?"":`<div class="llmbar"><span class="d" style="font-weight:700;margin-right:2px">Language</span>${Object.entries(LANGS).map(([k,v])=>`<button class="b ${k===c.lang?"on":""}" data-lang="${k}" ${c.gen?"disabled":""}>${v}</button>`).join("")}</div>
+    <div class="llmbar">${c.gen?`<span class="gen">✦ Writing the new version…</span>`:`<span class="llmtag">✦ Drafted by LLM · v${c.ver}</span>`}
+      <button class="b" data-a="regen" ${c.gen?"disabled":""}>Regenerate</button><button class="b ${c.mods.short?"on":""}" data-a="shorter" ${c.gen?"disabled":""}>Shorter</button><button class="b ${c.mods.warm?"on":""}" data-a="warmer" ${c.gen?"disabled":""}>Warmer</button><button class="b ${c.mods.direct?"on":""}" data-a="direct" ${c.gen?"disabled":""}>More direct</button></div>`}
     ${c.reason?`<div class="d" style="color:var(--red);margin-top:6px">rejected — “${esc(c.reason)}” (returned to SUP-1)</div>`:""}
     <div class="acts" style="margin-top:14px">
     ${c.rejecting?`<input class="f" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
@@ -539,6 +617,7 @@ function drawer(){
   }else{
     const c=cases.find(x=>x.id===DR.id), pb=playbookOf(c);
     dr.innerHTML=`<div class="dh"><div><div class="k">${c.id}${DR.back?` · <button class="b" data-dback="1" style="padding:2px 9px;font-size:11px">← ${esc(DR.back)}</button>`:""}</div><h3>${esc(c.op)}</h3><div style="margin-top:8px">${tags(c)} <span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="st ${c.state}">${c.state}</span></div></div><button class="x" data-dclose="1" aria-label="Close">✕</button></div>
+     ${c.why?`<div class="ds">AI analysis <span class="llmtag" style="margin-left:6px;text-transform:none;letter-spacing:0">✦ LLM</span></div><div class="dbox">${esc(c.why)}<div style="margin-top:8px"><b>Suggested next step:</b> ${esc(c.next)}</div></div>`:""}
      <div class="ds">Playbook</div>
      <div class="dbox"><b style="font-size:16px">${pb[0]}</b> <div class="d" style="margin-top:4px">${pb[1]}</div></div>
      <div class="ds">Product health</div>
@@ -547,7 +626,7 @@ function drawer(){
      <div class="dbox">${c.sig.map(([d,t])=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span>${esc(t)}</span><span class="d">${DET[d]} · ${d}</span></div>`).join("")}</div>
      <div class="ds">Account</div>
      <div class="dbox kvs"><b>Owner</b><span>${esc(c.owner)}</span><b>Email</b><span>${esc(c.email||"—")}</span><b>Email type</b><span>${c.play} → ${PLAY_OUT[c.play]}</span></div>
-     ${c.dormant?"":`<div class="ds">Draft</div><div class="dbox"><b>${esc(c.subject)}</b><div style="white-space:pre-wrap;margin-top:6px;color:#5d554b">${esc(c.draft)}</div><div class="d" style="margin-top:8px;font-size:12px">draft_hash ${c.hash} · QA 12/12 pass</div></div>
+     ${c.dormant?"":`<div class="ds">Draft</div><div class="dbox"><span class="llmtag" style="margin-bottom:6px;display:inline-block">${LANGS[c.lang]}</span><br><b>${esc(subjOf(c))}</b><div style="white-space:pre-wrap;margin-top:6px;color:#5d554b">${esc(draftText(c))}</div><div class="d" style="margin-top:8px;font-size:12px">draft_hash ${c.hash} · QA 12/12 pass</div></div>
      <div class="dfoot"><button class="b ap" data-open="${c.id}">Open draft &amp; approve →</button></div>`}`;
   }
   dr.scrollTop=0;
@@ -556,6 +635,24 @@ addEventListener("keydown",e=>{
   if(e.key==="Escape"&&DR){DR=null;drawer()}
   if(e.key==="Enter"){const k=e.target.closest&&e.target.closest("[data-kpi],[data-case]");if(k&&k.tagName!=="BUTTON")k.click()}
 });
+
+function llmApply(c,fn){
+  if(c.gen)return;
+  c.gen=true;render();
+  setTimeout(()=>{
+    fn(c);c.hash=rid();c.ver++;c.gen=false;
+    if(c.state==="approved"){const i=sendLog.findIndex(r=>r.case===c.id);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again."}
+    else c.note="";
+    render();
+  },700);
+}
+function llmRewrite(c,mode){
+  llmApply(c,c=>{
+    c.custom[c.lang]="";
+    if(mode==="regen")c.alt=((c.alt||0)+1)%3;
+    else c.mods[{shorter:"short",warmer:"warm",direct:"direct"}[mode]]=!c.mods[{shorter:"short",warmer:"warm",direct:"direct"}[mode]];
+  });
+}
 document.addEventListener("click",e=>{
   if(!e.target.closest("button")||e.target.closest("button").dataset.dclose||e.target.closest("button").dataset.dback){
     if(e.target.closest("[data-dclose]")){DR=null;return drawer()}
@@ -570,20 +667,22 @@ document.addEventListener("click",e=>{
   if(D.v){DR=null;drawer();view=D.v;scrollTo(0,0);return render()}
   if(D.wao){$("#waonote").textContent="WAO report is not connected yet — this will open the account's Weekly Active Operators view.";return}
   if(D.sf){sigF=D.sf;return render()}
+  if(D.lang){const c=cases.find(x=>x.id===cur);if(c&&D.lang!==c.lang)llmApply(c,c=>{c.lang=D.lang});return}
   if(D.pf){playF=D.pf;return render()}
   if(D.cur){cur=D.cur;return render()}
   if(D.open){DR=null;drawer();cur=D.open;playF="All";view="approve";scrollTo(0,0);return render()}
   if(D.bulk){rev.filter(c=>playbookOf(c)[0]===playF&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash})});return render()}
   const c=cases.find(x=>x.id===cur);if(!c||!D.a)return;
   switch(D.a){
-   case"approve":return decide(c,"approved");
+   case"regen":case"shorter":case"warmer":case"direct":return llmRewrite(c,D.a);
+   case"approve":c.note="";return decide(c,"approved");
    case"hold":return decide(c,"hold");
    case"reject":c.rejecting=true;return render();
    case"rejno":c.rejecting=false;return render();
    case"rejgo":c.rejecting=false;return decide(c,"rejected",{reason:$("#rj").value||"no reason"});
    case"edit":c.editing=true;return render();
    case"cancel":c.editing=false;return render();
-   case"save":c.draft=$("#ta").value;c.hash=rid();c.editing=false;return decide(c,"approved");
+   case"save":c.custom[c.lang]=$("#ta").value;c.hash=rid();c.editing=false;return decide(c,"approved");
   }
 });
 (function(){
