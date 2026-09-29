@@ -3,308 +3,236 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CS Tool — Weekly Workflow</title>
+<title>CS Tool — Weekly Run</title>
 <style>
 :root{
-  --bg:#fff; --ink:#1c262b; --mute:#6b767b; --line:#c3cacd; --pill:#e6eaea; --arrow:#4c5a60;
+  --bg:#fff; --ink:#1c262b; --mute:#6b767b; --line:#c3cacd; --pill:#e6eaea;
   --teal:#2c6f74; --amber:#b4531d; --amber-bg:#f4e5d9; --red:#a5422f; --ok:#3b7a57;
   --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
   --mono:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme=light]){--bg:#14191c;--ink:#e6ebed;--mute:#8d999f;--line:#3a4549;--pill:#242d31;--arrow:#9aa7ad;--teal:#5fb0b6;--amber:#e08a55;--amber-bg:#2c2019;--red:#e0705c;--ok:#6dbb90}
+  :root:not([data-theme=light]){--bg:#14191c;--ink:#e6ebed;--mute:#8d999f;--line:#3a4549;--pill:#242d31;--teal:#5fb0b6;--amber:#e08a55;--amber-bg:#2c2019;--red:#e0705c;--ok:#6dbb90}
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
-.page{max-width:1160px;margin:0 auto;padding:24px 16px 64px}
-header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-h1{font-size:22px;margin:0}
-.sub,.mono{font-family:var(--mono)}
-.sub{font-size:12px;color:var(--mute)}
-.layout{display:grid;grid-template-columns:minmax(0,640px) minmax(320px,1fr);gap:28px;align-items:start}
-@media(max-width:1000px){.layout{grid-template-columns:1fr}}
-
-/* ── workflow diagram ── */
-.flow{position:relative;padding-left:150px}
-.flow svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.ext{position:absolute;left:0;top:34px;width:118px}
-.stage{display:grid;grid-template-columns:1fr 62px;gap:8px;align-items:center}
-.time{font:11px var(--mono);color:var(--teal)}
-.stage.h .time{color:var(--amber)}
-.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
-.node{border:1.5px solid var(--line);border-radius:4px;padding:8px 10px 10px;background:var(--bg);position:relative;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;display:block}
-.node:hover{border-color:var(--ink)}
-.node.dashed{border-style:dashed}
-.node.teal{border:2px solid var(--teal)}
-.node.human{border:2px solid var(--amber);background:var(--amber-bg)}
-.node.sel{box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 18%,transparent)}
-.tag{display:flex;justify-content:space-between;font:10px var(--mono);color:var(--mute);letter-spacing:.04em}
+.mono,.sub{font-family:var(--mono)}.sub{font-size:12px;color:var(--mute)}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{border-right:1.5px solid var(--line);padding:22px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-weight:700;font-size:16px;margin:0 8px}
+.brand-s{font:10.5px var(--mono);color:var(--mute);margin:2px 8px 20px;display:block}
+.grp{font:10px var(--mono);letter-spacing:.08em;color:var(--mute);margin:16px 8px 6px;text-transform:uppercase}
+.grp.cut{color:var(--teal);border-top:1.5px dashed var(--teal);padding-top:8px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav button{display:grid;grid-template-columns:20px 1fr auto;gap:8px;align-items:center;width:100%;text-align:left;font:13px var(--sans);color:var(--ink);background:none;border:1.5px solid transparent;border-radius:4px;padding:7px 8px;cursor:pointer}
+.nav button:hover{border-color:var(--line)}
+.nav button.on{border-color:var(--teal);color:var(--teal);font-weight:700}
+.nav button.gate.on,.nav button.gate{--c:var(--amber)}
+.nav button.gate{background:var(--amber-bg)}
+.nav button.gate.on{border-color:var(--amber);color:var(--amber)}
+.nav i{font:normal 10px var(--mono);color:var(--mute)}
+.nav .dot{font:10px var(--mono);border-radius:22px;padding:0 7px;background:var(--pill);color:var(--mute)}
+.nav .dot.ok{color:var(--ok)}.nav .dot.wait{background:var(--amber);color:#fff}
+.main{padding:28px 32px 72px;max-width:980px;width:100%}
+.view{display:none}.view.on{display:block}
+.head{margin-bottom:22px}
+.head h1{font-size:22px;margin:2px 0}
+.tagline{display:flex;gap:10px;font:11px var(--mono);color:var(--mute)}
+.tagline .k{color:var(--teal)}.tagline .h{color:var(--amber)}
+.flowline{font:11px var(--mono);color:var(--mute);margin-top:6px}
+.flowline b{font-weight:400;color:var(--ink)}
+.box{border:1.5px solid var(--line);border-radius:4px;padding:12px 16px;background:var(--bg)}
+.box.dashed{border-style:dashed}.box.teal{border:2px solid var(--teal)}.box.human{border:2px solid var(--amber);background:var(--amber-bg)}
+.tag{display:flex;justify-content:space-between;font:10.5px var(--mono);color:var(--mute);letter-spacing:.04em}
 .teal .tag span:last-child{color:var(--teal)}.human .tag span:last-child{color:var(--amber)}
-.nt{font-weight:700;font-size:13.5px;text-align:center;margin:2px 0 1px;line-height:1.25}
-.nd{font:10.5px var(--mono);color:var(--mute);text-align:center;line-height:1.35}
-.badge{position:absolute;top:-9px;right:-6px;background:var(--amber);color:#fff;font:700 10px var(--mono);border-radius:22px;padding:1px 7px}
-.badge.ok{background:var(--ok)}
-.pill{background:var(--pill);border-radius:22px;padding:8px 14px;text-align:center;font:11.5px var(--mono);margin-right:70px}
-.arrow{width:1.5px;height:20px;background:var(--arrow);margin:0 auto;position:relative;left:-35px}
-.arrow::after{content:"";position:absolute;bottom:-1px;left:-3.5px;border:4.5px solid transparent;border-top:7px solid var(--arrow);border-bottom:0}
-.arrow small{white-space:nowrap;position:absolute;left:10px;top:2px;font:10px var(--mono);color:var(--mute)}
-.arrow.go small{color:var(--amber)}
-.divider{border-top:1.5px dashed var(--teal);margin:6px 70px 8px 0;position:relative}
-.divider span{position:absolute;top:-8px;left:0;background:var(--bg);padding:0 6px 0 0;font:10px var(--mono);color:var(--teal)}
-.divider{margin-top:14px;margin-bottom:22px}
-.l-hub{stroke:var(--arrow);stroke-width:1.5;fill:none}
-.l-loop{stroke:var(--red);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
-.l-loop.hot{stroke-width:2.5}
-.lbl{font:10px var(--mono);fill:var(--red)}.lbl.g{fill:var(--mute)}
-.head-r{fill:var(--red)}.head-g{fill:var(--arrow)}
-
-/* ── detail panel ── */
-.panel{position:sticky;top:16px;border:1.5px solid var(--line);border-radius:4px;padding:16px 18px;min-height:300px;max-height:calc(100vh - 32px);overflow:auto}
-.panel.teal{border:2px solid var(--teal)}.panel.human{border:2px solid var(--amber);background:var(--amber-bg)}.panel.dashed{border-style:dashed}
-.panel h2{font-size:18px;margin:4px 0 2px}
-.kv{display:grid;grid-template-columns:78px 1fr;gap:6px 10px;margin:14px 0;font-size:13px}
-.kv b{font:10.5px var(--mono);color:var(--mute);text-transform:uppercase;letter-spacing:.05em;font-weight:400;padding-top:2px}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chips span,.chip{font:11px var(--mono);padding:2px 8px;border:1.5px solid var(--line);border-radius:4px;background:var(--bg)}
-.st{display:inline-block;font:11px var(--mono);border-radius:22px;padding:2px 10px;background:var(--pill)}
-.st.ok{color:var(--ok)}.st.wait{background:var(--amber);color:#fff}
-.note{font:11.5px var(--mono);color:var(--mute);border-top:1.5px dashed var(--line);padding-top:10px;margin-top:10px}
-.hint{color:var(--mute);font:12px var(--mono);text-align:center;padding:60px 10px}
-
-/* ── gate queue ── */
-button{font:12px var(--mono);border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:5px 11px;cursor:pointer}
-button:hover{border-color:var(--ink)}
+.t{font-weight:700;font-size:15px;margin:3px 0 0}
+.d{font:11.5px var(--mono);color:var(--mute)}
+.n{font:700 28px var(--sans);margin:4px 0 0}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:1fr 1fr}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}}
+.pill{background:var(--pill);border-radius:22px;padding:8px 16px;font:12px var(--mono);margin:14px 0}
+h2{font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:28px 0 10px;font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font:10.5px var(--mono);color:var(--mute);text-align:left;font-weight:400;text-transform:uppercase;letter-spacing:.05em;padding:6px 10px;border-bottom:1.5px solid var(--line)}
+td{padding:9px 10px;border-bottom:1.5px dashed var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.wrapt{border:1.5px solid var(--line);border-radius:4px;overflow-x:auto}
+.chip,.chips span{font:11px var(--mono);padding:2px 8px;border:1.5px solid var(--line);border-radius:4px;display:inline-block;margin:0 4px 4px 0}
+.risk{font:11px var(--mono);border-radius:22px;padding:1px 9px;background:var(--pill);white-space:nowrap}
+.risk.hi{background:var(--amber-bg);color:var(--amber)}
+.ok{color:var(--ok)}.bad{color:var(--red)}
+button.b{font:12px var(--mono);border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:5px 11px;cursor:pointer}
+button.b:hover{border-color:var(--ink)}
 button.ap{border-color:var(--amber);color:var(--amber);font-weight:700}
 button.ap:hover{background:var(--amber);color:#fff}
 button.rj{border-style:dashed;border-color:var(--red);color:var(--red)}
-.bar{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
 .bar .on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.case{border:1.5px solid var(--line);border-radius:4px;margin-bottom:8px;background:var(--bg)}
+.case{border:1.5px solid var(--line);border-radius:4px;margin-bottom:10px;background:var(--bg)}
 .case.done{border-color:var(--ok)}.case.rej{border:1.5px dashed var(--red)}.case.hold{opacity:.7}
-.ch{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 12px;cursor:pointer;width:100%;border:0;border-radius:0;background:none;text-align:left;font:13px var(--sans)}
-.ch .m{font:10.5px var(--mono);color:var(--mute)}
-.risk{font:11px var(--mono);border-radius:22px;padding:1px 9px;background:var(--pill);white-space:nowrap}
-.risk.hi{background:var(--amber-bg);color:var(--amber)}
-.cb{display:none;border-top:1.5px dashed var(--line);padding:10px 12px}
+.ch{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;cursor:pointer;width:100%;border:0;background:none;text-align:left;font:14px var(--sans);color:var(--ink)}
+.m{font:11px var(--mono);color:var(--mute)}
+.cb{display:none;border-top:1.5px dashed var(--line);padding:12px 14px}
 .case.open .cb{display:block}
-.draft{background:var(--pill);border-radius:4px;padding:10px 12px;white-space:pre-wrap;font-size:12.5px;margin:8px 0}
-textarea,input{width:100%;font:13px var(--sans);background:var(--bg);color:var(--ink);border:1.5px solid var(--teal);border-radius:4px;padding:8px;margin:8px 0}
-input{border-color:var(--red)}textarea{min-height:110px}
+.draft{background:var(--pill);border-radius:4px;padding:12px 14px;white-space:pre-wrap;font-size:13px;margin:10px 0}
+textarea,input{width:100%;font:13px var(--sans);background:var(--bg);color:var(--ink);border:1.5px solid var(--teal);border-radius:4px;padding:8px;margin:10px 0}
+input{border-color:var(--red)}textarea{min-height:120px}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
-.log{background:var(--pill);border-radius:6px;padding:10px 12px;font:11.5px var(--mono);white-space:pre-wrap;word-break:break-all}
+.log{background:var(--pill);border-radius:6px;padding:12px 14px;font:12px var(--mono);white-space:pre-wrap;word-break:break-all}
+.checks li{list-style:none;display:flex;justify-content:space-between;padding:8px 0;border-bottom:1.5px dashed var(--line);font-size:13px}
+.checks{padding:0;margin:0}
+@media(max-width:700px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;border-right:0;border-bottom:1.5px solid var(--line);padding:14px 12px}
+  .nav{flex-direction:row;overflow-x:auto}.nav button{white-space:nowrap;width:auto}
+  .grp{display:none}.main{padding:20px 16px 64px}.g2{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<div class="page">
-  <header>
-    <div><h1>Weekly Workflow</h1><div class="sub">week 2026-W40 · Mon 01:00 → Tue 09:00 · click any step</div></div>
-    <div class="sub" id="summary"></div>
-  </header>
-
-  <div class="layout">
-    <div class="flow" id="flow">
-      <svg id="wires"></svg>
-      <div class="ext"><button class="node dashed" data-id="HUB" id="n-HUB"><div class="tag"><span>EXTERNAL</span></div><div class="nt">HubSpot</div><div class="nd">owner · playbook</div></button></div>
-
-      <button class="node dashed" data-id="SRC" style="width:calc(100% - 70px)"><div class="tag"><span>SOURCE</span></div><div class="nt">Data warehouse</div><div class="nd">fct_ticket · fct_ticket_weekly_by_route · fct_feature_event</div></button>
-      <div class="arrow"></div>
-      <div class="stage"><div class="row">
-        <button class="node" data-id="ADM-1"><div class="tag"><span>ADM-1</span><span>SQL</span></div><div class="nt">Commercial extract</div><div class="nd">tickets · fares · routes</div></button>
-        <button class="node" data-id="ADM-2"><div class="tag"><span>ADM-2</span><span>SQL</span></div><div class="nt">Product extract</div><div class="nd">sessions · feature events</div></button>
-      </div><div class="time">Mon 01:00</div></div>
-      <div class="arrow"><small>+ manifest gate</small></div>
-      <div class="pill">dataset_{week}.parquet + run_manifest.json</div>
-      <div class="arrow"></div>
-      <div class="stage"><div class="row">
-        <button class="node" data-id="ANL-1"><div class="tag"><span>ANL-1</span><span>SQL</span></div><div class="nt">Volume</div><div class="nd">WoW drop</div></button>
-        <button class="node" data-id="ANL-2"><div class="tag"><span>ANL-2</span><span>SQL</span></div><div class="nt">Route peer</div><div class="nd">them vs market</div></button>
-        <button class="node" data-id="ANL-3"><div class="tag"><span>ANL-3</span><span>SQL</span></div><div class="nt">Fare index</div><div class="nd">vs peer median</div></button>
-        <button class="node" data-id="ANL-4"><div class="tag"><span>ANL-4</span><span>SQL</span></div><div class="nt">Adoption</div><div class="nd">WAO · features</div></button>
-      </div><div class="time">Mon 01:30</div></div>
-      <div class="arrow"></div>
-      <div class="pill">signals[] — one row per operator per detector that fired</div>
-      <div class="arrow"></div>
-      <div class="stage"><button class="node teal" data-id="SUP-1"><div class="tag"><span>SUP-1</span><span>CODE + LLM</span></div><div class="nt">Triage &amp; de-duplication</div><div class="nd">group by operator · risk score · pick play · apply suppressions</div></button><div class="time">Mon 02:00</div></div>
-      <div class="arrow"></div>
-      <div class="pill">cases[] — one per operator, ranked by risk_score</div>
-      <div class="arrow"><small>assigned</small></div>
-      <div class="stage"><button class="node teal" data-id="AST-1"><div class="tag"><span>AST-1</span><span>LLM</span></div><div class="nt">Narrative &amp; drafting</div><div class="nd">per-operator story + one email draft per case</div></button><div class="time">Mon 02:30</div></div>
-      <div class="arrow"></div>
-      <div class="pill">report.xlsx · report.pptx · drafts[] (each with draft_hash)</div>
-      <div class="arrow"></div>
-      <div class="stage"><button class="node teal" data-id="QAM-1"><div class="tag"><span>QAM-1</span><span>CODE + LLM</span></div><div class="nt">QA — recompute and block</div><div class="nd">12 checks · re-derives every figure from the parquet</div></button><div class="time">Mon 03:30</div></div>
-      <div class="arrow"><small>pass</small></div>
-      <div class="stage h"><button class="node human" data-id="GATE-1"><span class="badge" id="b-gate"></span><div class="tag"><span>GATE-1</span><span>HUMAN</span></div><div class="nt">Chris — approve, edit, reject or hold</div><div class="nd">per case, or bulk per play</div></button><div class="time">Mon 09:00</div></div>
-      <div class="arrow go"><small>approve</small></div>
-      <div class="pill">approval_token — signed over draft_hash, TTL 72h</div>
-      <div class="divider"><span>no model call below this line — sending is deterministic</span></div>
-      <div class="stage"><div class="row">
-        <button class="node" data-id="OUT-1"><span class="badge ok" id="b-OUT-1"></span><div class="tag"><span>OUT-1</span><span>CODE</span></div><div class="nt">Retention</div><div class="nd">operator-specific</div></button>
-        <button class="node" data-id="OUT-2"><span class="badge ok" id="b-OUT-2"></span><div class="tag"><span>OUT-2</span><span>CODE</span></div><div class="nt">Adoption</div><div class="nd">feature gap</div></button>
-        <button class="node" data-id="OUT-3"><span class="badge ok" id="b-OUT-3"></span><div class="tag"><span>OUT-3</span><span>CODE</span></div><div class="nt">Commercial</div><div class="nd">fare position</div></button>
-      </div><div class="time">Tue 09:00</div></div>
-      <div class="arrow"></div>
-      <div class="pill">send_log — case · token · hash · message_id · outcome</div>
-      <div class="arrow"></div>
-      <div class="row" style="margin-right:70px">
-        <button class="node dashed" data-id="D-MAIL"><div class="nt">Owner mailbox</div><div class="nd">threaded</div></button>
-        <button class="node dashed" data-id="D-TASK"><div class="nt">HubSpot task</div><div class="nd">on reply</div></button>
-        <button class="node dashed" data-id="D-SLACK"><div class="nt">Slack + Drive</div><div class="nd">report delivery</div></button>
-      </div>
-    </div>
-
-    <aside class="panel" id="panel"></aside>
-  </div>
+<div class="app">
+  <aside class="side">
+    <div class="brand">CS Tool</div><span class="brand-s">weekly run · 2026-W40</span>
+    <div id="nav"></div>
+  </aside>
+  <main class="main" id="main"></main>
 </div>
 
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
 const rid=()=>Math.random().toString(16).slice(2,10);
-
-/* ── data ── */
 const PLAY_OUT={Retention:"OUT-1",Adoption:"OUT-2",Commercial:"OUT-3"};
 const cases=[
- {id:"C-101",op:"Aero Nusantara",play:"Retention",risk:87,sig:["Volume −23% WoW","Route peer −11 pts"],draft:"Hi Rina,\n\nBookings on your top three routes dropped 23% week over week, while the market on the same routes moved −4%. Could we find 20 minutes this week to look at what changed?\n\nChris"},
- {id:"C-102",op:"Blue Kestrel Air",play:"Commercial",risk:74,sig:["Fare index 1.18 vs peer median"],draft:"Hi Tom,\n\nYour average fare on CNX–BKK sits 18% above the peer median this week. Here is the breakdown by fare class, and two options we could test.\n\nChris"},
- {id:"C-103",op:"Coral Jet",play:"Adoption",risk:61,sig:["WAO 12%","2 features unused"],draft:"Hi Mei,\n\nOnly 12% of your agents used ancillary bundling last week. Teams that switch it on see a lift in attach rate — happy to walk through setup.\n\nChris"},
- {id:"C-104",op:"Delta Meridian",play:"Retention",risk:55,sig:["Volume −14% WoW"],draft:"Hi Sam,\n\nA quick note on the 14% dip in volume this week. Anything on your side we should know about?\n\nChris"},
- {id:"C-105",op:"Ember Wings",play:"Adoption",risk:42,sig:["WAO 21%"],draft:"Hi Lia,\n\nA short guide to the two features your team hasn't tried yet is attached.\n\nChris"}
+ {id:"C-101",op:"Aero Nusantara",owner:"Rina P.",play:"Retention",risk:87,sig:["Volume −23% WoW","Route peer −11 pts"],draft:"Hi Rina,\n\nBookings on your top three routes dropped 23% week over week, while the market on the same routes moved −4%. Could we find 20 minutes this week to look at what changed?\n\nChris"},
+ {id:"C-102",op:"Blue Kestrel Air",owner:"Tom W.",play:"Commercial",risk:74,sig:["Fare index 1.18 vs peer median"],draft:"Hi Tom,\n\nYour average fare on CNX–BKK sits 18% above the peer median this week. Here is the breakdown by fare class, and two options we could test.\n\nChris"},
+ {id:"C-103",op:"Coral Jet",owner:"Mei L.",play:"Adoption",risk:61,sig:["WAO 12%","2 features unused"],draft:"Hi Mei,\n\nOnly 12% of your agents used ancillary bundling last week. Teams that switch it on see a lift in attach rate — happy to walk through setup.\n\nChris"},
+ {id:"C-104",op:"Delta Meridian",owner:"Sam K.",play:"Retention",risk:55,sig:["Volume −14% WoW"],draft:"Hi Sam,\n\nA quick note on the 14% dip in volume this week. Anything on your side we should know about?\n\nChris"},
+ {id:"C-105",op:"Ember Wings",owner:"Lia T.",play:"Adoption",risk:42,sig:["WAO 21%"],draft:"Hi Lia,\n\nA short guide to the two features your team hasn't tried yet is attached.\n\nChris"}
 ].map(c=>({...c,state:"pending",hash:rid()}));
 const sendLog=[];
-let sel="GATE-1", filter="All", hot=null;
+const DETECT={"Volume":"ANL-1","Route peer":"ANL-2","Fare index":"ANL-3","Adoption":"ANL-4"};
+const detOf=s=>s.startsWith("Volume")?"Volume":s.startsWith("Route")?"Route peer":s.startsWith("Fare")?"Fare index":"Adoption";
+const QA=["Every figure recomputed from parquet","Operator names match HubSpot","Week window is W40","Percentages sum correctly","Peer median uses same route set","No draft cites a suppressed account","draft_hash matches body","Owner email resolved","Report totals match drafts","No unresolved placeholders","Play matches signal type","Numbers in xlsx equal pptx"];
 
-const N={ // id:[title, style, kind, time, input, output, notes, chips]
- "SRC":["Data warehouse","dashed","SOURCE","—","—","3 fact tables","Read-only. Only the frozen query pack reads from here.",["fct_ticket","fct_ticket_weekly_by_route","fct_feature_event"]],
- "HUB":["HubSpot","dashed","EXTERNAL","live","—","account state → SUP-1 · suppression read → OUT-1","Owner and playbook live in HubSpot. Suppressions are read live at send time, so a change made after approval still blocks the send.",["owner","playbook","account state","suppressions"]],
- "ADM-1":["Commercial extract","","SQL","Mon 01:00","frozen query pack","tickets · fares · routes","Writes into dataset_{week}.parquet.",["tickets","fares","routes"]],
- "ADM-2":["Product extract","","SQL","Mon 01:00","frozen query pack","sessions · feature events","Manifest gate: row counts and hashes go into run_manifest.json.",["sessions","feature events"]],
- "ANL-1":["Volume","","SQL","Mon 01:30","dataset_{week}.parquet","signals[] rows","Fires on week-over-week drop.",["WoW drop"]],
- "ANL-2":["Route peer","","SQL","Mon 01:30","dataset_{week}.parquet","signals[] rows","Compares the operator against the market on the same routes.",["them vs market"]],
- "ANL-3":["Fare index","","SQL","Mon 01:30","dataset_{week}.parquet","signals[] rows","Fire when the fare sits away from the peer median.",["vs peer median"]],
- "ANL-4":["Adoption","","SQL","Mon 01:30","dataset_{week}.parquet","signals[] rows","Weekly active operators and feature usage.",["WAO","features"]],
- "SUP-1":["Triage & de-duplication","teal","CODE + LLM","Mon 02:00","signals[] + HubSpot account state","cases[] ranked by risk_score","Groups signals per operator, scores risk, picks the play and applies suppressions. Receives rejected cases back with a reason.",["group by operator","risk score","pick play","suppressions"]],
- "AST-1":["Narrative & drafting","teal","LLM","Mon 02:30","cases[]","report.xlsx · report.pptx · drafts[]","Writes one story per operator and one email draft per case. Each draft carries a draft_hash. Receives QA failures back with defects[] (max 2 rounds).",["story","email draft","draft_hash"]],
- "QAM-1":["QA — recompute and block","teal","CODE + LLM","Mon 03:30","report + drafts[]","pass / fail + defects[]","Re-derives every figure from the parquet. Any mismatch blocks the case and sends it back to AST-1.",["12 checks","recompute","block"]],
- "GATE-1":["Chris — approve, edit, reject or hold","human","HUMAN","Mon 09:00","QA-passed cases","approval_token per approved case","Approve signs the exact draft_hash. Edit produces a new hash. Reject returns the case to SUP-1 with a reason.",[]],
- "OUT-1":["Retention","","CODE","Tue 09:00","approval_token + draft","send_log row","Deterministic send. Checks the token, hash and live suppressions. No model call.",["operator-specific"]],
- "OUT-2":["Adoption","","CODE","Tue 09:00","approval_token + draft","send_log row","Deterministic send. Checks the token, hash and live suppressions. No model call.",["feature gap"]],
- "OUT-3":["Commercial","","CODE","Tue 09:00","approval_token + draft","send_log row","Deterministic send. Checks the token, hash and live suppressions. No model call.",["fare position"]],
- "D-MAIL":["Owner mailbox","dashed","DESTINATION","Tue 09:00","send_log","threaded email","",[]],
- "D-TASK":["HubSpot task","dashed","DESTINATION","on reply","send_log","task on the account","Created when the operator replies.",[]],
- "D-SLACK":["Slack + Drive","dashed","DESTINATION","Tue 09:00","report.xlsx · report.pptx","report delivery","",[]]
-};
-const DONE=["SRC","ADM-1","ADM-2","ANL-1","ANL-2","ANL-3","ANL-4","SUP-1","AST-1","QAM-1"];
-
-/* ── state helpers ── */
 const pend=()=>cases.filter(c=>c.state==="pending").length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
+const STEPS=[
+ {id:"data",   n:1,label:"Data",    code:"ADM",  grp:"Mon · automated"},
+ {id:"signals",n:2,label:"Signals", code:"ANL"},
+ {id:"cases",  n:3,label:"Cases",   code:"SUP-1"},
+ {id:"drafts", n:4,label:"Drafts",  code:"AST-1"},
+ {id:"qa",     n:5,label:"QA",      code:"QAM-1"},
+ {id:"approve",n:6,label:"Approve", code:"GATE-1",grp:"Mon 09:00 · you",gate:1},
+ {id:"send",   n:7,label:"Send",    code:"OUT",  grp:"Tue 09:00 · no model call",cut:1}
+];
+let view="approve", filter="All";
 
-function status(id){
-  if(id==="GATE-1")return pend()?["wait",`${pend()} awaiting you`]:["ok","all decided"];
-  if(id.startsWith("OUT-"))return queued(id)?["ok",`${queued(id)} queued for Tue`]:["","idle"];
-  if(DONE.includes(id))return ["ok","done"];
-  return ["","waiting on upstream"];
+function dot(s){
+  if(s.id==="approve")return pend()?`<span class="dot wait">${pend()}</span>`:`<span class="dot ok">✓</span>`;
+  if(s.id==="send"){const q=cases.filter(c=>c.state==="approved").length;return q?`<span class="dot ok">${q}</span>`:`<span class="dot">—</span>`}
+  return `<span class="dot ok">✓</span>`;
+}
+function nav(){
+  let h=`<div class="grp">${STEPS[0].grp}</div><nav class="nav">`;
+  STEPS.forEach(s=>{
+    if(s.grp&&s.n>1)h+=`</nav><div class="grp ${s.cut?"cut":""}">${s.grp}</div><nav class="nav">`;
+    h+=`<button class="${view===s.id?"on":""} ${s.gate?"gate":""}" data-v="${s.id}"><i>${s.n}</i><span>${s.label}</span>${dot(s)}</button>`;
+  });
+  $("#nav").innerHTML=h+"</nav>";
+}
+function head(s,title,kind,time,flow){
+  return `<div class="head"><div class="tagline"><span>${s.code}</span><span class="${s.gate?"h":"k"}">${kind}</span><span>${time}</span></div>
+  <h1>${title}</h1><div class="flowline">${flow}</div></div>`;
 }
 
-/* ── panel ── */
-function panel(){
-  const d=N[sel], p=$("#panel");
-  const [cls,txt]=status(sel);
-  p.className="panel "+d[1];
-  let h=`<div class="sub">${sel} · ${d[2]}</div><h2>${esc(d[0])}</h2>
-   <span class="st ${cls}">${txt}</span>
-   <div class="kv"><b>Time</b><span>${d[3]}</span><b>Input</b><span>${d[4]}</span><b>Output</b><span>${d[5]}</span>
-   ${d[7].length?`<b>Covers</b><div class="chips">${d[7].map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:""}</div>
-   ${d[6]?`<div class="note">${d[6]}</div>`:""}`;
-  if(sel==="GATE-1")h+=gateHtml();
-  if(sel.startsWith("OUT-"))h+=outHtml(sel);
-  if(sel==="SUP-1"&&cases.some(c=>c.state==="rejected"))h+=`<div class="note" style="color:var(--red)">Returned from GATE-1:<br>${cases.filter(c=>c.state==="rejected").map(c=>`${c.id} ${esc(c.op)} — “${esc(c.reason)}”`).join("<br>")}</div>`;
-  p.innerHTML=h;
-}
-function gateHtml(){
+/* ── views ── */
+const V={
+ data(){const s=STEPS[0];return head(s,"Data","SQL","Mon 01:00","warehouse → <b>extract</b> → dataset_{week}.parquet + run_manifest.json")+`
+  <div class="grid g2">
+   <div class="box"><div class="tag"><span>ADM-1</span><span>SQL</span></div><div class="t">Commercial extract</div><div class="d">tickets · fares · routes</div><div class="n">184,220</div><div class="d">rows · ok</div></div>
+   <div class="box"><div class="tag"><span>ADM-2</span><span>SQL</span></div><div class="t">Product extract</div><div class="d">sessions · feature events</div><div class="n">612,904</div><div class="d">rows · ok</div></div>
+  </div>
+  <div class="pill">dataset_2026-W40.parquet + run_manifest.json — manifest gate passed</div>
+  <h2>Source tables</h2>
+  <div class="box dashed"><div class="tag"><span>SOURCE</span></div><div class="t">Data warehouse</div><div class="chips" style="margin-top:8px"><span>fct_ticket</span><span>fct_ticket_weekly_by_route</span><span>fct_feature_event</span></div><div class="d">frozen query pack · read-only</div></div>`},
+
+ signals(){const s=STEPS[1];
+  const rows=cases.flatMap(c=>c.sig.map(x=>({op:c.op,det:detOf(x),txt:x})));
+  const cnt=d=>rows.filter(r=>r.det===d).length;
+  return head(s,"Signals","SQL","Mon 01:30","dataset → <b>4 detectors</b> → signals[]")+`
+  <div class="grid g4">${Object.entries(DETECT).map(([d,c])=>`<div class="box"><div class="tag"><span>${c}</span><span>SQL</span></div><div class="t">${d}</div><div class="n">${cnt(d)}</div><div class="d">fired</div></div>`).join("")}</div>
+  <h2>signals[] — one row per operator per detector that fired</h2>
+  <div class="wrapt"><table><tr><th>Operator</th><th>Detector</th><th>Signal</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.op)}</b></td><td class="mono">${DETECT[r.det]} · ${r.det}</td><td>${esc(r.txt)}</td></tr>`).join("")}</table></div>`},
+
+ cases(){const s=STEPS[2];return head(s,"Cases","CODE + LLM","Mon 02:00","signals[] → <b>group · score · pick play · suppress</b> → cases[]")+`
+  <div class="wrapt"><table><tr><th>#</th><th>Operator</th><th>Owner (HubSpot)</th><th>Play</th><th>Signals</th><th>Risk</th></tr>
+  ${[...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="m">${c.id}</div></td><td>${esc(c.owner)}</td><td class="mono">${c.play}</td><td>${c.sig.map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</td><td><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></td></tr>`).join("")}</table></div>
+  ${cases.some(c=>c.state==="rejected")?`<h2>Returned from Approve</h2><div class="box" style="border-style:dashed;border-color:var(--red)">${cases.filter(c=>c.state==="rejected").map(c=>`<div><b>${esc(c.op)}</b> <span class="m">${c.id}</span> — <span class="bad">“${esc(c.reason)}”</span></div>`).join("")}<div class="d" style="margin-top:6px">reject + reason → SUP-1</div></div>`:""}
+  <div class="pill">no account is suppressed this week — live suppression read happens again at send</div>`},
+
+ drafts(){const s=STEPS[3];return head(s,"Drafts","LLM","Mon 02:30","cases[] → <b>narrative + one email per case</b> → report + drafts[]")+`
+  <div class="grid g2"><div class="box"><div class="tag"><span>FILE</span></div><div class="t">report.xlsx</div><div class="d">per-operator figures</div></div>
+  <div class="box"><div class="tag"><span>FILE</span></div><div class="t">report.pptx</div><div class="d">per-operator story</div></div></div>
+  <h2>drafts[] — each with draft_hash</h2>
+  <div class="wrapt"><table><tr><th>Case</th><th>Operator</th><th>Preview</th><th>draft_hash</th></tr>
+  ${cases.map(c=>`<tr><td class="mono">${c.id}</td><td><b>${esc(c.op)}</b></td><td>${esc(c.draft.split("\n\n")[1].slice(0,90))}…</td><td class="mono">${c.hash}</td></tr>`).join("")}</table></div>`},
+
+ qa(){const s=STEPS[4];return head(s,"QA","CODE + LLM","Mon 03:30","report + drafts[] → <b>recompute and block</b> → pass / fail + defects[]")+`
+  <div class="box teal"><div class="tag"><span>QAM-1</span><span>RESULT</span></div><div class="n ok">12 / 12 pass</div><div class="d">re-derives every figure from the parquet · 0 defects · fail sends the case back to AST-1 (max 2 rounds)</div></div>
+  <h2>12 checks</h2><ul class="checks">${QA.map((q,i)=>`<li><span><span class="mono m">${String(i+1).padStart(2,"0")}</span> &nbsp;${q}</span><span class="ok mono">pass</span></li>`).join("")}</ul>`},
+
+ approve(){const s=STEPS[5];
   const plays=["All",...new Set(cases.map(c=>c.play))];
-  const vis=cases.filter(c=>filter==="All"||c.play===filter);
-  const n=vis.filter(c=>c.state==="pending").length;
-  return `<div class="bar">${plays.map(p=>`<button class="${p===filter?"on":""}" data-f="${p}">${p}</button>`).join("")}</div>
-   ${filter!=="All"&&n?`<div class="bar"><button class="ap" data-bulk="1">Approve all ${filter} (${n})</button></div>`:""}
-   ${vis.map(c=>`<div class="case ${c.open?"open":""} ${{approved:"done",rejected:"rej",hold:"hold"}[c.state]||""}">
-    <button class="ch" data-open="${c.id}"><span><b>${esc(c.op)}</b> <span class="m">${c.id} · ${c.play}</span></span>
-     <span><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="m">${c.state}${c.reason?" · "+esc(c.reason):""}</span></span></button>
-    <div class="cb"><div class="chips">${c.sig.map(s=>`<span>${esc(s)}</span>`).join("")}</div>
-     ${c.editing?`<textarea id="ta-${c.id}">${esc(c.draft)}</textarea>`:`<div class="draft">${esc(c.draft)}</div>`}
-     <div class="m sub">draft_hash ${c.hash} · QA 12/12 pass</div>
-     <div class="acts" style="margin-top:8px">
-      ${c.rejecting?`<input id="rj-${c.id}" placeholder="Reason (goes back to SUP-1)"><button class="rj" data-a="rejgo" data-c="${c.id}">Confirm reject</button><button data-a="rejno" data-c="${c.id}">Cancel</button>`
-       :c.editing?`<button class="ap" data-a="save" data-c="${c.id}">Save &amp; approve</button><button data-a="cancel" data-c="${c.id}">Cancel</button>`
-       :`<button class="ap" data-a="approve" data-c="${c.id}">Approve</button><button data-a="edit" data-c="${c.id}">Edit</button><button data-a="hold" data-c="${c.id}">Hold</button><button class="rj" data-a="reject" data-c="${c.id}">Reject</button>`}
-     </div></div></div>`).join("")}`;
-}
-function outHtml(o){
-  const rows=sendLog.filter(r=>r.out===o);
-  return `<div class="note" style="border-top:0;margin-top:14px">send_log</div>
-   <div class="log">${rows.length?rows.map(r=>`${r.case} · tok_${r.tok} · ${r.hash} · queued Tue 09:00`).join("\n"):"— nothing queued —"}</div>`;
-}
+  const vis=cases.filter(c=>filter==="All"||c.play===filter), n=vis.filter(c=>c.state==="pending").length;
+  return head(s,"Approve","HUMAN","Mon 09:00","QA-passed cases → <b>approve · edit · reject · hold</b> → approval_token")+`
+  <div class="bar">${plays.map(p=>`<button class="b ${p===filter?"on":""}" data-f="${p}">${p}</button>`).join("")}
+   ${filter!=="All"&&n?`<button class="b ap" data-bulk="1">Approve all ${filter} (${n})</button>`:""}</div>
+  ${vis.map(c=>`<div class="case ${c.open?"open":""} ${{approved:"done",rejected:"rej",hold:"hold"}[c.state]||""}">
+   <button class="ch" data-open="${c.id}"><span><b>${esc(c.op)}</b> <span class="m">${c.id} · ${c.play} · ${esc(c.owner)}</span></span>
+    <span><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="m">${c.state}${c.reason?" · "+esc(c.reason):""}</span></span></button>
+   <div class="cb"><div class="chips">${c.sig.map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+    ${c.editing?`<textarea id="ta-${c.id}">${esc(c.draft)}</textarea>`:`<div class="draft">${esc(c.draft)}</div>`}
+    <div class="m">draft_hash ${c.hash} · QA 12/12 pass</div>
+    <div class="acts" style="margin-top:10px">
+    ${c.rejecting?`<input id="rj-${c.id}" placeholder="Reason (goes back to SUP-1)"><button class="b rj" data-a="rejgo" data-c="${c.id}">Confirm reject</button><button class="b" data-a="rejno" data-c="${c.id}">Cancel</button>`
+     :c.editing?`<button class="b ap" data-a="save" data-c="${c.id}">Save &amp; approve</button><button class="b" data-a="cancel" data-c="${c.id}">Cancel</button>`
+     :`<button class="b ap" data-a="approve" data-c="${c.id}">Approve</button><button class="b" data-a="edit" data-c="${c.id}">Edit</button><button class="b" data-a="hold" data-c="${c.id}">Hold</button><button class="b rj" data-a="reject" data-c="${c.id}">Reject</button>`}
+    </div></div></div>`).join("")}`},
 
-/* ── actions ── */
+ send(){const s=STEPS[6];return head(s,"Send","CODE","Tue 09:00","approval_token → <b>deterministic send</b> → send_log")+`
+  <div class="pill">approval_token — signed over draft_hash, TTL 72h · no model call on this page</div>
+  <div class="grid g4" style="grid-template-columns:repeat(3,1fr)">${[["OUT-1","Retention","operator-specific"],["OUT-2","Adoption","feature gap"],["OUT-3","Commercial","fare position"]].map(([o,t,d])=>`<div class="box"><div class="tag"><span>${o}</span><span>CODE</span></div><div class="t">${t}</div><div class="d">${d}</div><div class="n">${queued(o)}</div><div class="d">queued</div></div>`).join("")}</div>
+  <h2>send_log — case · token · hash · message_id · outcome</h2>
+  <div class="log">${sendLog.length?sendLog.map(r=>`${r.case} · tok_${r.tok} · ${r.hash} · — · queued Tue 09:00 (${r.out})`).join("\n"):"— nothing approved yet —"}</div>
+  <h2>Delivery</h2>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)"><div class="box dashed"><div class="t">Owner mailbox</div><div class="d">threaded</div></div><div class="box dashed"><div class="t">HubSpot task</div><div class="d">on reply</div></div><div class="box dashed"><div class="t">Slack + Drive</div><div class="d">report delivery</div></div></div>`}
+};
+
+function render(){nav();$("#main").innerHTML=`<div class="view on">${V[view]()}</div>`}
 function decide(c,state,extra){
   Object.assign(c,extra||{},{state});
-  if(state==="approved"){sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash})}
-  if(state==="rejected"){hot="reject";setTimeout(()=>{hot=null;wires()},2500)}
-  refresh();
+  if(state==="approved")sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});
+  render();
 }
 document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;
-  if(t.dataset.id){sel=t.dataset.id;return refresh()}
-  if(t.dataset.f){filter=t.dataset.f;return panel()}
+  if(t.dataset.v){view=t.dataset.v;scrollTo(0,0);return render()}
+  if(t.dataset.f){filter=t.dataset.f;return render()}
   if(t.dataset.bulk){cases.filter(c=>c.play===filter&&c.state==="pending").forEach(c=>decide(c,"approved"));return}
-  if(t.dataset.open){const c=cases.find(x=>x.id===t.dataset.open);c.open=!c.open;return panel()}
+  if(t.dataset.open){const c=cases.find(x=>x.id===t.dataset.open);c.open=!c.open;return render()}
   const c=cases.find(x=>x.id===t.dataset.c);if(!c)return;
   switch(t.dataset.a){
    case"approve":return decide(c,"approved");
    case"hold":return decide(c,"hold");
-   case"reject":c.rejecting=true;return panel();
-   case"rejno":c.rejecting=false;return panel();
+   case"reject":c.rejecting=true;return render();
+   case"rejno":c.rejecting=false;return render();
    case"rejgo":c.rejecting=false;return decide(c,"rejected",{reason:$("#rj-"+c.id).value||"no reason"});
-   case"edit":c.editing=true;return panel();
-   case"cancel":c.editing=false;return panel();
+   case"edit":c.editing=true;return render();
+   case"cancel":c.editing=false;return render();
    case"save":c.draft=$("#ta-"+c.id).value;c.hash=rid();c.editing=false;return decide(c,"approved");
   }
 });
-
-/* ── diagram wires ── */
-function wires(){
-  const f=$("#flow"), svg=$("#wires"), fr=f.getBoundingClientRect();
-  const R=id=>{const el=document.querySelector(`[data-id="${id}"]`).getBoundingClientRect();return{l:el.left-fr.left,r:el.right-fr.left,t:el.top-fr.top,b:el.bottom-fr.top,m:(el.top+el.bottom)/2-fr.top}};
-  const hub=R("HUB"),sup=R("SUP-1"),ast=R("AST-1"),qam=R("QAM-1"),gate=R("GATE-1"),out=R("OUT-1");
-  const X={hub:14,rej:56,fail:96};
-  const head=(x,y,c)=>`<path class="head-${c}" d="M${x},${y} l-7,-4.5 l0,9 z"/>`;
-  let s="";
-  // hubspot → SUP-1 and OUT-1
-  s+=`<path class="l-hub" d="M${X.hub},${hub.b} V${out.m} H${out.l-7}"/>${head(out.l,out.m,"g")}`;
-  s+=`<path class="l-hub" d="M${X.hub},${sup.m+10} H${sup.l-7}"/>${head(sup.l,sup.m+10,"g")}`;
-  s+=`<text class="lbl g" transform="translate(${X.hub-5},${(hub.b+sup.m)/2+40}) rotate(-90)" text-anchor="middle">account state</text>`;
-  s+=`<text class="lbl g" transform="translate(${X.hub-5},${(gate.b+out.m)/2+30}) rotate(-90)" text-anchor="middle">live suppression read</text>`;
-  // reject: GATE-1 → SUP-1
-  const rj=hot==="reject"?" hot":"";
-  s+=`<path class="l-loop${rj}" d="M${gate.l},${gate.m} H${X.rej} V${sup.m-10} H${sup.l-7}"/>${head(sup.l,sup.m-10,"r")}`;
-  s+=`<text class="lbl" transform="translate(${X.rej-5},${(sup.b+gate.m)/2}) rotate(-90)" text-anchor="middle">reject + reason</text>`;
-  // fail: QAM-1 → AST-1
-  s+=`<path class="l-loop" d="M${qam.l},${qam.m} H${X.fail} V${ast.m} H${ast.l-7}"/>${head(ast.l,ast.m,"r")}`;
-  s+=`<text class="lbl" transform="translate(${X.fail-5},${(ast.m+qam.m)/2}) rotate(-90)" text-anchor="middle">fail · defects[] ≤2</text>`;
-  svg.innerHTML=s;
-}
-
-/* ── refresh ── */
-function refresh(){
-  document.querySelectorAll(".node").forEach(n=>n.classList.toggle("sel",n.dataset.id===sel));
-  $("#b-gate").textContent=pend()||"";$("#b-gate").style.display=pend()?"":"none";
-  ["OUT-1","OUT-2","OUT-3"].forEach(o=>{const b=$("#b-"+o);b.textContent=queued(o)||"";b.style.display=queued(o)?"":"none"});
-  const a=cases.filter(c=>c.state==="approved").length;
-  $("#summary").textContent=`${cases.length} cases · ${pend()} pending · ${a} approved`;
-  panel();wires();
-}
-addEventListener("resize",wires);
-refresh();
+render();
 </script>
 </body>
 </html>
