@@ -167,6 +167,16 @@ body.nosb .topbar{padding-left:24px}
 .sync{display:inline-block;margin-left:8px;font:600 11.5px var(--sans);border-radius:999px;padding:1px 9px;background:var(--pill);color:var(--mute);vertical-align:1px}
 .sync.ok{background:var(--okbg);color:var(--ok)}.sync.bad{background:var(--pink);color:var(--red)}.sync.wait{background:var(--amber-bg);color:var(--amber)}
 .sync-retry{border:0;background:none;color:var(--red);font:700 11.5px var(--sans);text-decoration:underline;cursor:pointer;padding:0 0 0 6px}
+.split{align-items:start}
+.q{position:sticky;top:76px;max-height:calc(100vh - 96px);overflow-y:auto}
+.detail{position:sticky;top:76px;max-height:calc(100vh - 96px);overflow-y:auto;border-radius:22px}
+.detail>.card{min-height:0}
+.actbar{position:sticky;bottom:0;margin:16px -24px -22px;padding:14px 24px;background:inherit;border-radius:0 0 22px 22px;z-index:2;box-shadow:0 -10px 14px -10px rgba(80,60,30,.12)}
+@media(max-width:1000px){
+  .q{position:static;max-height:280px}
+  .detail{position:static;max-height:none;overflow:visible;order:-1}
+  .actbar{position:sticky;bottom:0}
+}
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){
@@ -508,14 +518,14 @@ function Approvals(){
     ${c.rejecting||c.editing?"":`<div class="row" style="margin-top:12px">${c.gen?`<span class="gen">${LIVE?"Rewriting…":"✦ Writing the new version…"}</span>`:`<span class="tg llm">${LIVE?"Template draft · v"+c.ver:"✦ Drafted by LLM · v"+c.ver}</span>`}
       <button class="b" data-a="regen" ${c.gen?"disabled":""}>Regenerate</button><button class="b ${c.mods.short?"on":""}" data-a="shorter" ${c.gen?"disabled":""}>Shorter</button><button class="b ${c.mods.warm?"on":""}" data-a="warmer" ${c.gen?"disabled":""}>Warmer</button><button class="b ${c.mods.direct?"on":""}" data-a="direct" ${c.gen?"disabled":""}>More direct</button></div>`}
     ${c.reason?`<div class="void">Returned to triage — “${esc(c.reason)}”</div>`:""}
-    <div class="row" style="margin-top:16px">${c.rejecting?`<input class="inp" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
+    <div class="row actbar" style="margin-top:16px">${c.rejecting?`<input class="inp" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
       :c.editing?`<button class="b pri" data-a="save">Save &amp; approve</button><button class="b" data-a="cancel">Cancel</button>`
       :`<button class="b pri" data-a="approve">Approve to send</button><button class="b" data-a="edit">Edit</button><button class="b" data-a="hold">Hold</button><button class="b rj" data-a="reject">Reject</button>`}</div></div>`;
   return `<div class="ph"><div><h1>Approvals</h1><div class="sub">GATE-1 · review the draft, then approve to send Tue 09:00 · ${(()=>{const n=cases.filter(c=>!c.noSend&&!c.drafted).length;return n?n+" account"+(n===1?"":"s")+" have no draft yet (generate from Accounts) · ":""})()} ${LIVE?"QA has not run on live data":"QA passed 12/12"}</div></div></div>
   <div class="grid g4" style="margin-bottom:18px">${strip.map(([l,n,s])=>`<div class="card ${s==="pending"?"human":""}"><div class="lab">${l}</div><div class="big">${n}</div></div>`).join("")}</div>
   <div class="tools"><button class="b ${apr.pb==="All"?"on":""}" data-pf="All">All</button>${pbs.map(p=>`<button class="b ${apr.pb===p?"on":""}" data-pf="${esc(p)}">${esc(p)} <span class="d">${rev.filter(x=>playbookOf(x)[0]===p).length}</span></button>`).join("")}
     ${apr.pb!=="All"&&bulkN?`<button class="b pri" data-bulk="1">Approve all ${esc(apr.pb)} (${bulkN})</button>`:""}</div>
-  <div class="split"><div class="q">${vis.map(x=>`<button class="qi ${x.id===cur?"on":""}" data-cur="${x.id}"><div class="l1"><b>${esc(x.op)}</b></div><div class="l2"><span>${esc(ownerName(x.owner))} · ${x.segment} · ${hOf(x)} · ${x.lang.toUpperCase()}</span><span class="tg st ${x.state}" style="padding:1px 9px">${x.state}</span></div></button>`).join("")||`<div class="d" style="padding:20px">No cases.</div>`}</div>${detail}</div>`;
+  <div class="split"><div class="q" id="queue">${vis.map(x=>`<button class="qi ${x.id===cur?"on":""}" data-cur="${x.id}"><div class="l1"><b>${esc(x.op)}</b></div><div class="l2"><span>${esc(ownerName(x.owner))} · ${x.segment} · ${hOf(x)} · ${x.lang.toUpperCase()}</span><span class="tg st ${x.state}" style="padding:1px 9px">${x.state}</span></div></button>`).join("")||`<div class="d" style="padding:20px">No cases.</div>`}</div><div class="detail" id="detail">${detail}</div></div>`;
 }
 
 /* ── Sent ── */
@@ -528,18 +538,33 @@ function Sent(){
 }
 
 /* ── shell ── */
+let _lastCur=null;
+function fitPanels(){
+  const sp=$(".split");if(!sp)return;
+  const wide=innerWidth>1000,top=Math.max(76,sp.getBoundingClientRect().top),h=Math.max(320,innerHeight-top-16);
+  document.querySelectorAll(".q,.detail").forEach(e=>{e.style.maxHeight=wide?h+"px":""});
+}
 function render(){
   applyOwner();nav();
-  const y=scrollY;
+  const y=scrollY,q0=$("#queue"),qt=q0?q0.scrollTop:null,d0=$("#detail"),dt=d0?d0.scrollTop:0,same=_lastCur===cur;
   $("#main").innerHTML=({home:Home,accounts:Accounts,record:Record,approvals:Approvals,sent:Sent}[view])();
-  if(render.keep){scrollTo(0,y)}
+  scrollTo(0,y);
+  if(view==="approvals"){
+    fitPanels();
+    const q=$("#queue");
+    if(q){if(qt!=null)q.scrollTop=qt;const on=q.querySelector(".qi.on");if(on){const r=on.getBoundingClientRect(),qr=q.getBoundingClientRect();if(r.top<qr.top||r.bottom>qr.bottom)on.scrollIntoView({block:"nearest"})}}
+    const d=$("#detail");if(d&&same)d.scrollTop=dt;
+    _lastCur=cur;
+  }
 }
+addEventListener("scroll",()=>{if(view==="approvals")fitPanels()},{passive:true});
+addEventListener("resize",()=>{if(view==="approvals")fitPanels()});
 function decide(c,state,extra,msg){
   Object.assign(c,extra||{},{state});
   if(state==="approved"){c.note="";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris · queued for Tue 09:00 (${LANGS[c.lang]})`)}
   if(state==="rejected")ev(c,"bad",`Returned to triage: “${c.reason}”`);
   if(state==="hold")ev(c,"note","Put on hold by Chris");
-  const nx=rev.find(x=>x.state==="pending");if(nx)cur=nx.id;
+  const lst=rev.filter(x=>apr.pb==="All"||playbookOf(x)[0]===apr.pb),ci=lst.findIndex(x=>x.id===c.id),nx=lst.slice(ci+1).find(x=>x.state==="pending")||lst.find(x=>x.state==="pending")||rev.find(x=>x.state==="pending");if(nx)cur=nx.id;
   toast(msg||({approved:"Approved · queued for Tue 09:00",rejected:"Returned to triage",hold:"Put on hold"}[state]));
   render();
 }
@@ -599,7 +624,7 @@ document.addEventListener("click",e=>{
   if(D.resync!==undefined){const c=byId(recId),e=c.events[+D.resync];if(e&&e.raw)sendNoteToHubSpot(c,e).then(ok=>{toast(ok?"Sent to HubSpot":"Still could not send");render()});return}
   if(D.pf){apr.pb=D.pf;return render()}
   if(D.bulk){rev.filter(c=>playbookOf(c)[0]===apr.pb&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris (bulk · ${apr.pb})`)});toast(`Approved all ${apr.pb}`);return render()}
-  if(D.cur){cur=D.cur;return render()}
+  if(D.cur){cur=D.cur;render();if(innerWidth<=1000){const d=$("#detail");if(d)d.scrollIntoView({block:"start"})}return}
   if(D.lang){const c=byId(D.c||cur);if(c&&D.lang!==c.lang)llmApply(c,c=>{c.lang=D.lang},`AI rewrote the draft in ${LANGS[D.lang]}`);return}
   const c=byId(cur);if(!c||!D.a)return;
   switch(D.a){
