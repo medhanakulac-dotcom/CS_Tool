@@ -96,10 +96,10 @@ textarea{width:100%;min-height:120px;font:13px var(--sans);background:var(--bg);
 <aside class="side">
   <div class="brand">CS Tool</div><span class="brand-s">weekly customer success</span>
   <nav class="nav">
-    <a href="#dashboard">Dashboard <small>01</small></a>
-    <a href="#queue">Approval queue <span class="badge" id="nav-badge"></span></a>
-    <a href="#pipeline">Pipeline <small>03</small></a>
-    <a href="#log">Send log <small>04</small></a>
+    <a href="javascript:void(0)" data-v="dashboard">Dashboard <small>01</small></a>
+    <a href="javascript:void(0)" data-v="queue">Approval queue <span class="badge" id="nav-badge"></span></a>
+    <a href="javascript:void(0)" data-v="pipeline">Pipeline <small>03</small></a>
+    <a href="javascript:void(0)" data-v="log">Send log <small>04</small></a>
   </nav>
 </aside>
 <div class="wrap">
@@ -212,13 +212,13 @@ function render(){
    <div class="case ${c.open?"open":""} ${c.state==="approved"?"done":c.state==="rejected"?"rej":c.state==="hold"?"hold":""}" data-id="${c.id}">
     <div class="case-h"><span class="rank">#${cases.indexOf(c)+1}</span>
      <div><b>${c.op}</b> <span class="mono" style="color:var(--mute);font-size:11px">${c.id} · ${c.play}</span></div>
-     <div><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="state">${c.state}</span></div></div>
+     <div><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="state">${c.state}${c.reason?" · "+esc(c.reason):""}</span></div></div>
     <div class="case-b">
      <div class="sig">${c.sig.map(s=>`<span>${s}</span>`).join("")}</div>
      ${c.editing?`<textarea>${esc(c.draft)}</textarea>`:`<div class="draft">${esc(c.draft)}</div>`}
      <div class="meta">draft_hash ${c.hash} · QA 12/12 pass</div>
      <div class="acts">
-      ${c.editing?`<button class="ap" data-a="save">Save &amp; approve</button><button data-a="cancel">Cancel</button>`:
+      ${c.rejecting?`<input placeholder="Reject reason (sent back to SUP-1)" style="flex:1;min-width:200px;font:13px var(--sans);padding:6px 10px;border:1.5px solid var(--red);border-radius:4px;background:var(--bg);color:var(--ink)"><button class="rj" data-a="rejgo">Confirm reject</button><button data-a="rejno">Cancel</button>`:c.editing?`<button class="ap" data-a="save">Save &amp; approve</button><button data-a="cancel">Cancel</button>`:
       `<button class="ap" data-a="approve">Approve</button><button data-a="edit">Edit</button><button data-a="hold">Hold</button><button class="rj" data-a="reject">Reject</button>`}
      </div></div></div>`).join("");
   const p=cases.filter(c=>c.state==="pending").length;
@@ -229,6 +229,7 @@ function render(){
   $("#top").innerHTML=cases.filter(c=>c.state==="pending").sort((a,b)=>b.risk-a.risk).slice(0,4).map(c=>`<div class="it"><span><b>${c.op}</b> <span class="mono" style="color:var(--mute);font-size:11px">${c.play}</span></span><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span></div>`).join("")||'<div class="it">All cases decided</div>';
 }
 document.addEventListener("click",e=>{
+  const n=e.target.closest("[data-v]");if(n){e.preventDefault();return go(n.dataset.v)}
   const f=e.target.closest("[data-f]");if(f){filter=f.dataset.f;return render()}
   const b=e.target.closest("[data-bulk]");
   if(b){cases.filter(c=>c.play===b.dataset.bulk&&c.state==="pending").forEach(c=>{c.state="approved";log(c)});return render()}
@@ -237,16 +238,19 @@ document.addEventListener("click",e=>{
   if(!a){if(e.target.closest(".case-h")){c.open=!c.open;render()}return}
   const act=a.dataset.a;
   if(act==="approve")set(c,"approved");
-  else if(act==="reject"){const r=prompt("Reject reason (sent back to SUP-1):");if(r)set(c,"rejected")}
+  else if(act==="reject"){c.rejecting=true;render()}
+  else if(act==="rejgo"){c.reason=el.querySelector("input").value||"no reason";c.rejecting=false;set(c,"rejected")}
+  else if(act==="rejno"){c.rejecting=false;render()}
   else if(act==="hold")set(c,"hold");
   else if(act==="edit"){c.editing=true;render()}
   else if(act==="cancel"){c.editing=false;render()}
   else if(act==="save"){c.draft=el.querySelector("textarea").value;c.hash=Math.random().toString(16).slice(2,10);c.editing=false;set(c,"approved")}
 });
-function route(){const v=(location.hash||"#dashboard").slice(1);
+let view="dashboard";
+function go(v){view=v;route()}
+function route(){const v=view;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
-  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.hash==="#"+v));}
-addEventListener("hashchange",route);
+  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.dataset.v===v));}
 render();route();
 </script>
 </body>
