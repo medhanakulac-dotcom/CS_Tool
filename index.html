@@ -164,6 +164,9 @@ body.nosb .topbar{padding-left:24px}
 .chat .m.a{background:var(--bg)}
 .chat .m.w{color:var(--mute);font-style:italic}
 .chat .hint{font-size:13px;color:var(--mute)}
+.sync{display:inline-block;margin-left:8px;font:600 11.5px var(--sans);border-radius:999px;padding:1px 9px;background:var(--pill);color:var(--mute);vertical-align:1px}
+.sync.ok{background:var(--okbg);color:var(--ok)}.sync.bad{background:var(--pink);color:var(--red)}.sync.wait{background:var(--amber-bg);color:var(--amber)}
+.sync-retry{border:0;background:none;color:var(--red);font:700 11.5px var(--sans);text-decoration:underline;cursor:pointer;padding:0 0 0 6px}
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){
@@ -450,7 +453,7 @@ function Record(){
     <h2 class="st" style="margin-top:18px"><span>Signals this week</span></h2>${c.sig.map(([d,t])=>`<div class="task"><div class="grow"><b>${esc(t)}</b><span class="d">${DET[d]} · ${d}</span></div></div>`).join("")}
     <h2 class="st" style="margin-top:18px"><span>Playbook</span></h2><div class="box2"><b>${pb[0]}</b><br><span class="d">${pb[1]}</span></div></div>`;
   if(rtab==="activity")center=`<div class="card"><div class="notein"><input id="notein" placeholder="Log a note about ${esc(c.op)}…"><button class="b pri" data-note="1">Add note</button></div>
-    <div class="tl">${[...c.events].reverse().map(e=>`<div class="ev ${e.k}"><div class="t">${e.t}</div>${esc(e.txt)}</div>`).join("")}</div></div>`;
+    <div class="tl">${[...c.events].map((e,i)=>({e,i})).reverse().map(({e,i})=>`<div class="ev ${e.k}"><div class="t">${e.t}</div>${esc(e.txt)}${syncTag(c,e,i)}</div>`).join("")}</div></div>`;
   if(rtab==="email")center=!c.noSend&&!c.drafted?`<div class="card"><div class="d" style="margin-bottom:12px">No draft has been written for this account yet.</div><button class="b pri" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button></div>`:c.noSend?`<div class="card"><div class="d">${c.dormant?"Reactive only — no outreach email for this account.":"Healthy — no email is sent for this account."}</div></div>`:`<div class="card"><h2 class="st"><span>Email draft</span><span class="tg llm">${LIVE?"Template draft · v"+c.ver:"✦ Drafted by LLM · v"+c.ver}</span></h2>${langBar(c)}
     <div class="mail">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${toLine(c)}<br>Subject: ${esc(subjOf(c))}</div><div class="draft">${esc(draftText(c))}</div>
     ${c.note?`<div class="void">${c.note}</div>`:""}<div class="row"><button class="b pri" data-review="${c.id}">Review &amp; approve →</button><span class="d">draft_hash ${c.hash} · ${LIVE?"QA not run":"QA 12/12 pass"}</span></div></div>`;
@@ -556,10 +559,28 @@ try{if(localStorage.getItem("cs.sb")==="1")setSb(true)}catch(e){}
 addEventListener("keydown",e=>{if(e.target&&e.target.id==="chatin"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();return}
   if((e.key==="\\"||e.key==="[")&&!/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||"")))setSb(!document.body.classList.contains("nosb"))});
 function genDraft(id){const c=byId(id);if(!c||c.drafted||c.generating||c.noSend)return;c.generating=true;render();setTimeout(()=>{c.generating=false;c.drafted=true;c.events.push({t:"Just now",k:"ai",txt:"Draft generated (Generate clicked)"});toast("Draft generated · "+c.op);render()},700)}
+/* ── Log note → HubSpot ──
+   To push notes to HubSpot automatically, define before this script runs:
+     window.CS_HUBSPOT_NOTE = async ({dealId, note, account}) => { ...call your server... };
+   The server creates a HubSpot note (with a hs_timestamp) associated with the deal `dealId`, using a token kept on the server.
+   Notes are attached to the account's main deal. Only notes logged here are sent; nothing else is written to HubSpot. */
+function syncTag(c,e,i){
+  if(e.k!=="note"||!e.sync)return "";
+  if(e.sync==="synced")return `<span class="sync ok">● synced to HubSpot</span>`;
+  if(e.sync==="pending")return `<span class="sync wait">sending to HubSpot…</span>`;
+  if(e.sync==="failed")return `<span class="sync bad">not sent</span><button class="sync-retry" data-resync="${i}">retry</button>`;
+  return `<span class="sync" title="${c.hs?"HubSpot is not connected to this page":"This account has no HubSpot deal"}">not sent to HubSpot</span>`;
+}
+async function sendNoteToHubSpot(c,e){
+  if(!c.hs||!window.CS_HUBSPOT_NOTE){e.sync="local";return false}
+  e.sync="pending";render();
+  try{await window.CS_HUBSPOT_NOTE({dealId:c.hsid,note:e.raw,account:{id:c.id,name:c.op}});e.sync="synced";return true}
+  catch(err){e.sync="failed";e.err=err&&err.message?err.message:String(err);return false}
+}
 function openRecord(id,tab){view="record";recId=id;rtab=tab||"overview";$("#gres").style.display="none";$("#gsearch").value="";scrollTo(0,0);render()}
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-gen],[data-send],[data-sb],[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
+  const t=e.target.closest("[data-resync],[data-gen],[data-send],[data-sb],[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
   if(!t){if(!e.target.closest(".search"))$("#gres").style.display="none";return}
   const D=t.dataset;
   if(D.gen)return genDraft(D.gen);
@@ -574,7 +595,8 @@ document.addEventListener("click",e=>{
   if(D.layout){acc.layout=D.layout;return render()}
   if(D.clear){acc={...acc,view:"all",q:"",seg:"All",health:"All",pb:"All",lang:"All"};return render()}
   if(D.rtab){rtab=D.rtab;return render()}
-  if(D.note){const i=$("#notein"),v=i.value.trim();if(!v)return;const c=byId(recId);ev(c,"note","Note · "+v);toast("Note added");return render()}
+  if(D.note){const i=$("#notein"),v=i.value.trim();if(!v)return;const c=byId(recId);const e={t:"Just now",k:"note",txt:"Note · "+v,raw:v,sync:"local"};c.events.push(e);render();sendNoteToHubSpot(c,e).then(ok=>{toast(ok?"Note added · sent to HubSpot":e.sync==="failed"?"Note added · could not send to HubSpot":"Note added · not sent (HubSpot not connected)");render()});return}
+  if(D.resync!==undefined){const c=byId(recId),e=c.events[+D.resync];if(e&&e.raw)sendNoteToHubSpot(c,e).then(ok=>{toast(ok?"Sent to HubSpot":"Still could not send");render()});return}
   if(D.pf){apr.pb=D.pf;return render()}
   if(D.bulk){rev.filter(c=>playbookOf(c)[0]===apr.pb&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris (bulk · ${apr.pb})`)});toast(`Approved all ${apr.pb}`);return render()}
   if(D.cur){cur=D.cur;return render()}
