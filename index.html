@@ -158,12 +158,17 @@ body.nosb .side{display:none}
 .brandrow{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .brandrow .sbbtn{width:32px;height:32px;font-size:14px;box-shadow:none;background:var(--bg)}
 body.nosb .topbar{padding-left:24px}
-.chat .msgs{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
-.chat .m{padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.5;max-width:94%;white-space:pre-wrap;word-break:break-word}
-.chat .m.u{background:var(--mint);align-self:flex-end}
-.chat .m.a{background:var(--bg)}
+.chat .msgs{height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;background:var(--bg);margin-bottom:12px}
+.chat .m{padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.55;max-width:82%;white-space:pre-wrap;word-break:break-word}
+.chat .m.u{background:var(--teal);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+.chat .m.a{background:#fff;align-self:flex-start;margin-left:36px;position:relative;border-bottom-left-radius:6px;box-shadow:var(--shadow)}
+.chat .m.a::before{content:"✦";position:absolute;left:-36px;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--purplebg);color:var(--purple);display:flex;align-items:center;justify-content:center;font-size:13px}
 .chat .m.w{color:var(--mute);font-style:italic}
-.chat .hint{font-size:13px;color:var(--mute)}
+.chatbar{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:5px 5px 5px 18px}
+.chatbar:focus-within{border-color:var(--teal)}
+.chatbar input{flex:1;border:0;background:none;font:14.5px var(--sans);outline:none;padding:8px 0;min-width:0}
+.chatbar .send{width:40px;height:40px;border-radius:50%;border:0;background:var(--teal);color:#fff;font-size:15px;cursor:pointer;flex:none}
+.chatbar .send:hover{filter:brightness(1.08)}
 .sync{display:inline-block;margin-left:8px;font:600 11.5px var(--sans);border-radius:999px;padding:1px 9px;background:var(--pill);color:var(--mute);vertical-align:1px}
 .sync.ok{background:var(--okbg);color:var(--ok)}.sync.bad{background:var(--pink);color:var(--red)}.sync.wait{background:var(--amber-bg);color:var(--amber)}
 .sync-retry{border:0;background:none;color:var(--red);font:700 11.5px var(--sans);text-decoration:underline;cursor:pointer;padding:0 0 0 6px}
@@ -468,14 +473,16 @@ function Record(){
     <div class="mail">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${toLine(c)}<br>Subject: ${esc(subjOf(c))}</div><div class="draft">${esc(draftText(c))}</div>
     ${c.note?`<div class="void">${c.note}</div>`:""}<div class="row"><button class="b pri" data-review="${c.id}">Review &amp; approve →</button><span class="d">draft_hash ${c.hash} · ${LIVE?"QA not run":"QA 12/12 pass"}</span></div></div>`;
   const dealsCard=c.hs?`<div class="card"><h2 class="st"><span>HubSpot deals</span><span class="d">${c.hs.deals.length}</span></h2>${c.hs.deals.map(d=>`<div class="task"><div class="grow"><b>${esc(d.pipe)}</b><span class="d">${esc(d.stage)}${d.amount!=null?" · $"+d.amount.toLocaleString():""}</span></div><a href="https://app.hubspot.com/contacts/48205146/record/0-3/${d.id}" target="_blank" rel="noopener" class="b tl" style="text-decoration:none">Open ↗</a></div>`).join("")}</div>`:"";
-  const chatCard=`<div class="card chat"><h2 class="st"><span>Ask about ${esc(c.op)}</span><span class="tg">${window.CS_ASSISTANT?"connected":"not connected"}</span></h2><div class="msgs" id="msgs">${chatHtml(c)}</div><div class="notein" style="margin:0"><input id="chatin" placeholder="Ask a question…" autocomplete="off"><button class="b pri" data-send="1">Send</button></div></div>`;
-  const right=`<div class="grid" style="gap:16px">${dealsCard}<div class="card"><h2 class="st"><span>Owner</span></h2><div class="task" style="border:0;padding:0"><span class="av">${initials(ownerName(c.owner))}</span><div class="grow"><b>${esc(ownerName(c.owner))}</b><span class="d">Sends from their mailbox</span></div></div></div>
-    <div class="card ${isQ(c)?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="closed"?"Case closed — removed from the queue.":c.state==="healthy"?"Healthy — nothing to send.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?(c.drafted?"Waiting for your review before Mon 09:00.":"No draft yet — click Generate draft."):c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.state==="closed"?`<button class="b" data-reopen="${c.id}" style="width:100%">Reopen case</button>`:c.noSend?"":c.drafted?`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`:`<button class="b pri" data-gen="${c.id}" style="width:100%" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}</div>${chatCard}</div>`;
+  const chatCard=`<div class="card chat"><h2 class="st"><span>Ask about ${esc(c.op)}</span><span class="tg">${window.CS_ASSISTANT?"connected":"not connected"}</span></h2><div class="msgs" id="msgs">${chatHtml(c)}</div><div class="chatbar"><input id="chatin" placeholder="Type your question…" autocomplete="off"><button class="send" data-send="1" aria-label="Send">➤</button></div></div>`;
+  const ownerCard=`<div class="card"><h2 class="st"><span>Owner</span></h2><div class="task" style="border:0;padding:0"><span class="av">${initials(ownerName(c.owner))}</span><div class="grow"><b>${esc(ownerName(c.owner))}</b><span class="d">Sends from their mailbox</span></div></div></div>`;
+  const approvalCard=`<div class="card ${isQ(c)?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="closed"?"Case closed — removed from the queue.":c.state==="healthy"?"Healthy — nothing to send.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?(c.drafted?"Waiting for your review before Mon 09:00.":"No draft yet — click Generate draft."):c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.state==="closed"?`<button class="b" data-reopen="${c.id}" style="width:100%">Reopen case</button>`:c.noSend?"":c.drafted?`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`:`<button class="b pri" data-gen="${c.id}" style="width:100%" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}</div>`;
+  const left=`<div class="grid" style="gap:18px;min-width:0">${props}${dealsCard}${ownerCard}</div>`;
+  const right=`<div class="grid" style="gap:18px;min-width:0"><div>${center}</div>${approvalCard}${chatCard}</div>`;
   return `<div class="crumb"><button data-nav="accounts">Accounts</button> / ${esc(c.op)}</div>
   <div class="rh"><span class="av">${initials(c.op)}</span><div><h1 style="margin:0">${esc(c.op)}</h1><div class="row" style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="tg st ${c.state}">${c.state}</span></div></div>
     <div class="row" style="margin-left:auto">${c.noSend||c.state==="closed"?"":c.drafted?`<button class="b pri" data-review="${c.id}">Review draft</button>`:`<button class="b pri" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}<button class="b" data-rtab="activity">Log note</button></div></div>
   <div class="tabs">${tabs.map(([k,l,n])=>`<button data-rtab="${k}" class="${rtab===k?"on":""}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>
-  <div class="rl">${props}<div class="grid" style="gap:18px;min-width:0"><div>${center}</div>${right}</div></div>`;
+  <div class="rl">${left}${right}</div>`;
 }
 const toLine=c=>c.hs?`<i>contact not synced from HubSpot yet</i>`:`${esc(c.contact)} &lt;${esc(c.email)}&gt;`;
 /* ── Ask-about-this-account chat ──
@@ -484,7 +491,7 @@ const toLine=c=>c.hs?`<i>contact not synced from HubSpot yet</i>`:`${esc(c.conta
    `account` is the object built by accountContext(c) below: it is what would leave this page, so review it first.
    Keep API keys on a server, never in this file. */
 const accountContext=c=>({id:c.id,name:c.op,segment:c.segment,health:hOf(c),playbook:playbookOf(c)[0],owner:ownerName(c.owner),country:c.hs?c.hs.country:undefined,state:c.state,signals:c.sig.map(([d,t])=>t),deals:c.hs?c.hs.deals.map(d=>({pipeline:d.pipe,stage:d.stage,amount:d.amount})):undefined,activity:c.events.map(e=>e.t+" · "+e.txt)});
-const chatHtml=c=>(c.chat&&c.chat.length)?c.chat.map(m=>`<div class="m ${m.r}">${esc(m.t)}</div>`).join(""):`<div class="hint">Ask anything about this account.</div>`;
+const chatHtml=c=>(c.chat&&c.chat.length)?c.chat.map(m=>`<div class="m ${m.r}">${esc(m.t)}</div>`).join(""):`<div class="m a">Ask anything about this account.</div>`;
 function chatPaint(c){const m=$("#msgs");if(m&&recId===c.id){m.innerHTML=chatHtml(c);m.scrollTop=m.scrollHeight}}
 async function sendChat(){
   const c=byId(recId),inp=$("#chatin");if(!c||!inp)return;
