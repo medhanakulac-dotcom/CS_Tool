@@ -470,9 +470,11 @@ function approve(){
     kpi("APPROVED","TOKEN","Approved",count("approved"),"queued for Tue 09:00")+
     kpi("HOLD","HUMAN","On hold",count("hold"),"not sent")+
     kpi("REJECTED","→ SUP-1","Rejected",count("rejected"),"returned with reason");
-  $("#playbar").innerHTML=["All","Retention","Adoption","Commercial"].map(p=>`<button class="b ${p===playF?"on":""}" data-pf="${p}">${p}</button>`).join("")+
-    (playF!=="All"&&cases.some(c=>c.play===playF&&c.state==="pending")?`<button class="b ap" data-bulk="1" style="margin-left:8px">Approve all ${playF} (${cases.filter(c=>c.play===playF&&c.state==="pending").length})</button>`:"");
-  const vis=rev.filter(c=>playF==="All"||c.play===playF);
+  const pbs=[...new Set(rev.map(c=>playbookOf(c)[0]))];
+  if(playF!=="All"&&!pbs.includes(playF))playF="All";
+  $("#playbar").innerHTML=["All",...pbs].map(p=>`<button class="b ${p===playF?"on":""}" data-pf="${p}">${p}${p==="All"?"":` <span class="d" style="font-size:11px">${rev.filter(c=>playbookOf(c)[0]===p).length}</span>`}</button>`).join("")+
+    (playF!=="All"&&rev.some(c=>playbookOf(c)[0]===playF&&c.state==="pending")?`<button class="b ap" data-bulk="1" style="margin-left:8px">Approve all ${playF} (${rev.filter(c=>playbookOf(c)[0]===playF&&c.state==="pending").length})</button>`:"");
+  const vis=rev.filter(c=>playF==="All"||playbookOf(c)[0]===playF);
   if(!vis.find(c=>c.id===cur)&&vis[0])cur=vis[0].id;
   $("#queue").innerHTML=vis.map(c=>`<button class="qi ${c.id===cur?"on":""}" data-cur="${c.id}"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></div><div class="l2"><span>${esc(ownerName(c.owner))} · ${c.segment} · ${healthOf(c.features)}</span><span class="st ${c.state}">${c.state}</span></div></button>`).join("")||`<div class="empty">no cases</div>`;
   const c=cases.find(x=>x.id===cur);
@@ -571,7 +573,7 @@ document.addEventListener("click",e=>{
   if(D.pf){playF=D.pf;return render()}
   if(D.cur){cur=D.cur;return render()}
   if(D.open){DR=null;drawer();cur=D.open;playF="All";view="approve";scrollTo(0,0);return render()}
-  if(D.bulk){cases.filter(c=>c.play===playF&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash})});return render()}
+  if(D.bulk){rev.filter(c=>playbookOf(c)[0]===playF&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash})});return render()}
   const c=cases.find(x=>x.id===cur);if(!c||!D.a)return;
   switch(D.a){
    case"approve":return decide(c,"approved");
