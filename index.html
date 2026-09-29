@@ -182,6 +182,9 @@ body.nosb .topbar{padding-left:24px}
   .detail{position:static;max-height:none;overflow:visible;order:-1}
   .actbar{position:sticky;bottom:0}
 }
+.promptbox{margin-top:14px;background:#fff;border-radius:16px;padding:14px 16px}
+.promptbox .lab{font:800 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan);margin-bottom:6px}
+.promptbox textarea{min-height:76px;margin:0 0 10px;border-color:#cfe8e2;font-size:14px}
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){
@@ -304,7 +307,7 @@ function draftText(c){
   const sign=m.warm?L.warmSign:(c.alt?L.signs[c.alt%3]:P.sign);
   return [greet,P.intro,pts,L.recoHead+"\n"+recs,ask,sign].join("\n\n");
 }
-const subjOf=c=>c.noSend||c.dormant||(!EM[c.id]&&!c.hs)?"":(EM[c.id]?EM[c.id][c.lang].subj:genP(c).subj);
+const subjOf=c=>c.noSend||c.dormant||(!EM[c.id]&&!c.hs)?"":((c.subj&&c.subj[c.lang])||(EM[c.id]?EM[c.id][c.lang].subj:genP(c).subj));
 
 ALLC.forEach(c=>{[c.why,c.next]=WHY[c.id]||["",""];c.ver=1;c.lang=DEFAULT_LANG[c.id]||"en";c.mods={};c.custom={};c.alt=0});
 
@@ -523,7 +526,10 @@ function Approvals(){
     <div class="d">draft_hash ${c.hash} · ${LIVE?"QA not run":"QA 12/12 pass"} · token TTL 72h</div>
     ${c.note?`<div class="void">${c.note}</div>`:""}
     ${c.rejecting||c.editing?"":`<div class="row" style="margin-top:12px">${c.gen?`<span class="gen">${LIVE?"Rewriting…":"✦ Writing the new version…"}</span>`:`<span class="tg llm">${LIVE?"Template draft · v"+c.ver:"✦ Drafted by LLM · v"+c.ver}</span>`}
-      <button class="b" data-a="regen" ${c.gen?"disabled":""}>Regenerate</button><button class="b ${c.mods.short?"on":""}" data-a="shorter" ${c.gen?"disabled":""}>Shorter</button><button class="b ${c.mods.warm?"on":""}" data-a="warmer" ${c.gen?"disabled":""}>Warmer</button><button class="b ${c.mods.direct?"on":""}" data-a="direct" ${c.gen?"disabled":""}>More direct</button></div>`}
+      <button class="b" data-a="regen" ${c.gen?"disabled":""}>Regenerate</button><button class="b ${c.mods.short?"on":""}" data-a="shorter" ${c.gen?"disabled":""}>Shorter</button><button class="b ${c.mods.warm?"on":""}" data-a="warmer" ${c.gen?"disabled":""}>Warmer</button><button class="b ${c.mods.direct?"on":""}" data-a="direct" ${c.gen?"disabled":""}>More direct</button></div>
+    <div class="promptbox"><div class="lab">Prompt for regeneration</div><textarea id="regprompt" placeholder="Tell the AI how to rewrite this email… e.g. mention their Krabi routes, keep it under 100 words, ask for a reply by Friday" ${c.gen?"disabled":""}>${esc(c.promptDraft||"")}</textarea>
+      <div class="row"><button class="b pri" data-regprompt="1" ${c.gen?"disabled":""}>${c.gen?"Rewriting…":"Regenerate with prompt"}</button><span class="d">${window.CS_EMAIL_LLM?"Email AI connected":"Email AI is not connected yet — the prompt won't change the draft"}</span></div>
+      ${c.promptNote?`<div class="void" style="margin-top:8px">${esc(c.promptNote)}</div>`:""}</div>`}
     ${c.reason?`<div class="void">Returned to triage — “${esc(c.reason)}”</div>`:""}
     <div class="row actbar" style="margin-top:16px">${c.rejecting?`<input class="inp" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
       :c.editing?`<button class="b pri" data-a="save">Save &amp; approve</button><button class="b" data-a="cancel">Cancel</button>`
@@ -583,6 +589,35 @@ function llmApply(c,fn,what){
     else c.note="";
     ev(c,"ai",what);render();},700);
 }
+/* ── Regenerate with a free-text prompt ──
+   To enable, define before this script runs:
+     window.CS_EMAIL_LLM = async ({account, language, subject, body, instruction}) => ({subject, body});
+   (returning just a string is treated as the new body). Call your own server, which calls the model; keep API keys off this page.
+   Until it is defined the button reports that the email AI is not connected and leaves the draft unchanged. */
+async function regenWithPrompt(){
+  const c=byId(cur);if(!c||c.gen)return;
+  const ta=$("#regprompt"),instr=(ta?ta.value:"").trim();
+  c.promptDraft=instr;
+  if(!instr){c.promptNote="Write a prompt first.";render();return showPromptNote()}
+  if(!window.CS_EMAIL_LLM){c.promptNote="The email AI isn't connected yet, so this prompt was not applied and the draft is unchanged.";render();return showPromptNote()}
+  c.promptNote="";c.gen=true;render();
+  try{
+    const r=await window.CS_EMAIL_LLM({account:accountContext(c),language:c.lang,subject:subjOf(c),body:draftText(c),instruction:instr});
+    const body=typeof r==="string"?r:(r&&r.body);
+    if(!body)throw new Error("empty response");
+    c.custom[c.lang]=String(body);c.subj=c.subj||{};if(r&&r.subject)c.subj[c.lang]=String(r.subject);
+    c.hash=rid();c.ver++;
+    if(c.state==="approved"){const i=sendLog.findIndex(x=>x.case===c.id);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again.";ev(c,"bad","Approval voided: draft changed")}else c.note="";
+    ev(c,"ai","AI rewrote the draft from a prompt: “"+(instr.length>80?instr.slice(0,80)+"…":instr)+"”");
+    c.promptDraft="";toast("Draft rewritten");
+  }catch(e){c.promptNote="The email AI returned an error: "+(e&&e.message?e.message:e)}
+  c.gen=false;render();showPromptNote();
+}
+function showPromptNote(){
+  const n=$(".promptbox .void"),d=$("#detail"),bar=$(".actbar");if(!n||!d||!bar)return;
+  const over=n.getBoundingClientRect().bottom-bar.getBoundingClientRect().top+12;
+  if(over>0){if(getComputedStyle(d).overflowY==="auto")d.scrollTop+=over;else scrollBy(0,over)}
+}
 function llmRewrite(c,mode){
   const k={shorter:"short",warmer:"warm",direct:"direct"}[mode];
   llmApply(c,c=>{c.custom[c.lang]="";if(mode==="regen")c.alt=((c.alt||0)+1)%3;else c.mods[k]=!c.mods[k]},mode==="regen"?"AI regenerated the draft":`AI rewrote the draft (${mode})`);
@@ -613,10 +648,11 @@ async function sendNoteToHubSpot(c,e){
 function openRecord(id,tab){view="record";recId=id;rtab=tab||"overview";$("#gres").style.display="none";$("#gsearch").value="";scrollTo(0,0);render()}
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-resync],[data-reopen],[data-gen],[data-send],[data-sb],[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
+  const t=e.target.closest("[data-resync],[data-regprompt],[data-reopen],[data-gen],[data-send],[data-sb],[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
   if(!t){if(!e.target.closest(".search"))$("#gres").style.display="none";return}
   const D=t.dataset;
   if(D.reopen){const c=byId(D.reopen);if(c&&c.state==="closed"){c.state="pending";ev(c,"note","Case reopened by Chris");toast("Case reopened · back in the queue");render()}return}
+  if(D.regprompt)return regenWithPrompt();
   if(D.gen)return genDraft(D.gen);
   if(D.send)return sendChat();
   if(D.sb)return setSb(!document.body.classList.contains("nosb"));
@@ -653,6 +689,7 @@ document.addEventListener("change",e=>{
   const s=e.target.closest("select[data-f]");if(s){acc[s.dataset.f]=s.value;render()}
 });
 document.addEventListener("input",e=>{
+  if(e.target.id==="regprompt"){const c=byId(cur);if(c)c.promptDraft=e.target.value}
   if(e.target.id==="accq"){const p=e.target.selectionStart;acc.q=e.target.value;render();const i=$("#accq");i.focus();i.setSelectionRange(p,p)}
   if(e.target.id==="gsearch"){
     const q=e.target.value.trim().toLowerCase(),r=$("#gres");
