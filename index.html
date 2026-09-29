@@ -162,6 +162,52 @@ textarea,input.f{border-radius:14px;border:1.5px solid #cfe8e2;background:#fff}
 .empty{color:var(--tan)}
 .b{white-space:nowrap}
 td .b{padding:6px 12px}
+
+/* ── reference fidelity ── */
+body{background:#f5f0e9;font-size:16px}
+.page{max-width:1240px}
+.sec{display:flex;align-items:center;gap:18px;margin:56px 0 24px;font:800 26px var(--sans);letter-spacing:-.02em;text-transform:none;color:var(--ink)}
+.sec i{font:800 20px var(--sans);font-style:normal;color:#3aa593;background:#e3f5ef;border-radius:16px;padding:10px 16px;letter-spacing:0}
+.sec::after{content:"";flex:1;height:1px;background:#e2d9cb;order:1}
+.sec .r{order:2;font-size:14px;font-weight:400;color:var(--mute);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sec .r .b{font-size:13px}
+.card{background:#fff;border-radius:36px;padding:38px 44px;box-shadow:0 1px 2px rgba(80,60,30,.05),0 12px 40px rgba(80,60,30,.04)}
+.card .lab{font:800 14px var(--sans);letter-spacing:.11em;text-transform:uppercase;color:#bfae92;margin-bottom:14px}
+.card .lab span{font-weight:600;letter-spacing:.02em;text-transform:none;color:#cbbda6}
+.card p{font-size:19px;line-height:1.75;color:#8a8178;margin:0 0 6px}
+.card p b{color:#4a4238}
+.seglist{margin-top:26px;border-top:1px solid #efe8dc}
+.seglist .row{display:grid;grid-template-columns:150px 1fr;gap:22px;padding:22px 0;border-bottom:1px solid #efe8dc;align-items:start}
+.seglist .row:last-child{border:0}
+.seglist .row p{font-size:18px;line-height:1.7;color:#5d554b;margin:0}
+.seglist .seg{font-size:20px;padding:9px 22px;border-radius:16px;justify-self:start}
+.wao{display:inline-flex;gap:12px;align-items:center;background:#e3f5ef;color:#3aa593;font:700 19px var(--sans);padding:16px 26px;border-radius:20px;border:0;cursor:pointer;margin:18px 0 10px}
+.wao:hover{background:#d3efe6}
+.waonote{font:14px var(--sans);color:var(--mute);margin:0 0 6px;min-height:18px}
+.ft{width:100%;border-collapse:collapse}
+.ft th{font:800 14px var(--sans);letter-spacing:.11em;color:#bfae92;padding:14px 0;border-bottom:1px solid #efe8dc;text-align:left}
+.ft td{border:0;padding:20px 0;font-size:22px;color:#4a4238;vertical-align:middle}
+.ft th{padding-right:24px;white-space:nowrap}.ft td{padding-right:24px}
+.ft td.big{font:800 34px var(--sans);letter-spacing:-.02em;color:var(--ink);width:150px}
+.ft .hl{font-size:22px;padding:8px 22px;border-radius:16px}
+.mxhead{display:flex;align-items:center;gap:10px;font:800 21px var(--sans);padding:0 4px}
+.mxhead i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.mxhead small{font:700 19px var(--sans);color:#cbbda6}
+.mx{gap:18px;grid-template-columns:200px repeat(3,1fr)}
+.mx .rh{border-radius:26px;padding:26px 28px;gap:10px}
+.mx .rh b{font:800 27px var(--sans);letter-spacing:-.02em}
+.mx .rh .seg{font-size:15px;padding:6px 14px;border-radius:12px;justify-self:start;align-self:flex-start}
+.mx .cell{border-radius:26px;padding:28px 30px;min-height:170px}
+.mx .cell b{font:800 26px var(--sans);letter-spacing:-.02em}
+.mx .cell .mono{font-size:17px!important;font-weight:800}
+.mx .cell .d{font-size:17px;line-height:1.6;color:#8a8178;margin-top:4px}
+.mx .cell.Dormant b{font-size:26px}
+.mxp{font-size:19px;line-height:1.85;color:#8a8178;margin:-8px 0 30px;max-width:1150px}
+.mxp b{color:#4a4238}
+.callout{border-radius:36px;padding:30px 40px;font-size:19px;line-height:1.85;color:#5d554b;box-shadow:inset 8px 0 0 #63d3bf,0 12px 40px rgba(80,60,30,.04)}
+.callout .k{font:800 15px var(--sans);letter-spacing:.11em;color:#3aa593;margin-bottom:12px}
+.callout b{color:var(--ink)}
+@media(max-width:900px){.card{padding:26px 22px}.seglist .row{grid-template-columns:1fr}.mx{grid-template-columns:90px repeat(3,minmax(190px,1fr))}.sec{font-size:21px}}
 </style>
 </head>
 <body>
@@ -182,21 +228,46 @@ td .b{padding:6px 12px}
 
     <div class="grid g4" id="kpis"></div>
 
-    <h2>Dashboard</h2>
+    <h2 class="sec"><i>01</i>Dashboard</h2>
     <div class="grid g2">
       <div class="box"><div class="tag"><span>RISK BY OPERATOR</span><span>cases[]</span></div><div class="bars" id="riskbars" style="margin-top:8px"></div></div>
       <div class="box"><div class="tag"><span>DETECTORS</span><span>SQL</span></div><div class="bars" id="detbars" style="margin-top:8px"></div>
         <div class="d" style="margin-top:8px">ANL-1 Volume · ANL-2 Route peer · ANL-3 Fare index · ANL-4 Adoption</div></div>
     </div>
 
-    <h2><span>Playbook matrix — commercial segment × product health</span><span class="d">features with a Weekly Active Operator: 0–2 · 3–4 · 5–6</span></h2>
-    <div class="mx" id="matrix"></div>
-    <div class="callout" style="margin-top:14px"><div class="k">WHY “ADOPTED” MEANS DIFFERENT THINGS BY SEGMENT</div>3-feature adoption is an acceptable Product Health baseline — but <b>Commercial Segment determines the level of ambition</b>. For a High account, 3 features is usable but not yet strategic, so the playbook keeps pushing toward 5–6. Mid and Low accounts are acceptable at 3+ and shift into maintain / self-serve motions.</div>
+    <h2 class="sec"><i>02</i>The two inputs that pick a playbook</h2>
+    <div class="grid g2" style="gap:28px;align-items:start">
+      <div class="card">
+        <div class="lab">Input 1 · Commercial segment</div>
+        <p>How valuable an account is to seatOS — based on contract value, growth potential and strategic fit. It answers “how much should we invest here?” and sets the <b>priority and cadence</b> of the motion. Segment is set commercially and reviewed each quarter; it doesn't change week to week.</p>
+        <div class="seglist">
+          <div class="row"><span class="seg High">High</span><p>Strategic, top-value accounts — largest contracts or strongest growth and reference potential. They earn the most hands-on attention and the fastest cadence, and we actively push them toward full adoption.</p></div>
+          <div class="row"><span class="seg Mid">Mid</span><p>Solid, mid-value accounts worth proactive care, but on a lighter touch than High. Three active features is treated as an acceptable baseline rather than a problem to fix.</p></div>
+          <div class="row"><span class="seg Low">Low</span><p>Smaller accounts handled mostly through automated, scalable motions — activation journeys, nudges and self-service — so the team's time stays focused on higher-value segments.</p></div>
+          <div class="row"><span class="seg Dormant">Dormant</span><p>Inactive or at-risk accounts with no live engagement. Reactive only — we respond to inbound requests but run no proactive outreach until they re-engage.</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="lab">Input 2 · Product health <span>— by Weekly Active Operators</span></div>
+        <p>A simple, objective score: count how many of the six core seatOS features have a <b>Weekly Active Operator</b> — a real user driving that feature each week. That feature count maps directly to a health state and what it means commercially.</p>
+        <button class="wao" data-wao="1">📈 Check this account's Weekly Active Operators <span>↗</span></button>
+        <div class="waonote" id="waonote"></div>
+        <table class="ft"><tr><th>FEATURE COUNT</th><th>PRODUCT HEALTH</th><th>COMMERCIAL MEANING</th></tr>
+          <tr><td class="big">5–6</td><td><span class="hl Healthy">Healthy</span></td><td>Strong adoption</td></tr>
+          <tr><td class="big">3–4</td><td><span class="hl Adopted">Adopted</span></td><td>Acceptable / usable</td></tr>
+          <tr><td class="big">0–2</td><td><span class="hl Unhealthy">Unhealthy</span></td><td>Low adoption</td></tr></table>
+      </div>
+    </div>
 
-    <h2><span>Signals</span><span class="bar" id="sigfilter"></span></h2>
+    <h2 class="sec"><i>03</i>The Playbook Matrix</h2>
+    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different cadence depending on segment value. A <b>High + Unhealthy</b> account gets a weekly Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
+    <div class="mx" id="matrix"></div>
+    <div class="callout" style="margin-top:22px"><div class="k">WHY “ADOPTED” MEANS DIFFERENT THINGS BY SEGMENT</div>We recognize <b>3-feature adoption as an acceptable Product Health baseline</b> — but <b>Commercial Segment determines the level of ambition</b>. For a High-value account, 3 features means the account is usable, but not yet strategic enough for growth, so its playbook keeps pushing toward 5–6 features. Mid and Low accounts, by contrast, are treated as acceptable at 3+ features and shift into maintain / self-serve motions.</div>
+
+    <h2 class="sec"><i>04</i>Signals<span class="r bar" id="sigfilter"></span></h2>
     <div class="wrapt"><table id="sigtable"></table></div>
 
-    <h2><span>Cases — one per operator, ranked by risk_score</span></h2>
+    <h2 class="sec"><i>05</i>Cases<span class="r">one per operator, ranked by risk_score</span></h2>
     <div class="wrapt"><table id="casetable"></table></div>
   </section>
 
@@ -207,13 +278,14 @@ td .b{padding:6px 12px}
 
     <div class="grid g4" id="astrip"></div>
 
-    <div class="bar" style="margin:22px 0 12px" id="playbar"></div>
+    <h2 class="sec"><i>01</i>Review queue<span class="r">QA passed 12/12</span></h2>
+    <div class="bar" style="margin:0 0 14px" id="playbar"></div>
     <div class="split">
       <div class="q" id="queue"></div>
       <div id="detail"></div>
     </div>
 
-    <h2>Send · Tue 09:00 · no model call</h2>
+    <h2 class="sec"><i>02</i>Send<span class="r">Tue 09:00 · no model call</span></h2>
     <div class="grid g4" style="grid-template-columns:repeat(3,1fr)" id="outs"></div>
     <div class="log" id="log"></div>
   </section>
@@ -257,11 +329,12 @@ function analysis(){
     kpi("OPERATORS","CODE","Cases",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`)+
     kpi("RISK","CODE + LLM","Average risk score",avg,`top: ${cases[0].op}`)+
     kpi("GATE-1","HUMAN","Awaiting you",count("pending"),"drafts to approve","human");
-  let mxh=`<div></div>${HEALTH.map(h=>`<div class="ch"><span class="hl ${h}">${h}</span> <span class="d">${h==="Unhealthy"?"0–2":h==="Adopted"?"3–4":"5–6"}</span></div>`).join("")}`;
-  SEG.forEach(g=>{mxh+=`<div class="rh"><span class="seg ${g}">${g}</span><span class="d">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+
+  const HC={Unhealthy:"#cc3f6e",Adopted:"#c98a2b",Healthy:"#3f9a5b"};
+  let mxh=`<div></div>${HEALTH.map(h=>`<div class="mxhead" style="color:${HC[h]}"><i style="background:${HC[h]}"></i>${h} <small>${h==="Unhealthy"?"0–2":h==="Adopted"?"3–4":"5–6"}</small></div>`).join("")}`;
+  SEG.forEach(g=>{mxh+=`<div class="rh"><b>${g}</b><span class="seg ${g}">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+
     HEALTH.map(h=>{const [n,cad,desc]=MATRIX[g][h];const ops=cases.filter(c=>c.segment===g&&healthOf(c.features)===h);
-    return `<div class="cell ${h}"><b>${n}</b><div class="mono" style="font-size:11.5px;font-weight:700">⏱ ${cad}</div><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
-  mxh+=`<div class="rh"><span class="seg Dormant">Dormant</span><span class="d">Reactive</span></div><div class="cell Dormant"><b style="color:var(--ink);display:inline">Reactive Only</b> <span class="d">No proactive touchpoints — respond to inbound requests only, regardless of health.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
+    return `<div class="cell ${h}"><b>${n}</b><div class="mono">⏱ ${cad}</div><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
+  mxh+=`<div class="rh"><b>Dormant</b><span class="seg Dormant">Reactive</span></div><div class="cell Dormant"><b style="display:inline;color:#4a4238">Reactive Only</b> <span class="d" style="margin-left:10px">No proactive touchpoints — respond to inbound requests only, regardless of health.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
   $("#matrix").innerHTML=mxh;
   $("#riskbars").innerHTML=[...cases].sort((a,b)=>b.risk-a.risk).map(c=>`<div class="r"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><span class="mono">${c.risk}</span></div>`).join("");
   const mx=Math.max(...Object.keys(DET).map(d=>sigs.filter(s=>s.d===d).length));
@@ -325,6 +398,7 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;
   const D=t.dataset;
   if(D.v){view=D.v;scrollTo(0,0);return render()}
+  if(D.wao){$("#waonote").textContent="WAO report is not connected yet — this will open the account's Weekly Active Operators view.";return}
   if(D.sf){sigF=D.sf;return render()}
   if(D.pf){playF=D.pf;return render()}
   if(D.cur){cur=D.cur;return render()}
