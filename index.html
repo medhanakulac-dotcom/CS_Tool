@@ -259,6 +259,39 @@ details.guide>summary::after{order:1}
 #casetable td:nth-child(6){white-space:normal}
 #sigtable td{white-space:nowrap}
 .wrapt{overflow-x:auto}
+
+/* ── clickable + drawer ── */
+.click{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.click:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(80,60,30,.08),0 14px 36px rgba(80,60,30,.09)}
+.click:focus-visible,[data-case]:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.go{color:var(--teal);font-weight:700;margin-left:6px}
+.human .go{color:var(--amber)}
+.bars .r[data-case],.bars .r[data-det]{cursor:pointer;border-radius:10px;padding:6px 8px;margin:0 -8px}
+.bars .r[data-case]:hover,.bars .r[data-det]:hover{background:var(--bg)}
+#casetable tr[data-case],#sigtable tr[data-case]{cursor:pointer}
+#casetable tr[data-case]:hover td,#sigtable tr[data-case]:hover td{background:#faf6f0}
+#ov{position:fixed;inset:0;background:rgba(40,30,20,.32);opacity:0;pointer-events:none;transition:opacity .18s;z-index:20}
+#ov.on{opacity:1;pointer-events:auto}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:#fff;z-index:21;transform:translateX(105%);transition:transform .22s;overflow-y:auto;padding:26px 28px 40px;border-radius:28px 0 0 28px;box-shadow:-20px 0 60px rgba(60,40,20,.18)}
+#drawer.on{transform:none}
+.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.dh h3{font-size:22px;margin:2px 0;letter-spacing:-.02em}
+.dh .k{font:800 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan)}
+.x{border:0;background:var(--bg);width:36px;height:36px;border-radius:12px;font-size:18px;cursor:pointer;color:var(--mute)}
+.x:hover{background:var(--line)}
+.li{display:block;padding:14px 16px;border-radius:18px;background:var(--bg);margin-bottom:10px;cursor:pointer}
+.li:hover{box-shadow:0 0 0 2px var(--line)}
+.li .l1{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.li .l2{margin-top:8px}
+.ds{margin:20px 0 8px;font:800 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan)}
+.dbox{background:var(--bg);border-radius:18px;padding:14px 16px;font-size:14px;line-height:1.6}
+.dots{display:flex;gap:6px;margin:6px 0}
+.dots i{width:22px;height:22px;border-radius:50%;background:var(--pill)}
+.dots i.on{background:#5bbfae}
+.kvs{display:grid;grid-template-columns:100px 1fr;gap:8px 12px;font-size:14px}
+.kvs b{font:600 12px var(--sans);color:var(--mute);padding-top:2px}
+.dfoot{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.dfoot .b{padding:10px 18px}
 </style>
 </head>
 <body>
@@ -346,6 +379,9 @@ details.guide>summary::after{order:1}
   </section>
 </div>
 
+<div id="ov" data-dclose="1"></div>
+<aside id="drawer" aria-label="Details"></aside>
+
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
 const rid=()=>Math.random().toString(16).slice(2,10);
@@ -373,17 +409,17 @@ let view="analysis", sigF="All", playF="All", cur="C-101";
 const rev=cases.filter(c=>!c.dormant);
 const count=s=>cases.filter(c=>c.state===s).length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
-const kpi=(tag,kind,title,n,desc,cls="")=>`<div class="box ${cls}"><div class="tag"><span>${tag}</span><span>${kind}</span></div><div class="d" style="margin-top:6px">${title}</div><div class="n">${n}</div><div class="d">${desc}</div></div>`;
+const kpi=(tag,kind,title,n,desc,cls="",act="")=>`<div class="box ${cls} ${act?"click":""}" ${act?`data-kpi="${act}" tabindex="0" role="button"`:""}><div class="tag"><span>${tag}</span><span>${kind}</span></div><div class="d" style="margin-top:6px">${title}</div><div class="n">${n}</div><div class="d">${desc}${act?' <span class="go">view →</span>':""}</div></div>`;
 
 /* ══ PAGE 1 ══ */
 function analysis(){
   const sigs=cases.flatMap(c=>c.sig.map(([d,t])=>({c,d,t})));
   const avg=Math.round(cases.reduce((a,c)=>a+c.risk,0)/cases.length);
   $("#kpis").innerHTML=
-    kpi("SIGNALS","SQL","Detectors fired",sigs.length,"across 4 detectors")+
-    kpi("OPERATORS","CODE","Cases",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`)+
-    kpi("RISK","CODE + LLM","Average risk score",avg,`top: ${cases[0].op}`)+
-    kpi("GATE-1","HUMAN","Awaiting you",count("pending"),"drafts to approve","human");
+    kpi("SIGNALS","SQL","Detectors fired",sigs.length,"across 4 detectors","","signals")+
+    kpi("OPERATORS","CODE","Cases",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`,"","cases")+
+    kpi("RISK","CODE + LLM","Average risk score",avg,`top: ${cases[0].op}`,"","risk")+
+    kpi("GATE-1","HUMAN","Awaiting you",count("pending"),"drafts to approve","human","gate");
   const HC={Unhealthy:"#cc3f6e",Adopted:"#c98a2b",Healthy:"#3f9a5b"};
   let mxh=`<div></div>${HEALTH.map(h=>`<div class="mxhead" style="color:${HC[h]}"><i style="background:${HC[h]}"></i>${h} <small>${h==="Unhealthy"?"0–2":h==="Adopted"?"3–4":"5–6"}</small></div>`).join("")}`;
   SEG.forEach(g=>{mxh+=`<div class="rh"><b>${g}</b><span class="seg ${g}">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+
@@ -391,14 +427,14 @@ function analysis(){
     return `<div class="cell ${h}"><b>${n}</b><div class="mono">⏱ ${cad}</div><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
   mxh+=`<div class="rh"><b>Dormant</b><span class="seg Dormant">Reactive</span></div><div class="cell Dormant"><b style="display:inline;color:#4a4238">Reactive Only</b> <span class="d" style="margin-left:10px">No proactive touchpoints — respond to inbound requests only, regardless of health.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
   $("#matrix").innerHTML=mxh;
-  $("#riskbars").innerHTML=[...cases].sort((a,b)=>b.risk-a.risk).map(c=>`<div class="r"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><span class="mono">${c.risk}</span></div>`).join("");
+  $("#riskbars").innerHTML=[...cases].sort((a,b)=>b.risk-a.risk).map(c=>`<div class="r" data-case="${c.id}"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><span class="mono">${c.risk}</span></div>`).join("");
   const mx=Math.max(...Object.keys(DET).map(d=>sigs.filter(s=>s.d===d).length));
-  $("#detbars").innerHTML=Object.keys(DET).map(d=>{const n=sigs.filter(s=>s.d===d).length;return `<div class="r"><span>${d}</span><div class="tr"><div class="fl" style="width:${n/mx*100}%"></div></div><span class="mono">${n}</span></div>`}).join("");
+  $("#detbars").innerHTML=Object.keys(DET).map(d=>{const n=sigs.filter(s=>s.d===d).length;return `<div class="r" data-det="${d}"><span>${d}</span><div class="tr"><div class="fl" style="width:${n/mx*100}%"></div></div><span class="mono">${n}</span></div>`}).join("");
   $("#sigfilter").innerHTML=["All",...Object.keys(DET)].map(d=>`<button class="b ${d===sigF?"on":""}" data-sf="${d}">${d}</button>`).join("");
   $("#sigtable").innerHTML=`<tr><th>Operator</th><th>Detector</th><th>Signal</th><th>Risk</th></tr>`+
-    sigs.filter(s=>sigF==="All"||s.d===sigF).sort((a,b)=>b.c.risk-a.c.risk).map(s=>`<tr><td><b>${esc(s.c.op)}</b></td><td class="mono">${DET[s.d]} · ${s.d}</td><td>${esc(s.t)}</td><td><span class="risk ${s.c.risk>70?"hi":""}">${s.c.risk}</span></td></tr>`).join("");
+    sigs.filter(s=>sigF==="All"||s.d===sigF).sort((a,b)=>b.c.risk-a.c.risk).map(s=>`<tr data-case="${s.c.id}"><td><b>${esc(s.c.op)}</b></td><td class="mono">${DET[s.d]} · ${s.d}</td><td>${esc(s.t)}</td><td><span class="risk ${s.c.risk>70?"hi":""}">${s.c.risk}</span></td></tr>`).join("");
   $("#casetable").innerHTML=`<tr><th>#</th><th>Operator</th><th>Segment</th><th>Health</th><th>Playbook</th><th>Signals</th><th>Risk</th><th>Status</th><th></th></tr>`+
-    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b><div class="d">⏱ ${playbookOf(c)[1]}</div></td>
+    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr data-case="${c.id}"><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b><div class="d">⏱ ${playbookOf(c)[1]}</div></td>
     <td>${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</td><td><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></td>
     <td><span class="st ${c.state}">${c.state}</span>${c.reason?`<div class="d bad" style="color:var(--red)">↩ ${esc(c.reason)}</div>`:""}</td>
     <td>${c.dormant?"":`<button class=\"b tl\" data-open=\"${c.id}\">Draft →</button>`}</td></tr>`).join("");
@@ -449,15 +485,68 @@ function decide(c,state,extra){
   const nx=cases.find(x=>x.state==="pending");if(nx&&state!=="rejected"||nx)cur=nx?nx.id:cur;
   render();
 }
+
+/* ── drawer ── */
+let DR=null;
+const sigsOf=c=>c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("");
+const tags=c=>`<span class="seg ${c.segment}">${c.segment}</span> `+(c.dormant?`<span class="st reactive">reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span>`);
+function openList(kind,det){
+  const byRisk=[...cases].sort((a,b)=>b.risk-a.risk);
+  if(kind==="signals")DR={type:"list",title:"Detectors fired",sub:`${cases.reduce((a,c)=>a+c.sig.length,0)} signals across ${cases.length} operators`,ids:byRisk.map(c=>c.id)};
+  if(kind==="cases")DR={type:"list",title:"Cases",sub:`${rev.length} outreach · ${cases.length-rev.length} reactive`,ids:byRisk.map(c=>c.id)};
+  if(kind==="risk")DR={type:"list",title:"Risk by operator",sub:`average ${Math.round(cases.reduce((a,c)=>a+c.risk,0)/cases.length)} · highest first`,ids:byRisk.map(c=>c.id)};
+  if(kind==="gate")DR={type:"list",title:"Awaiting you",sub:`${count("pending")} drafts at GATE-1`,ids:byRisk.filter(c=>c.state==="pending").map(c=>c.id),go:1};
+  if(kind==="det")DR={type:"list",title:`${DET[det]} · ${det}`,sub:"operators where this detector fired",ids:byRisk.filter(c=>c.sig.some(([d])=>d===det)).map(c=>c.id),det};
+  drawer();
+}
+function drawer(){
+  const ov=$("#ov"),dr=$("#drawer");
+  ov.classList.toggle("on",!!DR);dr.classList.toggle("on",!!DR);
+  if(!DR){return}
+  if(DR.type==="list"){
+    const items=DR.ids.map(id=>cases.find(c=>c.id===id));
+    dr.innerHTML=`<div class="dh"><div><div class="k">${DR.sub}</div><h3>${DR.title}</h3></div><button class="x" data-dclose="1" aria-label="Close">✕</button></div>`+
+     (items.map(c=>`<div class="li" data-case="${c.id}" tabindex="0"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span></div>
+       <div class="l2">${tags(c)} <span class="d">· ${playbookOf(c)[0]}</span></div>
+       <div class="l2">${(DR.det?c.sig.filter(([d])=>d===DR.det):c.sig).map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</div></div>`).join("")||`<div class="d">nothing here</div>`)+
+     (DR.go?`<div class="dfoot"><button class="b ap" data-v="approve">Go to Draft &amp; Approve →</button></div>`:"");
+  }else{
+    const c=cases.find(x=>x.id===DR.id), pb=playbookOf(c);
+    dr.innerHTML=`<div class="dh"><div><div class="k">${c.id}${DR.back?` · <button class="b" data-dback="1" style="padding:2px 9px;font-size:11px">← ${esc(DR.back)}</button>`:""}</div><h3>${esc(c.op)}</h3><div style="margin-top:8px">${tags(c)} <span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="st ${c.state}">${c.state}</span></div></div><button class="x" data-dclose="1" aria-label="Close">✕</button></div>
+     <div class="ds">Playbook</div>
+     <div class="dbox"><b style="font-size:16px">${pb[0]}</b> <span class="d">· ⏱ ${pb[1]}</span><div class="d" style="margin-top:4px">${pb[2]}</div></div>
+     <div class="ds">Product health</div>
+     <div class="dbox">${c.dormant?"No live engagement — reactive only.":`<div class="dots">${[1,2,3,4,5,6].map(i=>`<i class="${i<=c.features?"on":""}"></i>`).join("")}</div>${c.features}/6 core features have a Weekly Active Operator`}</div>
+     <div class="ds">Signals</div>
+     <div class="dbox">${c.sig.map(([d,t])=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span>${esc(t)}</span><span class="d">${DET[d]} · ${d}</span></div>`).join("")}</div>
+     <div class="ds">Account</div>
+     <div class="dbox kvs"><b>Owner</b><span>${esc(c.owner)}</span><b>Email</b><span>${esc(c.email||"—")}</span><b>Email type</b><span>${c.play} → ${PLAY_OUT[c.play]}</span></div>
+     ${c.dormant?"":`<div class="ds">Draft</div><div class="dbox"><b>${esc(c.subject)}</b><div style="white-space:pre-wrap;margin-top:6px;color:#5d554b">${esc(c.draft)}</div><div class="d" style="margin-top:8px;font-size:12px">draft_hash ${c.hash} · QA 12/12 pass</div></div>
+     <div class="dfoot"><button class="b ap" data-open="${c.id}">Open draft &amp; approve →</button></div>`}`;
+  }
+  dr.scrollTop=0;
+}
+addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&DR){DR=null;drawer()}
+  if(e.key==="Enter"){const k=e.target.closest&&e.target.closest("[data-kpi],[data-case]");if(k&&k.tagName!=="BUTTON")k.click()}
+});
 document.addEventListener("click",e=>{
+  if(!e.target.closest("button")||e.target.closest("button").dataset.dclose||e.target.closest("button").dataset.dback){
+    if(e.target.closest("[data-dclose]")){DR=null;return drawer()}
+    if(e.target.closest("[data-dback]")){DR=DR.prev||null;return drawer()}
+    const k=e.target.closest("[data-kpi]");if(k){return openList(k.dataset.kpi)}
+    const dt=e.target.closest("[data-det]");if(dt){return openList("det",dt.dataset.det)}
+    const cs=e.target.closest("[data-case]");if(cs){DR={type:"case",id:cs.dataset.case,back:DR&&DR.type==="list"?DR.title:null,prev:DR&&DR.type==="list"?DR:null};return drawer()}
+    return}
+
   const t=e.target.closest("button");if(!t)return;
   const D=t.dataset;
-  if(D.v){view=D.v;scrollTo(0,0);return render()}
+  if(D.v){DR=null;drawer();view=D.v;scrollTo(0,0);return render()}
   if(D.wao){$("#waonote").textContent="WAO report is not connected yet — this will open the account's Weekly Active Operators view.";return}
   if(D.sf){sigF=D.sf;return render()}
   if(D.pf){playF=D.pf;return render()}
   if(D.cur){cur=D.cur;return render()}
-  if(D.open){cur=D.open;playF="All";view="approve";scrollTo(0,0);return render()}
+  if(D.open){DR=null;drawer();cur=D.open;playF="All";view="approve";scrollTo(0,0);return render()}
   if(D.bulk){cases.filter(c=>c.play===playF&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash})});return render()}
   const c=cases.find(x=>x.id===cur);if(!c||!D.a)return;
   switch(D.a){
