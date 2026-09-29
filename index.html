@@ -318,7 +318,7 @@ function hydrateHS(a){
   const pb=playbookOf(c)[0];
   c.why=`${a.op}${a.country?" ("+a.country+")":""} is a ${a.seg} account with health status “${a.hh}” in HubSpot, currently at “${d0.stage}” in ${d0.pipe}.`+(dd!=null?` The last note was logged ${dd} day${dd===1?"":"s"} ago.`:"")+` Playbook: ${pb}.`;
   c.next=dormant?"Do not reach out; respond only if they contact us.":health==="Healthy"?"Healthy — nothing to send. Keep monitoring.":pb==="Rescue"?"Rescue play: book a 20-minute call this week and recommend "+RECO_HS[health].map(k=>FEATN[k]).join(", ")+".":"Recommend "+RECO_HS[health].map(k=>FEATN[k]).join(", ")+".";
-  c.events=[{t:a.created,k:"sys",txt:"Deal created in HubSpot"}].concat(a.note?[{t:a.note,k:"note",txt:"Last note logged in HubSpot"}]:[],[{t:a.mod,k:"sys",txt:"Deal last modified in HubSpot"},{t:"Mon 02:00",k:"sys",txt:dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${pb} (${a.seg} + ${health})`}],dormant||health==="Healthy"?[]:[{t:"Mon 02:30",k:"sys",txt:`Draft generated from template in ${LANGS[c.lang]}`}]);
+  c.events=[{t:a.created,k:"sys",txt:"Deal created in HubSpot"}].concat(a.note?[{t:a.note,k:"note",txt:"Last note logged in HubSpot"}]:[],[{t:a.mod,k:"sys",txt:"Deal last modified in HubSpot"},{t:"Mon 02:00",k:"sys",txt:dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${pb} (${a.seg} + ${health})`}],[]);
   return c;
 }
 if(LIVE){ALLC.length=0;HS_ACCOUNTS.forEach(a=>ALLC.push(hydrateHS(a)))}
@@ -326,14 +326,17 @@ if(LIVE){ALLC.length=0;HS_ACCOUNTS.forEach(a=>ALLC.push(hydrateHS(a)))}
 if(!LIVE)ALLC.forEach(c=>{c.contact=c.owner;c.owner=OWN[c.id]||"—";c.note="";c.notes=[];
   c.events=[{t:"Mon 01:00",k:"sys",txt:"Weekly data extracted · manifest gate passed"}].concat(
     c.sig.map(([d,t])=>({t:"Mon 01:30",k:"signal",txt:`Signal · ${DET[d]} ${d}: ${t}`})),
-    [{t:"Mon 02:00",k:"sys",txt:c.dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${playbookOf(c)[0]} (${c.segment} + ${hOf(c)})`}],
-    c.dormant?[]:[{t:"Mon 02:30",k:"ai",txt:`AI drafted the email in ${LANGS[c.lang]}`},{t:"Mon 03:30",k:"qa",txt:"QA passed · 12 / 12 checks"}])});
+    [{t:"Mon 02:00",k:"sys",txt:c.dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${playbookOf(c)[0]} (${c.segment} + ${hOf(c)})`}])});
 const ownerName=o=>o==="—"?"Unassigned":o;
 const initials=n=>n.split(/[\s.]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase();
 const sendLog=[];
 ALLC.forEach(c=>{c.noSend=!!c.dormant||hOf(c)==="Healthy";if(!c.dormant&&hOf(c)==="Healthy")c.state="healthy"});
-let cases=ALLC, rev=ALLC.filter(c=>!c.noSend), ownerF="All";
-function applyOwner(){cases=ownerF==="All"?ALLC:ALLC.filter(c=>c.owner===ownerF);rev=cases.filter(c=>!c.noSend)}
+/* Drafts are only written when Generate is clicked, except for these playbooks */
+const AUTO_GEN=["Automated Activation","Reactive Only"];
+ALLC.forEach(c=>{c.drafted=!c.noSend&&AUTO_GEN.includes(playbookOf(c)[0]);if(c.drafted)c.events.push({t:"Mon 02:30",k:"sys",txt:"Draft auto-generated ("+playbookOf(c)[0]+")"})});
+const isQ=c=>c.state==="pending"&&c.drafted;
+let cases=ALLC, rev=ALLC.filter(c=>!c.noSend&&c.drafted), ownerF="All";
+function applyOwner(){cases=ownerF==="All"?ALLC:ALLC.filter(c=>c.owner===ownerF);rev=cases.filter(c=>!c.noSend&&c.drafted)}
 const byId=id=>ALLC.find(c=>c.id===id);
 const count=s=>cases.filter(c=>c.state===s).length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
@@ -349,7 +352,7 @@ function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clea
 
 /* ── nav ── */
 function nav(){
-  const p=count("pending"),items=[["home","⌂","Home",""],["accounts","☰","Accounts",cases.length],["approvals","✓","Approvals",p],["sent","➤","Sent",cases.filter(c=>c.state==="approved").length]];
+  const p=cases.filter(isQ).length,items=[["home","⌂","Home",""],["accounts","☰","Accounts",cases.length],["approvals","✓","Approvals",p],["sent","➤","Sent",cases.filter(c=>c.state==="approved").length]];
   const act=view==="record"?"accounts":view;
   $("#snav").innerHTML=items.map(([k,ic,l,n])=>`<button data-nav="${k}" class="${act===k?"on":""}"><span class="ic">${ic}</span>${l}${n!==""?`<span class="cnt ${k==="approvals"&&p?"warn":""}">${n}</span>`:""}</button>`).join("");
 }
@@ -374,12 +377,12 @@ function guideHtml(){return `<div class="gl"><div class="card"><div class="lab">
 function Home(){
   const sigs=cases.reduce((a,c)=>a+c.sig.length,0);
   const top=[...cases].sort(byPrio);
-  const pend=top.filter(c=>c.state==="pending");
+  const pend=top.filter(isQ);
   const brief=top.filter(c=>!c.noSend).slice(0,3);
   const feed=cases.flatMap(c=>c.events.filter(e=>e.t==="Just now").map(e=>({...e,c}))).reverse().slice(0,6);
   const kpi=(l,tag,n,d,cls,act)=>`<div class="card click ${cls}" data-kpi="${act}"><div class="lab" style="display:flex;justify-content:space-between"><span>${l}</span><span>${tag}</span></div><div class="big">${n}</div><div class="d">${d} <span class="go">view →</span></div></div>`;
   return `<div class="ph"><div><h1>Good morning, Chris</h1><div class="sub">Week 2026-W40 · ${pend.length} draft${pend.length===1?"":"s"} waiting for your approval before Mon 09:00</div></div></div>
-  <div class="grid g4" style="grid-template-columns:repeat(3,1fr)">${kpi("Signals",LIVE?"HUBSPOT":"SQL",sigs,LIVE?"signals from HubSpot fields":"detectors fired","","signals")}${kpi("Accounts","CODE",cases.length,`${rev.length} to email · ${cases.length-rev.length} no send`,"","accounts")}${kpi("Approvals","HUMAN",pend.length,"awaiting you","human","gate")}</div>
+  <div class="grid g4" style="grid-template-columns:repeat(3,1fr)">${kpi("Signals",LIVE?"HUBSPOT":"SQL",sigs,LIVE?"signals from HubSpot fields":"detectors fired","","signals")}${kpi("Accounts","CODE",cases.length,`${cases.filter(c=>!c.noSend).length} to email · ${cases.filter(c=>c.noSend).length} no send`,"","accounts")}${kpi("Approvals","HUMAN",pend.length,"awaiting you","human","gate")}</div>
   <div class="grid g2" style="margin-top:18px;align-items:start">
    <div class="grid" style="gap:18px">
     <div class="card"><h2 class="st"><span>My tasks · review drafts</span><button class="b tl" data-nav="approvals">Open Approvals →</button></h2>
@@ -399,7 +402,7 @@ function Home(){
 /* ── Accounts ── */
 function filtered(){
   let L=cases.slice(); const v=acc.view;
-  if(v==="approval")L=L.filter(c=>c.state==="pending");
+  if(v==="approval")L=L.filter(isQ);
     if(v==="unhealthy")L=L.filter(c=>!c.dormant&&hOf(c)==="Unhealthy");
   if(v==="reactive")L=L.filter(c=>c.dormant);
   if(v==="healthy")L=L.filter(c=>c.state==="healthy");
@@ -414,12 +417,12 @@ function filtered(){
 }
 function Accounts(){
   const cnt=f=>cases.filter(f).length;
-  const views=[["all","All accounts",cases.length],["approval","Needs approval",cnt(c=>c.state==="pending")],["unhealthy","Unhealthy",cnt(c=>!c.dormant&&hOf(c)==="Unhealthy")],["reactive","Reactive only",cnt(c=>c.dormant)],["healthy","Healthy · no send",cnt(c=>c.state==="healthy")]];
+  const views=[["all","All accounts",cases.length],["approval","Needs approval",cnt(isQ)],["unhealthy","Unhealthy",cnt(c=>!c.dormant&&hOf(c)==="Unhealthy")],["reactive","Reactive only",cnt(c=>c.dormant)],["healthy","Healthy · no send",cnt(c=>c.state==="healthy")]];
   const L=filtered(), pbs=[...new Set(ALLC.map(c=>playbookOf(c)[0]))];
   const sel=(k,opts,label)=>`<select data-f="${k}"><option value="All">${label}: all</option>${opts.map(o=>`<option value="${esc(o[0])}" ${acc[k]===o[0]?"selected":""}>${esc(o[1])}</option>`).join("")}</select>`;
   const th=(k,l)=>`<th class="s" data-sort="${k}">${l}${acc.sort===k?(acc.dir>0?" ▲":" ▼"):""}</th>`;
-  const table=`<div class="tw"><table><thead><tr>${th("op","Account")}${th("owner","Owner")}${th("segment","Segment")}${th("health","Health")}${th("playbook","Playbook")}<th>Lang</th>${th("state","Status")}</tr></thead><tbody>
-   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.id}${c.hs?" · "+esc(c.hs.country):" · "+esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant||c.hs?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.noSend?"—":`<span class="tg llm" title="${LANGS[c.lang]}">${c.lang.toUpperCase()}</span>`}</td><td></td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
+  const table=`<div class="tw"><table><thead><tr>${th("op","Account")}${th("owner","Owner")}${th("segment","Segment")}${th("health","Health")}${th("playbook","Playbook")}<th>Lang</th><th>Draft</th>${th("state","Status")}</tr></thead><tbody>
+   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.id}${c.hs?" · "+esc(c.hs.country):" · "+esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant||c.hs?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.noSend?"—":`<span class="tg llm" title="${LANGS[c.lang]}">${c.lang.toUpperCase()}</span>`}</td><td>${c.noSend?"—":c.drafted?`<span class="tg">ready</span>`:`<button class="b tl" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate"}</button>`}</td><td></td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
   const cols=[["pending","To review"],["approved","Approved"],["hold","On hold"],["rejected","Returned"],["reactive","Reactive only"],["healthy","Healthy · no send"]];
   const board=`<div class="board">${cols.map(([s,l])=>{const items=L.filter(c=>c.state===s);return `<div class="col"><h3><span>${l}</span><span>${items.length}</span></h3>${items.map(c=>`<div class="kc" data-open="${c.id}"><div class="l"><b>${esc(c.op)}</b></div><div class="d">${playbookOf(c)[0]}</div><div class="m"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}${c.noSend?"":`<span class="tg llm">${c.lang.toUpperCase()}</span>`}<span class="av" style="width:24px;height:24px;font-size:10px;margin-left:auto" title="${esc(ownerName(c.owner))}">${initials(ownerName(c.owner))}</span></div></div>`).join("")}</div>`}).join("")}</div>`;
   return `<div class="ph"><div><h1>Accounts</h1><div class="sub">${L.length} of ${cases.length} accounts · click a row to open the record</div></div>
@@ -448,16 +451,16 @@ function Record(){
     <h2 class="st" style="margin-top:18px"><span>Playbook</span></h2><div class="box2"><b>${pb[0]}</b><br><span class="d">${pb[1]}</span></div></div>`;
   if(rtab==="activity")center=`<div class="card"><div class="notein"><input id="notein" placeholder="Log a note about ${esc(c.op)}…"><button class="b pri" data-note="1">Add note</button></div>
     <div class="tl">${[...c.events].reverse().map(e=>`<div class="ev ${e.k}"><div class="t">${e.t}</div>${esc(e.txt)}</div>`).join("")}</div></div>`;
-  if(rtab==="email")center=c.noSend?`<div class="card"><div class="d">${c.dormant?"Reactive only — no outreach email for this account.":"Healthy — no email is sent for this account."}</div></div>`:`<div class="card"><h2 class="st"><span>Email draft</span><span class="tg llm">${LIVE?"Template draft · v"+c.ver:"✦ Drafted by LLM · v"+c.ver}</span></h2>${langBar(c)}
+  if(rtab==="email")center=!c.noSend&&!c.drafted?`<div class="card"><div class="d" style="margin-bottom:12px">No draft has been written for this account yet.</div><button class="b pri" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button></div>`:c.noSend?`<div class="card"><div class="d">${c.dormant?"Reactive only — no outreach email for this account.":"Healthy — no email is sent for this account."}</div></div>`:`<div class="card"><h2 class="st"><span>Email draft</span><span class="tg llm">${LIVE?"Template draft · v"+c.ver:"✦ Drafted by LLM · v"+c.ver}</span></h2>${langBar(c)}
     <div class="mail">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${toLine(c)}<br>Subject: ${esc(subjOf(c))}</div><div class="draft">${esc(draftText(c))}</div>
     ${c.note?`<div class="void">${c.note}</div>`:""}<div class="row"><button class="b pri" data-review="${c.id}">Review &amp; approve →</button><span class="d">draft_hash ${c.hash} · ${LIVE?"QA not run":"QA 12/12 pass"}</span></div></div>`;
   const dealsCard=c.hs?`<div class="card"><h2 class="st"><span>HubSpot deals</span><span class="d">${c.hs.deals.length}</span></h2>${c.hs.deals.map(d=>`<div class="task"><div class="grow"><b>${esc(d.pipe)}</b><span class="d">${esc(d.stage)}${d.amount!=null?" · $"+d.amount.toLocaleString():""}</span></div><a href="https://app.hubspot.com/contacts/48205146/record/0-3/${d.id}" target="_blank" rel="noopener" class="b tl" style="text-decoration:none">Open ↗</a></div>`).join("")}</div>`:"";
   const chatCard=`<div class="card chat"><h2 class="st"><span>Ask about ${esc(c.op)}</span><span class="tg">${window.CS_ASSISTANT?"connected":"not connected"}</span></h2><div class="msgs" id="msgs">${chatHtml(c)}</div><div class="notein" style="margin:0"><input id="chatin" placeholder="Ask a question…" autocomplete="off"><button class="b pri" data-send="1">Send</button></div></div>`;
   const right=`<div class="grid" style="gap:16px">${dealsCard}<div class="card"><h2 class="st"><span>Owner</span></h2><div class="task" style="border:0;padding:0"><span class="av">${initials(ownerName(c.owner))}</span><div class="grow"><b>${esc(ownerName(c.owner))}</b><span class="d">Sends from their mailbox</span></div></div></div>
-    <div class="card ${c.state==="pending"?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="healthy"?"Healthy — nothing to send.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?"Waiting for your review before Mon 09:00.":c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.noSend?"":`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`}</div>${chatCard}</div>`;
+    <div class="card ${isQ(c)?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="healthy"?"Healthy — nothing to send.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?(c.drafted?"Waiting for your review before Mon 09:00.":"No draft yet — click Generate draft."):c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.noSend?"":c.drafted?`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`:`<button class="b pri" data-gen="${c.id}" style="width:100%" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}</div>${chatCard}</div>`;
   return `<div class="crumb"><button data-nav="accounts">Accounts</button> / ${esc(c.op)}</div>
   <div class="rh"><span class="av">${initials(c.op)}</span><div><h1 style="margin:0">${esc(c.op)}</h1><div class="row" style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="tg st ${c.state}">${c.state}</span></div></div>
-    <div class="row" style="margin-left:auto">${c.noSend?"":`<button class="b pri" data-review="${c.id}">Review draft</button>`}<button class="b" data-rtab="activity">Log note</button></div></div>
+    <div class="row" style="margin-left:auto">${c.noSend?"":c.drafted?`<button class="b pri" data-review="${c.id}">Review draft</button>`:`<button class="b pri" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}<button class="b" data-rtab="activity">Log note</button></div></div>
   <div class="tabs">${tabs.map(([k,l,n])=>`<button data-rtab="${k}" class="${rtab===k?"on":""}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>
   <div class="rl">${props}<div>${center}</div>${right}</div>`;
 }
@@ -489,7 +492,7 @@ function Approvals(){
   if(!vis.find(c=>c.id===cur)&&vis[0])cur=vis[0].id;
   const c=vis.find(x=>x.id===cur);
   const bulkN=rev.filter(x=>playbookOf(x)[0]===apr.pb&&x.state==="pending").length;
-  const strip=[["Pending",count("pending"),"pending"],["Approved",count("approved"),"approved"],["On hold",count("hold"),"hold"],["Returned",count("rejected"),"rejected"]];
+  const strip=[["Pending",cases.filter(isQ).length,"pending"],["Approved",count("approved"),"approved"],["On hold",count("hold"),"hold"],["Returned",count("rejected"),"rejected"]];
   const detail=!c?`<div class="card d">Select a case.</div>`:`<div class="card ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"box-shadow:inset 0 0 0 2px var(--ok)":""}">
     <div class="lab" style="display:flex;justify-content:space-between"><span>${c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span class="tg st ${c.state}">${c.state}</span></div>
     <h2 style="font-size:22px;margin:6px 0"><span data-open="${c.id}" style="cursor:pointer">${esc(c.op)}</span></h2>
@@ -505,7 +508,7 @@ function Approvals(){
     <div class="row" style="margin-top:16px">${c.rejecting?`<input class="inp" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
       :c.editing?`<button class="b pri" data-a="save">Save &amp; approve</button><button class="b" data-a="cancel">Cancel</button>`
       :`<button class="b pri" data-a="approve">Approve to send</button><button class="b" data-a="edit">Edit</button><button class="b" data-a="hold">Hold</button><button class="b rj" data-a="reject">Reject</button>`}</div></div>`;
-  return `<div class="ph"><div><h1>Approvals</h1><div class="sub">GATE-1 · review the draft, then approve to send Tue 09:00 · ${LIVE?"QA has not run on live data":"QA passed 12/12"}</div></div></div>
+  return `<div class="ph"><div><h1>Approvals</h1><div class="sub">GATE-1 · review the draft, then approve to send Tue 09:00 · ${(()=>{const n=cases.filter(c=>!c.noSend&&!c.drafted).length;return n?n+" account"+(n===1?"":"s")+" have no draft yet (generate from Accounts) · ":""})()} ${LIVE?"QA has not run on live data":"QA passed 12/12"}</div></div></div>
   <div class="grid g4" style="margin-bottom:18px">${strip.map(([l,n,s])=>`<div class="card ${s==="pending"?"human":""}"><div class="lab">${l}</div><div class="big">${n}</div></div>`).join("")}</div>
   <div class="tools"><button class="b ${apr.pb==="All"?"on":""}" data-pf="All">All</button>${pbs.map(p=>`<button class="b ${apr.pb===p?"on":""}" data-pf="${esc(p)}">${esc(p)} <span class="d">${rev.filter(x=>playbookOf(x)[0]===p).length}</span></button>`).join("")}
     ${apr.pb!=="All"&&bulkN?`<button class="b pri" data-bulk="1">Approve all ${esc(apr.pb)} (${bulkN})</button>`:""}</div>
@@ -552,12 +555,14 @@ function setSb(hide){document.body.classList.toggle("nosb",hide);try{localStorag
 try{if(localStorage.getItem("cs.sb")==="1")setSb(true)}catch(e){}
 addEventListener("keydown",e=>{if(e.target&&e.target.id==="chatin"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();return}
   if((e.key==="\\"||e.key==="[")&&!/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||"")))setSb(!document.body.classList.contains("nosb"))});
+function genDraft(id){const c=byId(id);if(!c||c.drafted||c.generating||c.noSend)return;c.generating=true;render();setTimeout(()=>{c.generating=false;c.drafted=true;c.events.push({t:"Just now",k:"ai",txt:"Draft generated (Generate clicked)"});toast("Draft generated · "+c.op);render()},700)}
 function openRecord(id,tab){view="record";recId=id;rtab=tab||"overview";$("#gres").style.display="none";$("#gsearch").value="";scrollTo(0,0);render()}
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-send],[data-sb],[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
+  const t=e.target.closest("[data-gen],[data-send],[data-sb],[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
   if(!t){if(!e.target.closest(".search"))$("#gres").style.display="none";return}
   const D=t.dataset;
+  if(D.gen)return genDraft(D.gen);
   if(D.send)return sendChat();
   if(D.sb)return setSb(!document.body.classList.contains("nosb"));
   if(D.nav){view=D.nav;scrollTo(0,0);return render()}
