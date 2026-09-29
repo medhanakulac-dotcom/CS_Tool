@@ -665,10 +665,18 @@ function Leader(){
 }
 function Sent(){
   const rows=sendLog.filter(r=>cases.some(c=>c.id===r.case));
-  return `<div class="ph"><div><h1>Sent</h1><div class="sub">Tue 09:00 · deterministic send · no model call</div></div></div>
-  <div class="grid g4" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">${[["OUT-1","Retention","operator-specific"],["OUT-2","Adoption","feature gap"],["OUT-3","Commercial","fare position"]].map(([o,t,d])=>`<div class="card"><div class="lab" style="display:flex;justify-content:space-between"><span>${o}</span><span>CODE</span></div><div class="d" style="margin-top:6px">${t}</div><div class="big">${queued(o)}</div><div class="d">queued · ${d}</div></div>`).join("")}</div>
-  <div class="tw"><table><thead><tr><th>Account</th><th>Case</th><th>Channel</th><th>Token</th><th>draft_hash</th><th>Outcome</th></tr></thead><tbody>
-  ${rows.map(r=>{const c=byId(r.case);return `<tr data-open="${c.id}"><td><b>${esc(c.op)}</b></td><td>${r.caseId||c.id}</td><td>${r.out}</td><td>tok_${r.tok}</td><td>${r.hash}</td><td><span class="tg st pending">queued Tue 09:00</span></td></tr>`}).join("")||`<tr><td colspan="6" class="d" style="padding:30px;text-align:center">Nothing approved yet.</td></tr>`}</tbody></table></div>`;
+  const queuedN=cases.filter(c=>c.state==="approved").length,waitN=cases.filter(isQ).length;
+  const byPb={};cases.filter(c=>c.state==="approved").forEach(c=>{const k=playbookOf(c)[0];byPb[k]=(byPb[k]||0)+1});
+  const card=(l,n,d,cls="")=>`<div class="card ${cls}"><div class="lab">${l}</div><div class="big">${n}</div><div class="d">${d}</div></div>`;
+  return `<div class="ph"><div><h1>Sent</h1><div class="sub">Approved emails go out on Tuesday 09:00</div></div></div>
+  <div class="grid g4" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px">
+    ${card("Queued for Tuesday 09:00",queuedN,"emails approved this week")}
+    ${card("Waiting for your approval",waitN,"drafts in Approvals",waitN?"human":"")}
+    ${card("Sent so far",0,"sending isn't connected yet, so nothing has gone out")}
+  </div>
+  ${queuedN?`<div class="row" style="margin-bottom:18px"><span class="d">Queued by playbook:</span>${Object.entries(byPb).map(([k,n])=>`<span class="chip" style="margin:0"><b>${esc(k)}</b> · ${n}</span>`).join("")}</div>`:`<div style="margin-bottom:18px"></div>`}
+  <div class="tw"><table><thead><tr><th>Account</th><th>Case</th><th>Playbook</th><th>Token</th><th>draft_hash</th><th>Outcome</th></tr></thead><tbody>
+  ${rows.map(r=>{const c=byId(r.case);return `<tr data-open="${c.id}"><td><b>${esc(c.op)}</b></td><td>${r.caseId||c.id}</td><td>${esc(playbookOf(c)[0])}</td><td>tok_${r.tok}</td><td>${r.hash}</td><td><span class="tg st pending">queued Tue 09:00</span></td></tr>`}).join("")||`<tr><td colspan="6" class="d" style="padding:30px;text-align:center">Nothing approved yet.</td></tr>`}</tbody></table></div>`;
 }
 
 /* ── shell ── */
