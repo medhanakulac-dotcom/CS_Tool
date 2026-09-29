@@ -192,6 +192,13 @@ body.nosb .topbar{padding-left:24px}
 .lt td.n{text-align:right;font-variant-numeric:tabular-nums}
 .lt th.n{text-align:right}
 .def{font-size:13px;color:var(--mute);line-height:1.6;margin-top:14px}
+.tw th,.tw td{padding-left:10px;padding-right:10px}
+.tw .acct{gap:10px}
+.acct b,.acct .d{max-width:190px}
+@media(max-width:1400px){.tw .acct .av{display:none}}
+.acct>div{min-width:0}
+.acct b{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.acct .d{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){
@@ -506,7 +513,7 @@ function Accounts(){
   const sel=(k,opts,label)=>`<select data-f="${k}"><option value="All">${label}: all</option>${opts.map(o=>`<option value="${esc(o[0])}" ${acc[k]===o[0]?"selected":""}>${esc(o[1])}</option>`).join("")}</select>`;
   const th=(k,l)=>`<th class="s" data-sort="${k}">${l}${acc.sort===k?(acc.dir>0?" ▲":" ▼"):""}</th>`;
   const table=`<div class="tw"><table><thead><tr>${th("op","Account")}${th("owner","Owner")}${th("segment","Segment")}${th("health","Health")}${th("playbook","Playbook")}<th>Lang</th><th>Draft</th>${th("state","Status")}</tr></thead><tbody>
-   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.caseId||"no case"}${c.hs?" · "+esc(c.hs.country):" · "+esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant||c.hs?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.noSend?"—":`<span class="tg llm" title="${LANGS[c.lang]}">${c.lang.toUpperCase()}</span>`}</td><td>${c.noSend||c.state==="closed"?"—":c.drafted?`<span class="tg">ready</span>`:`<button class="b tl" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate"}</button>`}</td><td></td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
+   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.caseId||"no case"}${c.hs?" · "+esc(c.hs.country):" · "+esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant||c.hs?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.noSend?"—":`<span class="tg llm" title="${LANGS[c.lang]}">${c.lang.toUpperCase()}</span>`}</td><td>${c.noSend||c.state==="closed"?"—":c.drafted?`<span class="tg">ready</span>`:`<button class="b tl" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate"}</button>`}</td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
   const cols=[["pending","To review"],["approved","Approved"],["hold","On hold"],["rejected","Returned"],["reactive","Reactive only"],["healthy","Healthy · no case"],["closed","Closed"]];
   const board=`<div class="board">${cols.map(([s,l])=>{const items=L.filter(c=>c.state===s);return `<div class="col"><h3><span>${l}</span><span>${items.length}</span></h3>${items.map(c=>`<div class="kc" data-open="${c.id}"><div class="l"><b>${esc(c.op)}</b></div><div class="d">${playbookOf(c)[0]}</div><div class="m"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}${c.noSend?"":`<span class="tg llm">${c.lang.toUpperCase()}</span>`}<span class="av" style="width:24px;height:24px;font-size:10px;margin-left:auto" title="${esc(ownerName(c.owner))}">${initials(ownerName(c.owner))}</span></div></div>`).join("")}</div>`}).join("")}</div>`;
   return `<div class="ph"><div><h1>Accounts</h1><div class="sub">${L.length} of ${cases.length} accounts · click a row to open the record</div></div>
