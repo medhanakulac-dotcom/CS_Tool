@@ -19,11 +19,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
 .app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
 .side{border-right:1.5px solid var(--line);padding:24px 14px;position:sticky;top:0;height:100vh}
 .brand{font-weight:700;font-size:16px;margin:0 6px 2px}.brand-s{font:10.5px var(--mono);color:var(--mute);margin:0 6px 24px;display:block}
-.nav a{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;margin-bottom:4px;border:1.5px solid transparent;border-radius:4px;color:var(--ink);text-decoration:none;font-size:13px}
-.nav a small{font:10px var(--mono);color:var(--mute)}
-.nav a:hover{border-color:var(--line)}
-.nav a.on{border-color:var(--teal);color:var(--teal);font-weight:700}
-.nav a .badge{font:10px var(--mono);background:var(--amber-bg);color:var(--amber);border-radius:22px;padding:1px 8px}
+.nav button{width:100%;text-align:left;font-family:var(--sans);background:none;display:flex;justify-content:space-between;align-items:center;padding:8px 10px;margin-bottom:4px;border:1.5px solid transparent;border-radius:4px;color:var(--ink);text-decoration:none;font-size:13px}
+.nav button small{font:10px var(--mono);color:var(--mute)}
+.nav button:hover{border-color:var(--line)}
+.nav button.on{border-color:var(--teal);color:var(--teal);font-weight:700}
+.nav button .badge{font:10px var(--mono);background:var(--amber-bg);color:var(--amber);border-radius:22px;padding:1px 8px}
 .wrap{max-width:1000px;width:100%;padding:28px 28px 64px}
 .view{display:none}.view.on{display:block}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
@@ -32,8 +32,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
 .two{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
 .list .it{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1.5px dashed var(--line);font-size:13px}
 .list .it:last-child{border:0}
-@media(max-width:900px){.app{grid-template-columns:168px 1fr}.side{padding:20px 8px}.nav a small{display:none}.wrap{padding:24px 16px 64px}.kpis{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
-@media(max-width:480px){.app{grid-template-columns:1fr}.side{position:static;height:auto;border-right:0;border-bottom:1.5px solid var(--line);padding:14px 16px}.nav{display:flex;gap:4px;overflow-x:auto}.nav a{white-space:nowrap}.brand-s{margin-bottom:10px}.wrap{padding:20px 16px 64px}.kpis{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
+@media(max-width:900px){.app{grid-template-columns:168px 1fr}.side{padding:20px 8px}.nav button small{display:none}.wrap{padding:24px 16px 64px}.kpis{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
+@media(max-width:480px){.app{grid-template-columns:1fr}.side{position:static;height:auto;border-right:0;border-bottom:1.5px solid var(--line);padding:14px 16px}.nav{display:flex;gap:4px;overflow-x:auto}.nav button{white-space:nowrap}.brand-s{margin-bottom:10px}.wrap{padding:20px 16px 64px}.kpis{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
 .mono,.tag,.time{font-family:var(--mono)}
 header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:28px}
 h1{font-size:22px;margin:0}
@@ -96,10 +96,10 @@ textarea{width:100%;min-height:120px;font:13px var(--sans);background:var(--bg);
 <aside class="side">
   <div class="brand">CS Tool</div><span class="brand-s">weekly customer success</span>
   <nav class="nav">
-    <a href="javascript:void(0)" data-v="dashboard">Dashboard <small>01</small></a>
-    <a href="javascript:void(0)" data-v="queue">Approval queue <span class="badge" id="nav-badge"></span></a>
-    <a href="javascript:void(0)" data-v="pipeline">Pipeline <small>03</small></a>
-    <a href="javascript:void(0)" data-v="log">Send log <small>04</small></a>
+    <button type="button" data-v="dashboard">Dashboard <small>01</small></button>
+    <button type="button" data-v="queue">Approval queue <span class="badge" id="nav-badge"></span></button>
+    <button type="button" data-v="pipeline">Pipeline <small>03</small></button>
+    <button type="button" data-v="log">Send log <small>04</small></button>
   </nav>
 </aside>
 <div class="wrap">
@@ -229,7 +229,7 @@ function render(){
   $("#top").innerHTML=cases.filter(c=>c.state==="pending").sort((a,b)=>b.risk-a.risk).slice(0,4).map(c=>`<div class="it"><span><b>${c.op}</b> <span class="mono" style="color:var(--mute);font-size:11px">${c.play}</span></span><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span></div>`).join("")||'<div class="it">All cases decided</div>';
 }
 document.addEventListener("click",e=>{
-  const n=e.target.closest("[data-v]");if(n){e.preventDefault();return go(n.dataset.v)}
+  const n=e.target.closest("[data-v]");if(n){return go(n.dataset.v)}
   const f=e.target.closest("[data-f]");if(f){filter=f.dataset.f;return render()}
   const b=e.target.closest("[data-bulk]");
   if(b){cases.filter(c=>c.play===b.dataset.bulk&&c.state==="pending").forEach(c=>{c.state="approved";log(c)});return render()}
@@ -250,7 +250,7 @@ let view="dashboard";
 function go(v){view=v;route()}
 function route(){const v=view;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
-  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.dataset.v===v));}
+  document.querySelectorAll(".nav button").forEach(a=>a.classList.toggle("on",a.dataset.v===v));}
 render();route();
 </script>
 </body>
