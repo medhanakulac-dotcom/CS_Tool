@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CS Tool — Weekly Run</title>
+<style>
+:root{
+  --bg:#fff; --ink:#1c262b; --mute:#6b767b; --line:#c3cacd; --pill:#e6eaea;
+  --teal:#2c6f74; --amber:#b4531d; --amber-bg:#f4e5d9; --red:#a5422f; --ok:#3b7a57;
+  --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]){--bg:#14191c;--ink:#e6ebed;--mute:#8d999f;--line:#3a4549;--pill:#242d31;--teal:#5fb0b6;--amber:#e08a55;--amber-bg:#2c2019;--red:#e0705c;--ok:#6dbb90}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 16px 64px}
+.mono,.tag,.time{font-family:var(--mono)}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:28px}
+h1{font-size:22px;margin:0}
+.sub{color:var(--mute);font:12px var(--mono)}
+h2{font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:36px 0 12px}
+
+/* boxes — the diagram's node language */
+.box{border:1.5px solid var(--line);border-radius:4px;padding:12px 16px;background:var(--bg);position:relative}
+.box.dashed{border-style:dashed}
+.box.teal{border:2px solid var(--teal)}
+.box.human{border:2px solid var(--amber);background:var(--amber-bg)}
+.tag{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute);letter-spacing:.04em}
+.box.teal .tag span:last-child{color:var(--teal)}
+.box.human .tag span:last-child{color:var(--amber)}
+.title{font-weight:700;font-size:15px;text-align:center;margin:2px 0}
+.desc{font:11.5px var(--mono);color:var(--mute);text-align:center}
+.pill{background:var(--pill);border-radius:22px;padding:9px 18px;text-align:center;font:12px var(--mono)}
+.arrow{width:1.5px;height:22px;background:#4c5a60;margin:0 auto;position:relative}
+.arrow::after{content:"";position:absolute;bottom:-1px;left:-3.5px;border:4.5px solid transparent;border-top:7px solid #4c5a60;border-bottom:0}
+.arrow small{position:absolute;left:10px;top:3px;font:10.5px var(--mono);color:var(--mute);white-space:nowrap}
+.arrow.go small{color:var(--amber)}
+.row{display:flex;gap:14px}.row>*{flex:1}
+.stage{display:grid;grid-template-columns:1fr 64px;gap:12px;align-items:center}
+.time{font-size:11px;color:var(--teal)}
+.stage.h .time{color:var(--amber)}
+.divider{border-top:1.5px dashed var(--teal);margin:8px 0;position:relative}
+.divider span{position:absolute;top:-9px;left:8px;background:var(--bg);padding:0 8px;font:11px var(--mono);color:var(--teal)}
+.status{position:absolute;right:10px;bottom:8px;font:10px var(--mono);color:var(--ok)}
+.status.wait{color:var(--amber)}
+.status.idle{color:var(--mute)}
+@media(max-width:640px){.row{flex-direction:column}.stage{grid-template-columns:1fr}.time{display:none}}
+
+/* approval queue */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+button{font:12px var(--mono);border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button.ap{border-color:var(--amber);color:var(--amber);font-weight:700}
+button.ap:hover{background:var(--amber);color:#fff}
+button.rj{border-style:dashed;border-color:var(--red);color:var(--red)}
+.filters button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.case{border:1.5px solid var(--line);border-radius:4px;margin-bottom:10px;background:var(--bg)}
+.case-h{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 16px;cursor:pointer}
+.rank{font:700 13px var(--mono);color:var(--mute)}
+.risk{font:11px var(--mono);border-radius:22px;padding:2px 10px;background:var(--pill)}
+.risk.hi{background:var(--amber-bg);color:var(--amber)}
+.case-b{display:none;border-top:1.5px dashed var(--line);padding:14px 16px}
+.case.open .case-b{display:block}
+.case.done{border-color:var(--ok)}.case.rej{border:1.5px dashed var(--red)}.case.hold{opacity:.65}
+.sig{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.sig span{font:11px var(--mono);padding:2px 8px;border:1.5px solid var(--line);border-radius:4px}
+.draft{background:var(--pill);border-radius:4px;padding:12px 14px;white-space:pre-wrap;font-size:13px;margin-bottom:12px}
+.meta{font:11px var(--mono);color:var(--mute);margin-bottom:12px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+textarea{width:100%;min-height:120px;font:13px var(--sans);background:var(--bg);color:var(--ink);border:1.5px solid var(--teal);border-radius:4px;padding:10px;margin-bottom:12px}
+.state{font:11px var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Weekly Run</h1><div class="sub">week 2026-W40 · run_manifest ok · generated Mon 03:30</div></div>
+    <div class="sub" id="counts"></div>
+  </header>
+
+  <h2>Pipeline</h2>
+  <div class="box dashed"><div class="tag"><span>SOURCE</span></div><div class="title">Data warehouse</div><div class="desc">fct_ticket · fct_ticket_weekly_by_route · fct_feature_event</div></div>
+  <div class="arrow"></div>
+  <div class="stage"><div class="row">
+    <div class="box"><div class="tag"><span>ADM-1</span><span>SQL</span></div><div class="title">Commercial extract</div><div class="desc">tickets · fares · routes</div><span class="status">done</span></div>
+    <div class="box"><div class="tag"><span>ADM-2</span><span>SQL</span></div><div class="title">Product extract</div><div class="desc">sessions · feature events</div><span class="status">done</span></div>
+  </div><div class="time">Mon 01:00</div></div>
+  <div class="arrow"></div>
+  <div class="pill">dataset_{week}.parquet + run_manifest.json</div>
+  <div class="arrow"></div>
+  <div class="stage"><div class="row">
+    <div class="box"><div class="tag"><span>ANL-1</span><span>SQL</span></div><div class="title">Volume</div><div class="desc">WoW drop</div></div>
+    <div class="box"><div class="tag"><span>ANL-2</span><span>SQL</span></div><div class="title">Route peer</div><div class="desc">them vs market</div></div>
+    <div class="box"><div class="tag"><span>ANL-3</span><span>SQL</span></div><div class="title">Fare index</div><div class="desc">vs peer median</div></div>
+    <div class="box"><div class="tag"><span>ANL-4</span><span>SQL</span></div><div class="title">Adoption</div><div class="desc">WAO · features</div></div>
+  </div><div class="time">Mon 01:30</div></div>
+  <div class="arrow"></div>
+  <div class="pill">signals[] — one row per operator per detector that fired</div>
+  <div class="arrow"></div>
+  <div class="stage"><div class="box teal"><div class="tag"><span>SUP-1</span><span>CODE + LLM</span></div><div class="title">Triage &amp; de-duplication</div><div class="desc">group by operator · risk score · pick play · apply suppressions</div><span class="status">done</span></div><div class="time">Mon 02:00</div></div>
+  <div class="arrow"></div>
+  <div class="pill">cases[] — one per operator, ranked by risk_score</div>
+  <div class="arrow"><small>assigned</small></div>
+  <div class="stage"><div class="box teal"><div class="tag"><span>AST-1</span><span>LLM</span></div><div class="title">Narrative &amp; drafting</div><div class="desc">per-operator story + one email draft per case</div><span class="status">done</span></div><div class="time">Mon 02:30</div></div>
+  <div class="arrow"></div>
+  <div class="pill">report.xlsx · report.pptx · drafts[] (each with draft_hash)</div>
+  <div class="arrow"></div>
+  <div class="stage"><div class="box teal"><div class="tag"><span>QAM-1</span><span>CODE + LLM</span></div><div class="title">QA — recompute and block</div><div class="desc">12 checks · re-derives every figure from the parquet</div><span class="status">12 / 12 pass</span></div><div class="time">Mon 03:30</div></div>
+  <div class="arrow"><small>pass</small></div>
+  <div class="stage h"><div class="box human"><div class="tag"><span>GATE-1</span><span>HUMAN</span></div><div class="title">Chris — approve, edit, reject or hold</div><div class="desc">per case, or bulk per play</div><span class="status wait" id="gate-status"></span></div><div class="time">Mon 09:00</div></div>
+  <div class="arrow go"><small>approve</small></div>
+  <div class="pill">approval_token — signed over draft_hash, TTL 72h</div>
+  <div class="divider"><span>no model call below this line — sending is deterministic</span></div>
+  <div class="stage"><div class="row">
+    <div class="box"><div class="tag"><span>OUT-1</span><span>CODE</span></div><div class="title">Retention</div><div class="desc">operator-specific</div></div>
+    <div class="box"><div class="tag"><span>OUT-2</span><span>CODE</span></div><div class="title">Adoption</div><div class="desc">feature gap</div></div>
+    <div class="box"><div class="tag"><span>OUT-3</span><span>CODE</span></div><div class="title">Commercial</div><div class="desc">fare position</div></div>
+  </div><div class="time">Tue 09:00</div></div>
+  <div class="arrow"></div>
+  <div class="pill">send_log — case · token · hash · message_id · outcome</div>
+
+  <h2>GATE-1 · Approval queue</h2>
+  <div class="toolbar filters" id="filters"></div>
+  <div class="toolbar" id="bulk"></div>
+  <div id="cases"></div>
+
+  <h2>send_log</h2>
+  <div class="pill" id="log" style="text-align:left;border-radius:8px;white-space:pre-wrap">— nothing sent yet —</div>
+</div>
+
+<script>
+const cases=[
+ {id:"C-101",op:"Aero Nusantara",play:"Retention",risk:87,sig:["Volume −23% WoW","Route peer −11 pts"],
+  draft:"Hi Rina,\n\nBookings on your top three routes dropped 23% week over week, while the market on the same routes moved −4%. Could we find 20 minutes this week to look at what changed?\n\nChris"},
+ {id:"C-102",op:"Blue Kestrel Air",play:"Commercial",risk:74,sig:["Fare index 1.18 vs peer median"],
+  draft:"Hi Tom,\n\nYour average fare on CNX–BKK sits 18% above the peer median this week. Here is the breakdown by fare class, and two options we could test.\n\nChris"},
+ {id:"C-103",op:"Coral Jet",play:"Adoption",risk:61,sig:["WAO 12%","2 features unused"],
+  draft:"Hi Mei,\n\nOnly 12% of your agents used ancillary bundling last week. Teams that switch it on see a lift in attach rate — happy to walk through setup.\n\nChris"},
+ {id:"C-104",op:"Delta Meridian",play:"Retention",risk:55,sig:["Volume −14% WoW"],
+  draft:"Hi Sam,\n\nA quick note on the 14% dip in volume this week. Anything on your side we should know about?\n\nChris"},
+ {id:"C-105",op:"Ember Wings",play:"Adoption",risk:42,sig:["WAO 21%"],
+  draft:"Hi Lia,\n\nA short guide to the two features your team hasn't tried yet is attached.\n\nChris"}
+].map(c=>({...c,state:"pending",hash:Math.random().toString(16).slice(2,10)}));
+let filter="All";
+const $=s=>document.querySelector(s), esc=s=>s.replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+
+function set(c,state){c.state=state;log(c);render()}
+function log(c){
+  if(c.state!=="approved")return;
+  const l=$("#log");if(l.dataset.n!=="1"){l.textContent="";l.dataset.n="1"}
+  l.textContent+=`${c.id} · tok_${c.hash}${c.hash.slice(0,2)} · ${c.hash} · queued Tue 09:00 · pending\n`;
+}
+function render(){
+  const plays=["All",...new Set(cases.map(c=>c.play))];
+  $("#filters").innerHTML=plays.map(p=>`<button class="${p===filter?"on":""}" data-f="${p}">${p}</button>`).join("");
+  const vis=cases.filter(c=>filter==="All"||c.play===filter);
+  $("#bulk").innerHTML=filter==="All"?"":`<button class="ap" data-bulk="${filter}">Approve all ${filter} (${vis.filter(c=>c.state==="pending").length})</button>`;
+  $("#cases").innerHTML=vis.map(c=>`
+   <div class="case ${c.open?"open":""} ${c.state==="approved"?"done":c.state==="rejected"?"rej":c.state==="hold"?"hold":""}" data-id="${c.id}">
+    <div class="case-h"><span class="rank">#${cases.indexOf(c)+1}</span>
+     <div><b>${c.op}</b> <span class="mono" style="color:var(--mute);font-size:11px">${c.id} · ${c.play}</span></div>
+     <div><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="state">${c.state}</span></div></div>
+    <div class="case-b">
+     <div class="sig">${c.sig.map(s=>`<span>${s}</span>`).join("")}</div>
+     ${c.editing?`<textarea>${esc(c.draft)}</textarea>`:`<div class="draft">${esc(c.draft)}</div>`}
+     <div class="meta">draft_hash ${c.hash} · QA 12/12 pass</div>
+     <div class="acts">
+      ${c.editing?`<button class="ap" data-a="save">Save &amp; approve</button><button data-a="cancel">Cancel</button>`:
+      `<button class="ap" data-a="approve">Approve</button><button data-a="edit">Edit</button><button data-a="hold">Hold</button><button class="rj" data-a="reject">Reject</button>`}
+     </div></div></div>`).join("");
+  const p=cases.filter(c=>c.state==="pending").length;
+  $("#counts").textContent=`${cases.length-p} / ${cases.length} decided`;
+  $("#gate-status").textContent=p?`${p} awaiting you`:"all decided";
+  $("#gate-status").className="status "+(p?"wait":"");
+}
+document.addEventListener("click",e=>{
+  const f=e.target.closest("[data-f]");if(f){filter=f.dataset.f;return render()}
+  const b=e.target.closest("[data-bulk]");
+  if(b){cases.filter(c=>c.play===b.dataset.bulk&&c.state==="pending").forEach(c=>{c.state="approved";log(c)});return render()}
+  const el=e.target.closest(".case");if(!el)return;
+  const c=cases.find(x=>x.id===el.dataset.id), a=e.target.closest("[data-a]");
+  if(!a){if(e.target.closest(".case-h")){c.open=!c.open;render()}return}
+  const act=a.dataset.a;
+  if(act==="approve")set(c,"approved");
+  else if(act==="reject"){const r=prompt("Reject reason (sent back to SUP-1):");if(r)set(c,"rejected")}
+  else if(act==="hold")set(c,"hold");
+  else if(act==="edit"){c.editing=true;render()}
+  else if(act==="cancel"){c.editing=false;render()}
+  else if(act==="save"){c.draft=el.querySelector("textarea").value;c.hash=Math.random().toString(16).slice(2,10);c.editing=false;set(c,"approved")}
+});
+render();
+</script>
+</body>
+</html>
