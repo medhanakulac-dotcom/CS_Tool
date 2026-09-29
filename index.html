@@ -5,422 +5,181 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CS Tool — Customer Success</title>
 <style>
-:root{
-  --bg:#fff; --ink:#1c262b; --mute:#6b767b; --line:#c3cacd; --pill:#e6eaea;
-  --teal:#2c6f74; --amber:#b4531d; --amber-bg:#f4e5d9; --red:#a5422f; --ok:#3b7a57;
-  --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
-}
+:root{--bg:#f5f0e9;--card:#fff;--ink:#1d1d1b;--mute:#8a8178;--tan:#b9a98f;--line:#ece4d8;--pill:#f0eadf;
+ --teal:#3e9d8c;--mint:#e3f5ef;--amber:#c47f1e;--amber-bg:#fbf1dc;--red:#cc3f6e;--pink:#fbe9ec;--ok:#3f9a5b;--okbg:#e6f6ec;--purple:#7a5cf0;--purplebg:#efe9fb;
+ --shadow:0 1px 2px rgba(80,60,30,.06),0 8px 24px rgba(80,60,30,.04);
+ --sans:Inter,-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
-.mono{font-family:var(--mono)}
-.top{border-bottom:1.5px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
-.top-in{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
-.brand{font-weight:700;font-size:16px}.brand small{display:block;font:10.5px var(--mono);color:var(--mute);font-weight:400}
-.tabs{display:flex;gap:6px;flex:1}
-.tabs button{font:13px var(--sans);color:var(--ink);background:none;border:1.5px solid transparent;border-radius:4px;padding:8px 14px;cursor:pointer;display:flex;gap:8px;align-items:center}
-.tabs button:hover{border-color:var(--line)}
-.tabs button.on{border-color:var(--teal);color:var(--teal);font-weight:700}
-.tabs button.gate.on{border-color:var(--amber);color:var(--amber)}
-.tabs .cnt{font:10px var(--mono);border-radius:22px;padding:0 7px;background:var(--amber);color:#fff}
-.week{font:11.5px var(--mono);color:var(--mute)}
-.page{max-width:1180px;margin:0 auto;padding:26px 20px 72px}
-h1{font-size:22px;margin:0 0 2px}
-.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.sub{font:12px var(--mono);color:var(--mute)}
-h2{font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:30px 0 10px;font-weight:400;display:flex;justify-content:space-between;align-items:center}
-.box{border:1.5px solid var(--line);border-radius:4px;padding:12px 16px;background:var(--bg)}
-.box.dashed{border-style:dashed}.box.teal{border:2px solid var(--teal)}.box.human{border:2px solid var(--amber);background:var(--amber-bg)}
-.tag{display:flex;justify-content:space-between;font:10.5px var(--mono);color:var(--mute);letter-spacing:.04em}
-.teal .tag span:last-child{color:var(--teal)}.human .tag span:last-child{color:var(--amber)}
-.t{font-weight:700;font-size:15px;margin:3px 0 0}
-.d{font:11.5px var(--mono);color:var(--mute)}
-.n{font:700 28px var(--sans);margin:4px 0 0;line-height:1.1}
-.grid{display:grid;gap:14px}.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1fr 1fr}
-@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
-.pill{background:var(--pill);border-radius:22px;padding:8px 16px;font:12px var(--mono)}
-.wrapt{border:1.5px solid var(--line);border-radius:4px;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{font:10.5px var(--mono);color:var(--mute);text-align:left;font-weight:400;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;border-bottom:1.5px solid var(--line);white-space:nowrap}
-td{padding:10px 12px;border-bottom:1.5px dashed var(--line);vertical-align:middle}
-tr:last-child td{border-bottom:0}
-.chip{font:11px var(--mono);padding:2px 8px;border:1.5px solid var(--line);border-radius:4px;display:inline-block;margin:0 4px 4px 0;background:var(--bg)}
-.risk{font:11px var(--mono);border-radius:22px;padding:1px 9px;background:var(--pill);white-space:nowrap}
-.risk.hi{background:var(--amber-bg);color:var(--amber)}
-.st{font:11px var(--mono);border-radius:22px;padding:1px 9px;border:1.5px solid var(--line);white-space:nowrap}
-.st.approved{border-color:var(--ok);color:var(--ok)}.st.rejected{border:1.5px dashed var(--red);color:var(--red)}.st.hold{color:var(--mute)}.st.reactive{color:var(--mute);border-style:dashed}.st.pending{border-color:var(--amber);color:var(--amber)}
-.b{font:12px var(--mono);border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:5px 11px;cursor:pointer}
-.b:hover{border-color:var(--ink)}
-.b.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.b.ap{border-color:var(--amber);color:var(--amber);font-weight:700}
-.b.ap:hover{background:var(--amber);color:#fff}
-.b.rj{border-style:dashed;border-color:var(--red);color:var(--red)}
-.b.tl{border-color:var(--teal);color:var(--teal)}
-.bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-/* bars */
-.bars .r{display:grid;grid-template-columns:130px 1fr 36px;gap:10px;align-items:center;padding:5px 0;font-size:13px}
-.bars .tr{height:10px;background:var(--pill);border-radius:2px}
-.bars .fl{height:100%;background:var(--teal);border-radius:2px}
-.bars .fl.hi{background:var(--amber)}
-/* draft page */
-.split{display:grid;grid-template-columns:340px minmax(0,1fr);gap:20px;align-items:start}
-@media(max-width:900px){.split{grid-template-columns:1fr}}
-.q{border:1.5px solid var(--line);border-radius:4px;overflow:hidden}
-.qi{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1.5px dashed var(--line);padding:10px 14px;cursor:pointer;font:13px var(--sans);color:var(--ink)}
-.qi:last-child{border-bottom:0}
-.qi:hover{background:var(--pill)}
-.qi.on{background:var(--amber-bg);box-shadow:inset 3px 0 0 var(--amber)}
-.qi .l1{display:flex;justify-content:space-between;gap:8px}.qi .l2{display:flex;justify-content:space-between;margin-top:3px;font:11px var(--mono);color:var(--mute)}
-.draft{background:var(--pill);border-radius:4px;padding:14px 16px;white-space:pre-wrap;font-size:13.5px;margin:12px 0}
-.mail{font:12px var(--mono);color:var(--mute);border-bottom:1.5px dashed var(--line);padding-bottom:8px}
-textarea,input.f{width:100%;font:13.5px var(--sans);background:var(--bg);color:var(--ink);border:1.5px solid var(--teal);border-radius:4px;padding:10px;margin:12px 0}
-input.f{border-color:var(--red);margin:0}textarea{min-height:170px}
-.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.log{background:var(--pill);border-radius:6px;padding:12px 14px;font:12px var(--mono);white-space:pre-wrap;word-break:break-all;margin-top:12px}
-.seg{font:11px var(--mono);border-radius:6px;padding:2px 9px;font-weight:700;white-space:nowrap;display:inline-block}
-.seg.High{background:color-mix(in srgb,var(--teal) 16%,var(--bg));color:var(--teal)}
-.seg.Mid{background:color-mix(in srgb,#7a5cf0 16%,var(--bg));color:#7a5cf0}
-.seg.Low{background:var(--amber-bg);color:var(--amber)}
-.seg.Dormant{background:var(--pill);color:var(--mute)}
-.hl{font:11px var(--mono);border-radius:6px;padding:2px 9px;font-weight:700;white-space:nowrap;display:inline-block}
-.hl.Unhealthy{background:color-mix(in srgb,var(--red) 14%,var(--bg));color:var(--red)}
-.hl.Adopted{background:var(--amber-bg);color:var(--amber)}
-.hl.Healthy{background:color-mix(in srgb,var(--ok) 14%,var(--bg));color:var(--ok)}
-.mx{display:grid;grid-template-columns:110px repeat(3,1fr);gap:8px}
-.mx .ch{font:700 12px var(--mono);padding:4px 6px}
-.mx .rh{border:1.5px solid var(--line);border-radius:4px;padding:10px;display:flex;flex-direction:column;gap:4px;justify-content:center}
-.mx .cell{border-radius:4px;padding:10px 12px;min-height:96px;border:1.5px solid transparent}
-.mx .cell.Unhealthy{background:color-mix(in srgb,var(--red) 9%,var(--bg))}.mx .cell.Adopted{background:var(--amber-bg)}.mx .cell.Healthy{background:color-mix(in srgb,var(--ok) 9%,var(--bg))}
-.mx .cell.Dormant{background:var(--pill);grid-column:2/5;min-height:0}
-.mx .cell b{display:block;font-size:14px}.mx .cell.Unhealthy b{color:var(--red)}.mx .cell.Adopted b{color:var(--amber)}.mx .cell.Healthy b{color:var(--ok)}
-.mx .cell .ops{margin-top:8px}
-.mx .cell .ops span{font:11px var(--mono);background:var(--bg);border:1.5px solid var(--line);border-radius:22px;padding:1px 8px;margin:0 4px 4px 0;display:inline-block;color:var(--ink)}
-@media(max-width:900px){.mx{grid-template-columns:70px repeat(3,minmax(150px,1fr));overflow-x:auto}}
-.callout{border:1.5px solid var(--line);border-left:5px solid var(--teal);border-radius:4px;padding:14px 18px;font-size:13.5px}
-.callout .k{font:700 11px var(--mono);letter-spacing:.06em;color:var(--teal);margin-bottom:6px}
-.view{display:none}.view.on{display:block}
-.empty{color:var(--mute);font:12px var(--mono);padding:30px;text-align:center}
-
-/* ── warm theme (playbook look) ── */
-:root{--bg:#f4efe8;--ink:#1d1d1b;--mute:#8a8178;--line:#ece4d8;--pill:#f0eadf;--teal:#3e9d8c;--amber:#c47f1e;--amber-bg:#fbf1dc;--red:#cc3f6e;--ok:#3f9a5b;
- --tan:#b9a98f;--mint:#e3f5ef;--card:#fff;--shadow:0 1px 2px rgba(80,60,30,.06),0 8px 24px rgba(80,60,30,.04);
- --sans:Inter,-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;--mono:var(--sans)}
-body{font-family:var(--sans);font-size:15px}
-.top{background:var(--bg);border-bottom:0}
-.brand{font-size:18px;letter-spacing:-.01em}.brand small{font-size:12px;color:var(--tan)}
-.tabs button{border:0;border-radius:14px;padding:10px 18px;font-weight:600;color:var(--mute)}
-.tabs button:hover{background:#fff}
-.tabs button.on{background:var(--mint);color:var(--teal)}
-.tabs button.gate.on{background:var(--amber-bg);color:var(--amber)}
-.tabs .cnt{border-radius:999px;font-weight:700}
-.week{color:var(--tan)}
-h1{font-size:28px;letter-spacing:-.02em}
-.sub,.d,.m{font-family:var(--sans);font-size:13.5px;color:var(--mute)}
-h2,.tag,th,.callout .k{font-family:var(--sans);text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:11.5px;color:var(--tan)}
-h2{margin-top:36px}
-.box,.wrapt,.q,.case,.callout,.mx .rh{background:var(--card);border:0;border-radius:22px;box-shadow:var(--shadow)}
-.box{padding:20px 24px}
-.box.dashed{border:1.5px dashed var(--line);box-shadow:none;background:transparent}
-.box.teal{border:0;box-shadow:inset 4px 0 0 var(--teal),var(--shadow)}
-.box.human{background:#fbeee0;box-shadow:none}
-.teal .tag span:last-child,.human .tag span:last-child{font-weight:700}
-.t{font-size:17px;letter-spacing:-.01em}
-.n{font-size:34px;letter-spacing:-.02em}
-.pill{background:var(--pill);border-radius:999px}
-th{border-bottom:1px solid var(--line);padding:14px 16px}
-td{border-bottom:1px solid #f3ede3;padding:14px 16px;font-size:14px}
-.wrapt{overflow:hidden;overflow-x:auto}
-.chip{border:0;background:var(--bg);border-radius:999px;padding:3px 11px;font-size:12.5px}
-.risk{border-radius:999px;font-weight:700;padding:2px 11px;font-size:12.5px}
-.st{border:0;border-radius:999px;background:var(--pill);padding:3px 12px;font-weight:600;font-size:12px}
-.st.approved{background:#e6f6ec;color:var(--ok)}.st.rejected{background:#fbe9ec;color:var(--red)}.st.pending{background:var(--amber-bg);color:var(--amber)}.st.hold,.st.reactive{background:var(--pill);color:var(--mute)}
-.b{border:0;background:#fff;box-shadow:var(--shadow);border-radius:12px;padding:8px 16px;font:600 13px var(--sans)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+button,input,select,textarea{font-family:inherit}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{background:#fff;border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{font:800 18px var(--sans);letter-spacing:-.02em;padding:0 10px}
+.brand small{display:block;font:500 12px var(--sans);color:var(--tan);letter-spacing:0}
+#snav{margin-top:22px;display:flex;flex-direction:column;gap:4px}
+#snav button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:12px;padding:10px 12px;font:600 14.5px var(--sans);color:#6f665c;cursor:pointer}
+#snav button:hover{background:var(--bg)}
+#snav button.on{background:var(--mint);color:var(--teal)}
+#snav .ic{width:20px;text-align:center;font-size:16px}
+#snav .cnt{margin-left:auto;font:700 11px var(--sans);border-radius:999px;padding:1px 8px;background:var(--pill);color:var(--mute)}
+#snav .cnt.warn{background:var(--amber);color:#fff}
+.me{margin-top:auto;display:flex;gap:10px;align-items:center;padding:10px;border-top:1px solid var(--line)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--mint);color:var(--teal);display:inline-flex;align-items:center;justify-content:center;font:800 13px var(--sans);flex:none}
+.me b{display:block;font-size:14px}.me span{font-size:12px;color:var(--mute)}
+.topbar{display:flex;align-items:center;gap:16px;padding:14px 32px;position:sticky;top:0;background:var(--bg);z-index:8}
+.search{position:relative;flex:1;max-width:520px}
+.search input{width:100%;border:0;background:#fff;border-radius:14px;padding:11px 16px 11px 40px;font-size:14px;box-shadow:var(--shadow);outline:none}
+.search input:focus{box-shadow:0 0 0 2px #cfe8e2}
+.search::before{content:"⌕";position:absolute;left:15px;top:8px;font-size:18px;color:var(--tan)}
+#gres{position:absolute;top:46px;left:0;right:0;background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(60,40,20,.15);overflow:hidden;display:none;z-index:20}
+#gres .it{display:flex;justify-content:space-between;gap:10px;padding:10px 16px;cursor:pointer;font-size:14px}
+#gres .it:hover{background:var(--bg)}
+.ownerf{display:flex;align-items:center;gap:8px;font:800 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan)}
+.ownerf select{font:600 14px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:#fff;border:0;border-radius:12px;padding:9px 14px;box-shadow:var(--shadow);cursor:pointer}
+.ownerf.on select{background:var(--mint);color:var(--teal)}
+.week{font-size:12.5px;color:var(--tan);margin-left:auto;white-space:nowrap}
+main{padding:8px 32px 80px;max-width:1240px}
+h1{font-size:28px;letter-spacing:-.02em;margin:6px 0 2px}
+.sub{font-size:13.5px;color:var(--mute)}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:6px 0 20px}
+.crumb{font-size:13px;color:var(--mute);margin-bottom:6px}
+.crumb button{background:none;border:0;padding:0;color:var(--teal);font:600 13px var(--sans);cursor:pointer}
+h2.st{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--card);border-radius:22px;padding:22px 24px;box-shadow:var(--shadow)}
+.card.human{background:#fbeee0;box-shadow:inset 0 0 0 2px var(--amber)}
+.card.click{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.card.click:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(80,60,30,.08),0 14px 36px rgba(80,60,30,.09)}
+.lab{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan)}
+.big{font:800 34px var(--sans);letter-spacing:-.02em;line-height:1.1;margin:6px 0 2px}
+.d{font-size:13px;color:var(--mute)}
+.go{color:var(--teal);font-weight:700}.human .go{color:var(--amber)}
+.grid{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1.25fr 1fr}
+@media(max-width:1000px){.g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+.b{font:600 13px var(--sans);border:0;background:#fff;box-shadow:var(--shadow);color:var(--ink);border-radius:12px;padding:8px 16px;cursor:pointer;white-space:nowrap}
 .b:hover{box-shadow:0 0 0 2px var(--line)}
+.b:disabled{opacity:.5;cursor:default}
 .b.on{background:var(--ink);color:#fff}
-.b.ap{background:var(--amber-bg);color:var(--amber);border:0}.b.ap:hover{background:var(--amber);color:#fff}
-.b.rj{background:#fbe9ec;color:var(--red);border:0}
-.b.tl{background:var(--mint);color:var(--teal);border:0}
-.seg,.hl{border-radius:12px;padding:5px 14px;font:700 13px var(--sans)}
-.seg.High{background:var(--mint);color:var(--teal)}.seg.Mid{background:#e9e6fb;color:#7a5cf0}.seg.Low{background:var(--amber-bg);color:var(--amber)}.seg.Dormant{background:#ebe5db;color:#8a8178}
-.hl.Unhealthy{background:#fbe9ec;color:var(--red)}.hl.Adopted{background:var(--amber-bg);color:var(--amber)}.hl.Healthy{background:#e6f6ec;color:var(--ok)}
-.mx{gap:14px}
-.mx .ch{font:700 15px var(--sans);display:flex;gap:8px;align-items:center}
-.mx .rh{padding:18px 20px}
-.mx .cell{border-radius:22px;padding:20px 22px}
-.mx .cell.Unhealthy{background:#fbe9ec}.mx .cell.Adopted{background:#fbf1dc}.mx .cell.Healthy{background:#e9f7ee}.mx .cell.Dormant{background:#efe9df}
-.mx .cell b{font-size:19px;margin-bottom:6px}
-.mx .cell .mono{font-size:13.5px!important;color:#4a4238}
-.mx .cell .ops span{border:0;font-size:12px;font-weight:600}
-.callout{border-left:0;box-shadow:inset 6px 0 0 #63d3bf,var(--shadow);padding:22px 28px;line-height:1.7}
-.bars .tr{height:10px;border-radius:999px;background:var(--pill)}.bars .fl{border-radius:999px;background:#5bbfae}.bars .fl.hi{background:#e0a03a}
-.qi{border-bottom:1px solid #f3ede3;padding:14px 18px}.qi:hover{background:#faf6f0}.qi.on{background:#fbf1dc;box-shadow:inset 4px 0 0 var(--amber)}
-.mail{border-bottom:1px solid var(--line)}
-.draft{background:var(--bg);border-radius:16px;padding:18px 20px}
-textarea,input.f{border-radius:14px;border:1.5px solid #cfe8e2;background:#fff}
-.log{background:#fff;border-radius:18px;box-shadow:var(--shadow);color:#4a4238}
-.case.done{box-shadow:inset 4px 0 0 var(--ok),var(--shadow)}
-.empty{color:var(--tan)}
-.b{white-space:nowrap}
-td .b{padding:6px 12px}
-
-/* ── reference fidelity ── */
-body{background:#f5f0e9;font-size:16px}
-.page{max-width:1240px}
-.sec{display:flex;align-items:center;gap:18px;margin:56px 0 24px;font:800 26px var(--sans);letter-spacing:-.02em;text-transform:none;color:var(--ink)}
-.sec i{font:800 20px var(--sans);font-style:normal;color:#3aa593;background:#e3f5ef;border-radius:16px;padding:10px 16px;letter-spacing:0}
-.sec::after{content:"";flex:1;height:1px;background:#e2d9cb;order:1}
-.sec .r{order:2;font-size:14px;font-weight:400;color:var(--mute);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.sec .r .b{font-size:13px}
-.card{background:#fff;border-radius:36px;padding:38px 44px;box-shadow:0 1px 2px rgba(80,60,30,.05),0 12px 40px rgba(80,60,30,.04)}
-.card .lab{font:800 14px var(--sans);letter-spacing:.11em;text-transform:uppercase;color:#bfae92;margin-bottom:14px}
-.card .lab span{font-weight:600;letter-spacing:.02em;text-transform:none;color:#cbbda6}
-.card p{font-size:19px;line-height:1.75;color:#8a8178;margin:0 0 6px}
-.card p b{color:#4a4238}
-.seglist{margin-top:26px;border-top:1px solid #efe8dc}
-.seglist .row{display:grid;grid-template-columns:150px 1fr;gap:22px;padding:22px 0;border-bottom:1px solid #efe8dc;align-items:start}
-.seglist .row:last-child{border:0}
-.seglist .row p{font-size:18px;line-height:1.7;color:#5d554b;margin:0}
-.seglist .seg{font-size:20px;padding:9px 22px;border-radius:16px;justify-self:start}
-.wao{display:inline-flex;gap:12px;align-items:center;background:#e3f5ef;color:#3aa593;font:700 19px var(--sans);padding:16px 26px;border-radius:20px;border:0;cursor:pointer;margin:18px 0 10px}
-.wao:hover{background:#d3efe6}
-.waonote{font:14px var(--sans);color:var(--mute);margin:0 0 6px;min-height:18px}
-.ft{width:100%;border-collapse:collapse}
-.ft th{font:800 14px var(--sans);letter-spacing:.11em;color:#bfae92;padding:14px 0;border-bottom:1px solid #efe8dc;text-align:left}
-.ft td{border:0;padding:20px 0;font-size:22px;color:#4a4238;vertical-align:middle}
-.ft th{padding-right:24px;white-space:nowrap}.ft td{padding-right:24px}
-.ft td.big{font:800 34px var(--sans);letter-spacing:-.02em;color:var(--ink);width:150px}
-.ft .hl{font-size:22px;padding:8px 22px;border-radius:16px}
-.mxhead{display:flex;align-items:center;gap:10px;font:800 21px var(--sans);padding:0 4px}
-.mxhead i{width:14px;height:14px;border-radius:50%;display:inline-block}
-.mxhead small{font:700 19px var(--sans);color:#cbbda6}
-.mx{gap:18px;grid-template-columns:200px repeat(3,1fr)}
-.mx .rh{border-radius:26px;padding:26px 28px;gap:10px}
-.mx .rh b{font:800 27px var(--sans);letter-spacing:-.02em}
-.mx .rh .seg{font-size:15px;padding:6px 14px;border-radius:12px;justify-self:start;align-self:flex-start}
-.mx .cell{border-radius:26px;padding:28px 30px;min-height:170px}
-.mx .cell b{font:800 26px var(--sans);letter-spacing:-.02em}
-.mx .cell .mono{font-size:17px!important;font-weight:800}
-.mx .cell .d{font-size:17px;line-height:1.6;color:#8a8178;margin-top:4px}
-.mx .cell.Dormant b{font-size:26px}
-.mxp{font-size:19px;line-height:1.85;color:#8a8178;margin:-8px 0 30px;max-width:1150px}
-.mxp b{color:#4a4238}
-.callout{border-radius:36px;padding:30px 40px;font-size:19px;line-height:1.85;color:#5d554b;box-shadow:inset 8px 0 0 #63d3bf,0 12px 40px rgba(80,60,30,.04)}
-.callout .k{font:800 15px var(--sans);letter-spacing:.11em;color:#3aa593;margin-bottom:12px}
-.callout b{color:var(--ink)}
-@media(max-width:900px){.card{padding:26px 22px}.seglist .row{grid-template-columns:1fr}.mx{grid-template-columns:90px repeat(3,minmax(190px,1fr))}.sec{font-size:21px}}
-
-/* ── tidy first page ── */
-.page{max-width:1120px}
-.sec{font-size:22px;margin:44px 0 18px}
-.sec i{font-size:16px;padding:7px 12px;border-radius:12px}
-.card{border-radius:28px;padding:28px 32px}
-.card p{font-size:16px;line-height:1.7}
-.card .lab{font-size:12px}
-.seglist .row{grid-template-columns:130px 1fr;padding:16px 0}
-.seglist .row p{font-size:15px}
-.seglist .seg{font-size:16px;padding:7px 16px}
-.wao{font-size:15px;padding:12px 20px;border-radius:16px}
-.ft th{font-size:12px}.ft td{font-size:16px;padding:14px 24px 14px 0}.ft td.big{font-size:26px;width:110px}.ft .hl{font-size:16px;padding:6px 16px}
-.mxp{font-size:15px}
-.mx{gap:12px;grid-template-columns:150px repeat(3,minmax(0,1fr))}
-.mxhead{font-size:16px}.mxhead small{font-size:14px}
-.mx .rh{padding:18px 20px;border-radius:22px}.mx .rh b{font-size:21px}.mx .rh .seg{font-size:12px}
-.mx .cell{padding:20px 22px;min-height:120px;border-radius:22px}
-.mx .cell b{font-size:19px}.mx .cell .mono{font-size:13.5px!important}.mx .cell .d{font-size:14px}
-.callout{font-size:15.5px;line-height:1.75;padding:22px 30px;border-radius:28px}
-details.guide>summary{cursor:pointer;list-style:none}
-details.guide>summary::-webkit-details-marker{display:none}
-details.guide>summary .r::after{content:"▾";margin-left:6px}
-details.guide[open]>summary .r::after{content:"▴"}
-details.guide>summary::after{order:1}
-@media(max-width:900px){.mx{grid-template-columns:80px repeat(3,minmax(170px,1fr));overflow-x:auto;padding-bottom:6px}}
-
-/* ── compact matrix ── */
-.mxp{font-size:13.5px;line-height:1.65;margin:-4px 0 18px;max-width:900px}
-.mx{gap:8px;grid-template-columns:96px repeat(3,minmax(0,1fr))}
-.mxhead{font-size:13px;gap:7px}.mxhead i{width:10px;height:10px}.mxhead small{font-size:12px}
-.mx .rh{padding:12px 14px;border-radius:16px;gap:6px}
-.mx .rh b{font-size:16px}
-.mx .rh .seg{font-size:10.5px;padding:3px 9px;border-radius:9px}
-.mx .cell{padding:12px 16px;min-height:0;border-radius:16px}
-.mx .cell b{font-size:15px;margin-bottom:2px}
-.mx .cell .mono{font-size:12px!important}
-.mx .cell .d{font-size:12px;line-height:1.45;margin-top:2px}
-.mx .cell .ops{margin-top:6px}
-.mx .cell .ops span{font-size:11px;padding:1px 8px}
-.mx .cell.Dormant b{font-size:15px}
-@media(max-width:900px){.mx{grid-template-columns:70px repeat(3,minmax(150px,1fr))}}
-
-/* chips never break inside the capsule */
-.chip,.chips span,.mx .cell .ops span,.cb .chip{white-space:nowrap}
-#casetable td:nth-child(8){min-width:190px}
-#casetable td,#casetable th{white-space:nowrap}
-#casetable td:nth-child(2),#casetable td:nth-child(6){white-space:normal;min-width:120px}
-#casetable td:nth-child(8){white-space:normal}
-#sigtable td{white-space:nowrap}
-.wrapt{overflow-x:auto}
-
-/* ── clickable + drawer ── */
-.click{cursor:pointer;transition:transform .12s,box-shadow .12s}
-.click:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(80,60,30,.08),0 14px 36px rgba(80,60,30,.09)}
-.click:focus-visible,[data-case]:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-.go{color:var(--teal);font-weight:700;margin-left:6px}
-.human .go{color:var(--amber)}
-.bars .r[data-case],.bars .r[data-det]{cursor:pointer;border-radius:10px;padding:6px 8px;margin:0 -8px}
-.bars .r[data-case]:hover,.bars .r[data-det]:hover{background:var(--bg)}
-#casetable tr[data-case],#sigtable tr[data-case]{cursor:pointer}
-#casetable tr[data-case]:hover td,#sigtable tr[data-case]:hover td{background:#faf6f0}
-#ov{position:fixed;inset:0;background:rgba(40,30,20,.32);opacity:0;pointer-events:none;transition:opacity .18s;z-index:20}
-#ov.on{opacity:1;pointer-events:auto}
-#drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:#fff;z-index:21;transform:translateX(105%);transition:transform .22s;overflow-y:auto;padding:26px 28px 40px;border-radius:28px 0 0 28px;box-shadow:-20px 0 60px rgba(60,40,20,.18)}
-#drawer.on{transform:none}
-.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
-.dh h3{font-size:22px;margin:2px 0;letter-spacing:-.02em}
-.dh .k{font:800 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan)}
-.x{border:0;background:var(--bg);width:36px;height:36px;border-radius:12px;font-size:18px;cursor:pointer;color:var(--mute)}
-.x:hover{background:var(--line)}
-.li{display:block;padding:14px 16px;border-radius:18px;background:var(--bg);margin-bottom:10px;cursor:pointer}
-.li:hover{box-shadow:0 0 0 2px var(--line)}
-.li .l1{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.li .l2{margin-top:8px}
-.ds{margin:20px 0 8px;font:800 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan)}
-.dbox{background:var(--bg);border-radius:18px;padding:14px 16px;font-size:14px;line-height:1.6}
-.dots{display:flex;gap:6px;margin:6px 0}
-.dots i{width:22px;height:22px;border-radius:50%;background:var(--pill)}
-.dots i.on{background:#5bbfae}
-.kvs{display:grid;grid-template-columns:100px 1fr;gap:8px 12px;font-size:14px}
-.kvs b{font:600 12px var(--sans);color:var(--mute);padding-top:2px}
-.dfoot{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
-.dfoot .b{padding:10px 18px}
-
-.ownerf{display:flex;align-items:center;gap:8px;font:700 11.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--tan)}
-.ownerf select{font:600 14px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:#fff;border:0;border-radius:12px;padding:9px 34px 9px 14px;box-shadow:var(--shadow);cursor:pointer;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#8a8178 50%),linear-gradient(135deg,#8a8178 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat}
-.ownerf.on select{background-color:var(--mint);color:var(--teal)}
-@media(max-width:700px){.ownerf span{display:none}}
-
-/* ── guide (compact) ── */
-.gcols{display:grid;grid-template-columns:1fr;gap:16px;align-items:stretch}
-.gcard{background:#fff;border-radius:22px;padding:22px 24px;box-shadow:var(--shadow);display:flex;flex-direction:column}
-.gcard .lab{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan);margin-bottom:8px}
-.gcard .lab span{font-weight:600;letter-spacing:.02em;text-transform:none;margin-left:6px;color:#cbbda6}
-.gcard .gi{font-size:14px;line-height:1.6;color:var(--mute);margin:0 0 12px}
-.grow{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center;padding:12px 0;border-top:1px solid #f0e9de}
-.grow p{margin:0;font-size:14px;line-height:1.5;color:#5d554b}
-.grow .seg{justify-self:start;font-size:13px;padding:5px 12px;border-radius:11px}
-.grow.head{grid-template-columns:96px 130px 1fr;font:800 11px var(--sans);letter-spacing:.1em;color:var(--tan);padding:8px 0}
-.grow.h3{grid-template-columns:96px 130px 1fr;font-size:14px;color:#5d554b}
-.grow.h3 b{font:800 22px var(--sans);letter-spacing:-.02em;color:var(--ink)}
-.grow.h3 .hl{justify-self:start;font-size:13px;padding:5px 12px;border-radius:11px}
-.gcard .wao{margin:auto 0 0;align-self:flex-start;font-size:14px;padding:10px 16px;border-radius:14px}
-.gcard .waonote{margin-top:8px;min-height:0}
-.grow.head span{white-space:nowrap}.grow.head{grid-template-columns:110px 130px 1fr}.grow.h3{grid-template-columns:110px 130px 1fr}
-.gcard .wao{margin-top:18px!important}
-.grow.head{align-items:start!important;padding:10px 0 6px!important;line-height:1.2;border-top:1px solid #f0e9de}.grow.head+.grow.h3{border-top:1px solid #f0e9de}
-.gnote{margin-top:16px;background:#fff;border-radius:22px;padding:16px 24px;font-size:14px;line-height:1.6;color:#5d554b;box-shadow:inset 6px 0 0 #63d3bf,var(--shadow)}
-.gnote b{color:var(--ink)}
-
-.llmtag{background:#efe9fb;color:#7a5cf0;border-radius:999px;padding:3px 11px;font:700 12px var(--sans);white-space:nowrap}
-.llmbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0 0}
-.llmbar .b{padding:5px 12px;font-size:12px}
-.llmbar .b:disabled{opacity:.5;cursor:default}
-.brief{list-style:none;padding:0;margin:10px 0 8px}
-.brief li{padding:10px 12px;border-radius:14px;cursor:pointer;font-size:14px;line-height:1.55;color:#5d554b}
-.brief li:hover{background:var(--bg)}
-.brief li b{color:var(--ink)}
-.void{font:600 12.5px var(--sans);color:var(--red);background:#fbe9ec;border-radius:12px;padding:8px 12px;margin-top:10px}
-.gen{font:600 13px var(--sans);color:#7a5cf0}
-.langbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:14px 0 0;padding:10px 12px;background:#fff;border-radius:16px}
+.b.pri{background:var(--amber-bg);color:var(--amber)}.b.pri:hover{background:var(--amber);color:#fff}
+.b.rj{background:var(--pink);color:var(--red)}
+.b.tl{background:var(--mint);color:var(--teal)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg,.hl,.tg{font:700 12.5px var(--sans);border-radius:10px;padding:3px 11px;white-space:nowrap;display:inline-block}
+.seg.High{background:var(--mint);color:var(--teal)}.seg.Mid{background:var(--purplebg);color:var(--purple)}.seg.Low{background:var(--amber-bg);color:var(--amber)}.seg.Dormant{background:#ebe5db;color:#8a8178}
+.hl.Unhealthy{background:var(--pink);color:var(--red)}.hl.Adopted{background:var(--amber-bg);color:var(--amber)}.hl.Healthy{background:var(--okbg);color:var(--ok)}
+.tg{background:var(--pill);color:var(--mute)}.tg.llm{background:var(--purplebg);color:var(--purple)}
+.st.approved{background:var(--okbg);color:var(--ok)}.st.rejected{background:var(--pink);color:var(--red)}.st.pending{background:var(--amber-bg);color:var(--amber)}.st.hold,.st.reactive{background:var(--pill);color:var(--mute)}
+.risk{font:700 12px var(--sans);border-radius:999px;padding:2px 10px;background:var(--pill);white-space:nowrap}.risk.hi{background:var(--amber-bg);color:var(--amber)}
+.chip{font:600 12.5px var(--sans);padding:3px 11px;border-radius:999px;background:var(--bg);display:inline-block;margin:0 4px 4px 0;white-space:nowrap}
+/* tabs / toolbar */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font:600 14px var(--sans);color:var(--mute);cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--teal);border-color:var(--teal)}
+.tabs .n{font-size:11px;background:var(--pill);border-radius:999px;padding:1px 8px;margin-left:6px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tools input,.tools select{border:0;background:#fff;border-radius:12px;padding:9px 14px;font:500 14px var(--sans);box-shadow:var(--shadow);outline:none}
+.tools input{min-width:220px}
+.tools .sp{margin-left:auto}
+/* table */
+.tw{background:#fff;border-radius:22px;box-shadow:var(--shadow);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font:800 11.5px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--tan);text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none}
+th.s{cursor:pointer}th.s:hover{color:var(--ink)}
+td{padding:13px 12px;border-bottom:1px solid #f3ede3;vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr[data-open]{cursor:pointer}tbody tr[data-open]:hover td{background:#faf6f0}
+.acct{display:flex;gap:12px;align-items:center}
+.acct b{display:block}
+/* board */
+.board{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:14px;overflow-x:auto;padding-bottom:8px}
+.col{background:#ede6da;border-radius:20px;padding:12px;min-height:200px}
+.col h3{font:800 12px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:#8a7f6e;margin:4px 6px 10px;display:flex;justify-content:space-between}
+.kc{background:#fff;border-radius:16px;padding:14px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow)}
+.kc:hover{box-shadow:0 0 0 2px var(--line)}
+.kc .l{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.kc .m{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* record */
+.rh{display:flex;gap:16px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.rh .av{width:56px;height:56px;font-size:20px;border-radius:18px}
+.rl{display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media(max-width:1100px){.rl{grid-template-columns:1fr}}
+.prop{display:grid;grid-template-columns:104px 1fr;gap:10px 8px;font-size:14px;align-items:center}
+.prop b{font:600 12.5px var(--sans);color:var(--mute)}
+.dots{display:flex;gap:5px}.dots i{width:16px;height:16px;border-radius:50%;background:var(--pill)}.dots i.on{background:#5bbfae}
+.box2{background:var(--bg);border-radius:16px;padding:14px 16px;font-size:14px;line-height:1.6;margin-bottom:12px}
+.tl{position:relative;padding-left:26px}
+.tl::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.ev{position:relative;padding:0 0 18px}
+.ev::before{content:"";position:absolute;left:-23px;top:5px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid #cbbda6}
+.ev.ai::before{border-color:var(--purple)}.ev.qa::before,.ev.ok::before{border-color:var(--ok)}.ev.bad::before{border-color:var(--red)}.ev.note::before{border-color:var(--amber)}.ev.signal::before{border-color:var(--teal)}
+.ev .t{font-size:12px;color:var(--tan);font-weight:600}
+.notein{display:flex;gap:8px;margin-bottom:18px}.notein input{flex:1;border:0;background:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;outline:none}
+/* approvals */
+.split{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:1000px){.split{grid-template-columns:1fr}}
+.q{background:#fff;border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+.qi{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #f3ede3;padding:14px 18px;cursor:pointer;font:14px var(--sans);color:var(--ink)}
+.qi:hover{background:#faf6f0}.qi.on{background:var(--amber-bg);box-shadow:inset 4px 0 0 var(--amber)}
+.qi .l1{display:flex;justify-content:space-between;gap:8px}.qi .l2{display:flex;justify-content:space-between;margin-top:4px;font-size:12px;color:var(--mute);gap:6px}
+.langbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 12px;background:#fff;border-radius:16px;margin:12px 0}
 .langbar .lb{font:800 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan);margin-right:6px}
-.langbar .b{padding:6px 14px;font-size:13px;box-shadow:none;background:var(--bg)}
-.langbar .b.on{background:var(--ink);color:#fff}
+.langbar .b{box-shadow:none;background:var(--bg);padding:6px 14px}.langbar .b.on{background:var(--ink);color:#fff}
+.mail{font-size:13px;color:var(--mute);border-bottom:1px solid var(--line);padding-bottom:10px;line-height:1.7}
+.draft{background:var(--bg);border-radius:16px;padding:18px 20px;white-space:pre-wrap;font-size:14.5px;margin:14px 0;line-height:1.7}
+.card.human .draft{background:#f8efe4}
+textarea,.inp{width:100%;font:14.5px var(--sans);background:#fff;color:var(--ink);border:1.5px solid #cfe8e2;border-radius:14px;padding:12px;margin:12px 0}
+textarea{min-height:220px}.inp{border-color:#f0c4d0;margin:0}
+.void{font:600 12.5px var(--sans);color:var(--red);background:var(--pink);border-radius:12px;padding:8px 12px;margin-top:10px}
+.gen{font:600 13px var(--sans);color:var(--purple)}
+.log{background:#fff;border-radius:16px;padding:14px 16px;font:12.5px ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;color:#4a4238}
+.bars .r{display:grid;grid-template-columns:130px 1fr 34px;gap:10px;align-items:center;padding:6px 8px;margin:0 -8px;border-radius:10px;font-size:14px;cursor:pointer}
+.bars .r:hover{background:var(--bg)}.tr{height:10px;background:var(--pill);border-radius:999px}.fl{height:100%;border-radius:999px;background:#5bbfae}.fl.hi{background:#e0a03a}
+.task{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid #f3ede3}
+.task:last-child{border:0}.task .grow{flex:1;min-width:0}
+.task b{display:block}
+.sec{display:flex;align-items:center;gap:14px;margin:38px 0 16px;font:800 20px var(--sans);letter-spacing:-.01em}
+details.h>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;font:800 18px var(--sans);margin:30px 0 14px;color:var(--ink)}
+details.h>summary::-webkit-details-marker{display:none}
+details.h>summary::after{content:"▾";margin-left:auto;color:var(--tan);font-size:14px}
+details.h[open]>summary::after{content:"▴"}
+details.h>summary small{font:500 13px var(--sans);color:var(--mute)}
+.mx{display:grid;grid-template-columns:110px repeat(3,minmax(0,1fr));gap:8px}
+.mxh{display:flex;align-items:center;gap:7px;font:800 13px var(--sans);padding:0 4px}.mxh i{width:10px;height:10px;border-radius:50%}
+.mxr{background:#fff;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;justify-content:center;box-shadow:var(--shadow)}
+.mxr b{font-size:16px}
+.cell{border-radius:16px;padding:12px 16px}.cell b{font-size:15px;display:block}.cell .d{font-size:12px;line-height:1.45}
+.cell.Unhealthy{background:var(--pink)}.cell.Unhealthy b{color:var(--red)}.cell.Adopted{background:var(--amber-bg)}.cell.Adopted b{color:var(--amber)}.cell.Healthy{background:#e9f7ee}.cell.Healthy b{color:var(--ok)}.cell.Dormant{background:#efe9df;grid-column:2/5}
+.cell .ops span{font:600 11px var(--sans);background:#fff;border-radius:999px;padding:1px 8px;margin:4px 4px 0 0;display:inline-block}
+.gl{display:grid;grid-template-columns:1fr;gap:14px}
+.gr{display:grid;grid-template-columns:100px 1fr;gap:14px;align-items:center;padding:10px 0;border-top:1px solid #f0e9de;font-size:14px;color:#5d554b}
+.gr3{grid-template-columns:100px 130px 1fr}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:800px){
+ .app{grid-template-columns:1fr}
+ .side{position:static;height:auto;flex-direction:column;padding:12px}
+ #snav{flex-direction:row;overflow-x:auto;margin-top:10px}.me{display:none}
+ .topbar{padding:12px 16px;flex-wrap:wrap}main{padding:8px 16px 60px}.week{display:none}
+}
 </style>
 </head>
 <body>
-<div class="top"><div class="top-in">
-  <div class="brand">CS Tool<small>customer success</small></div>
-  <div class="tabs">
-    <button data-v="analysis" id="t-analysis">1 · Analysis</button>
-    <button data-v="approve" id="t-approve" class="gate">2 · Draft &amp; Approve <span class="cnt" id="t-cnt"></span></button>
+<div class="app">
+  <aside class="side">
+    <div class="brand">CS Tool<small>customer success</small></div>
+    <nav id="snav"></nav>
+    <div class="me"><span class="av">C</span><div><b>Chris</b><span>Customer Success lead</span></div></div>
+  </aside>
+  <div>
+    <header class="topbar">
+      <div class="search"><input id="gsearch" placeholder="Search accounts…" autocomplete="off"><div id="gres"></div></div>
+      <label class="ownerf"><span>Owner</span><select id="ownersel"></select></label>
+      <span class="week">Week 2026-W40 · run_manifest ok</span>
+    </header>
+    <main id="main"></main>
   </div>
-  <label class="ownerf"><span>Case owner</span><select id="ownersel"></select></label>
-  <div class="week">week 2026-W40 · run_manifest ok</div>
-</div></div>
-
-<div class="page">
-  <!-- ══════ PAGE 1 : ANALYSIS ══════ -->
-  <section class="view" id="v-analysis">
-    <div class="head"><div><h1>Analysis</h1><div class="sub">dashboard → signals → cases · generated Mon 02:00</div></div>
-      <button class="b ap" data-v="approve">Go to Draft &amp; Approve →</button></div>
-
-    <div class="grid g4" id="kpis"></div>
-    <div id="brief" style="margin-top:14px"></div>
-
-    <h2 class="sec"><i>01</i>Dashboard</h2>
-    <div class="grid g2">
-      <div class="box"><div class="tag"><span>RISK BY OPERATOR</span><span>cases[]</span></div><div class="bars" id="riskbars" style="margin-top:8px"></div></div>
-      <div class="box"><div class="tag"><span>DETECTORS</span><span>SQL</span></div><div class="bars" id="detbars" style="margin-top:8px"></div>
-        <div class="d" style="margin-top:8px">ANL-1 Volume · ANL-2 Route peer · ANL-3 Fare index · ANL-4 Adoption</div></div>
-    </div>
-
-    <h2 class="sec"><i>02</i>Cases<span class="r">scored by code · explained by LLM</span></h2>
-    <div class="wrapt"><table id="casetable"></table></div>
-  <h2 class="sec"><i>03</i>Signals<span class="r bar" id="sigfilter"></span></h2>
-    <div class="wrapt"><table id="sigtable"></table></div>
-
-    <details class="guide" id="mxdetails"><summary class="sec"><i>04</i>Playbook matrix<span class="r">segment × product health · hidden · tap to show</span></summary>
-    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different motion depending on segment value. A <b>High + Unhealthy</b> account gets a hands-on Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. Every account is reviewed <b>weekly</b> by the tool, so there is no per-segment schedule. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
-    <div class="mx" id="matrix"></div>
-    </details>
-  <details class="guide"><summary class="sec"><i>05</i>How playbooks are picked<span class="r">two inputs · tap to expand</span></summary>
-    <div class="gcols">
-      <div class="gcard">
-        <div class="lab">Input 1 · Commercial segment</div>
-        <p class="gi">How valuable an account is to seatOS. Set commercially and reviewed each quarter.</p>
-        <div class="grow"><span class="seg High">High</span><p>Strategic, top-value accounts. Most hands-on attention, pushed toward full adoption.</p></div>
-        <div class="grow"><span class="seg Mid">Mid</span><p>Solid mid-value accounts. Lighter touch; 3 active features is an acceptable baseline.</p></div>
-        <div class="grow"><span class="seg Low">Low</span><p>Smaller accounts served by automated motions: activation journeys, nudges, self-service.</p></div>
-        <div class="grow"><span class="seg Dormant">Dormant</span><p>Inactive or at-risk, no live engagement. Reactive only.</p></div>
-      </div>
-      <div class="gcard">
-        <div class="lab">Input 2 · Product health <span>by Weekly Active Operators</span></div>
-        <p class="gi">Count how many of the 6 core seatOS features have a Weekly Active Operator: a real user driving that feature each week.</p>
-        <div class="grow head"><span>FEATURE COUNT</span><span>HEALTH</span><span>MEANING</span></div>
-        <div class="grow h3"><b>5–6</b><span class="hl Healthy">Healthy</span><span>Strong adoption</span></div>
-        <div class="grow h3"><b>3–4</b><span class="hl Adopted">Adopted</span><span>Acceptable / usable</span></div>
-        <div class="grow h3"><b>0–2</b><span class="hl Unhealthy">Unhealthy</span><span>Low adoption</span></div>
-        <button class="wao" data-wao="1">📈 Check this account's Weekly Active Operators <span>↗</span></button>
-        <div class="waonote" id="waonote"></div>
-      </div>
-    </div>
-    <div class="gnote"><b>Why “Adopted” differs by segment:</b> 3 features is an acceptable baseline, but <b>segment sets the ambition</b>. High accounts keep pushing toward 5–6; Mid and Low shift to maintain / self-serve at 3+.</div>
-  </details>
-  </section>
-
-  <!-- ══════ PAGE 2 : DRAFT & APPROVE ══════ -->
-  <section class="view" id="v-approve">
-    <div class="head"><div><h1>Draft &amp; Approve</h1><div class="sub">review the draft · QA passed 12/12 · approve to send Tue 09:00</div></div>
-      <button class="b" data-v="analysis">← Back to Analysis</button></div>
-
-    <div class="grid g4" id="astrip"></div>
-
-    <h2 class="sec"><i>01</i>Review queue<span class="r">QA passed 12/12</span></h2>
-    <div class="bar" style="margin:0 0 14px" id="playbar"></div>
-    <div class="split">
-      <div class="q" id="queue"></div>
-      <div id="detail"></div>
-    </div>
-
-    <h2 class="sec"><i>02</i>Send<span class="r">Tue 09:00 · no model call</span></h2>
-    <div class="grid g4" style="grid-template-columns:repeat(3,1fr)" id="outs"></div>
-    <div class="log" id="log"></div>
-  </section>
 </div>
-
-<div id="ov" data-dclose="1"></div>
-<aside id="drawer" aria-label="Details"></aside>
-
+<div id="toast"></div>
 <script>
-const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
 const rid=()=>Math.random().toString(16).slice(2,10);
 const PLAY_OUT={Retention:"OUT-1",Adoption:"OUT-2",Commercial:"OUT-3"};
 const DET={"Volume":"ANL-1","Route peer":"ANL-2","Fare index":"ANL-3","Adoption":"ANL-4"};
@@ -497,205 +256,267 @@ function draftText(c){
 const subjOf=c=>c.dormant||!EM[c.id]?"":EM[c.id][c.lang].subj;
 
 ALLC.forEach(c=>{[c.why,c.next]=WHY[c.id]||["",""];c.ver=1;c.lang=DEFAULT_LANG[c.id]||"en";c.mods={};c.custom={};c.alt=0});
-let cases=ALLC, ownerF="All";
-const ownerName=o=>o==="—"?"Unassigned":o;
-function applyOwner(){cases=ownerF==="All"?ALLC:ALLC.filter(c=>c.owner===ownerF);rev=cases.filter(c=>!c.dormant)}
-const sendLog=[];
-let view="analysis", sigF="All", playF="All", cur="C-101";
 
-let rev=cases.filter(c=>!c.dormant);
+/* ═════════ CRM logic ═════════ */
+const $=s=>document.querySelector(s), esc=s=>String(s==null?"":s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const OWN={"C-101":"Dewi A.","C-102":"Nok S.","C-103":"Linh T.","C-104":"Dewi A.","C-105":"Nok S."};
+ALLC.forEach(c=>{c.contact=c.owner;c.owner=OWN[c.id]||"—";c.note="";c.notes=[];
+  c.events=[{t:"Mon 01:00",k:"sys",txt:"Weekly data extracted · manifest gate passed"}].concat(
+    c.sig.map(([d,t])=>({t:"Mon 01:30",k:"signal",txt:`Signal · ${DET[d]} ${d}: ${t}`})),
+    [{t:"Mon 02:00",k:"sys",txt:c.dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${playbookOf(c)[0]} (${c.segment} + ${healthOf(c.features)})`}],
+    c.dormant?[]:[{t:"Mon 02:30",k:"ai",txt:`AI drafted the email in ${LANGS[c.lang]}`},{t:"Mon 03:30",k:"qa",txt:"QA passed · 12 / 12 checks"}])});
+const ownerName=o=>o==="—"?"Unassigned":o;
+const initials=n=>n.split(/[\s.]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase();
+const sendLog=[];
+let cases=ALLC, rev=ALLC.filter(c=>!c.dormant), ownerF="All";
+function applyOwner(){cases=ownerF==="All"?ALLC:ALLC.filter(c=>c.owner===ownerF);rev=cases.filter(c=>!c.dormant)}
+const byId=id=>ALLC.find(c=>c.id===id);
 const count=s=>cases.filter(c=>c.state===s).length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
-const kpi=(tag,kind,title,n,desc,cls="",act="")=>`<div class="box ${cls} ${act?"click":""}" ${act?`data-kpi="${act}" tabindex="0" role="button"`:""}><div class="tag"><span>${tag}</span><span>${kind}</span></div><div class="d" style="margin-top:6px">${title}</div><div class="n">${n}</div><div class="d">${desc}${act?' <span class="go">view →</span>':""}</div></div>`;
+const ev=(c,k,txt)=>c.events.push({t:"Just now",k,txt});
+const HC={Unhealthy:"#cc3f6e",Adopted:"#c98a2b",Healthy:"#3f9a5b"};
+const hlOf=c=>c.dormant?`<span class="tg">Reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span>`;
+const riskP=c=>`<span class="risk ${c.risk>70?"hi":""}">${c.risk}</span>`;
+let view="home", recId=null, rtab="overview", cur="C-101", apr={pb:"All"};
+let acc={view:"all",q:"",seg:"All",health:"All",pb:"All",lang:"All",sort:"risk",dir:-1,layout:"table"};
+let openMx=false, openGuide=false;
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),2200)}
 
-/* ══ PAGE 1 ══ */
-function analysis(){
-  const sigs=cases.flatMap(c=>c.sig.map(([d,t])=>({c,d,t})));
-  const avg=Math.round(cases.reduce((a,c)=>a+c.risk,0)/cases.length);
-  $("#kpis").innerHTML=
-    kpi("SIGNALS","SQL","Detectors fired",sigs.length,"across 4 detectors","","signals")+
-    kpi("OPERATORS","CODE","Cases",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`,"","cases")+
-    kpi("RISK","CODE + LLM","Average risk score",avg,`top: ${cases[0].op}`,"","risk")+
-    kpi("GATE-1","HUMAN","Awaiting you",count("pending"),"drafts to approve","human","gate");
-  const HC={Unhealthy:"#cc3f6e",Adopted:"#c98a2b",Healthy:"#3f9a5b"};
-  let mxh=`<div></div>${HEALTH.map(h=>`<div class="mxhead" style="color:${HC[h]}"><i style="background:${HC[h]}"></i>${h} <small>${h==="Unhealthy"?"0–2":h==="Adopted"?"3–4":"5–6"}</small></div>`).join("")}`;
-  SEG.forEach(g=>{mxh+=`<div class="rh"><b>${g}</b><span class="seg ${g}">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+
-    HEALTH.map(h=>{const [n,desc]=MATRIX[g][h];const ops=cases.filter(c=>c.segment===g&&healthOf(c.features)===h);
-    return `<div class="cell ${h}"><b>${n}</b><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
-  mxh+=`<div class="rh"><b>Dormant</b><span class="seg Dormant">Reactive</span></div><div class="cell Dormant"><b style="display:inline;color:#4a4238">Reactive Only</b> <span class="d" style="margin-left:10px">No proactive touchpoints — respond to inbound requests only, regardless of health.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
-  $("#matrix").innerHTML=mxh;
-  const top3=[...cases].sort((a,b)=>b.risk-a.risk).filter(c=>!c.dormant).slice(0,3);
-  $("#brief").innerHTML=top3.length?`<div class="box teal"><div class="tag"><span>AI BRIEFING · WEEK 2026-W40</span><span class="llmtag">✦ LLM</span></div>
-    <ul class="brief">${top3.map(c=>`<li data-case="${c.id}" tabindex="0"><b>${esc(c.op)}</b> <span class="risk ${c.risk>70?"hi":""}">${c.risk}</span> — ${esc(c.why)}</li>`).join("")}</ul>
-    <div class="d">Written from this week's signals by the LLM; every figure is re-checked against the data by QA before anything is sent.</div></div>`:"";
-  $("#riskbars").innerHTML=[...cases].sort((a,b)=>b.risk-a.risk).map(c=>`<div class="r" data-case="${c.id}"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><span class="mono">${c.risk}</span></div>`).join("");
-  const mx=Math.max(...Object.keys(DET).map(d=>sigs.filter(s=>s.d===d).length));
-  $("#detbars").innerHTML=Object.keys(DET).map(d=>{const n=sigs.filter(s=>s.d===d).length;return `<div class="r" data-det="${d}"><span>${d}</span><div class="tr"><div class="fl" style="width:${n/mx*100}%"></div></div><span class="mono">${n}</span></div>`}).join("");
-  $("#sigfilter").innerHTML=["All",...Object.keys(DET)].map(d=>`<button class="b ${d===sigF?"on":""}" data-sf="${d}">${d}</button>`).join("");
-  $("#sigtable").innerHTML=`<tr><th>Operator</th><th>Owner</th><th>Detector</th><th>Signal</th><th>Risk</th></tr>`+
-    sigs.filter(s=>sigF==="All"||s.d===sigF).sort((a,b)=>b.c.risk-a.c.risk).map(s=>`<tr data-case="${s.c.id}"><td><b>${esc(s.c.op)}</b></td><td>${esc(ownerName(s.c.owner))}</td><td class="mono">${DET[s.d]} · ${s.d}</td><td>${esc(s.t)}</td><td><span class="risk ${s.c.risk>70?"hi":""}">${s.c.risk}</span></td></tr>`).join("");
-  $("#casetable").innerHTML=`<tr><th>#</th><th>Operator</th><th>Owner</th><th>Segment</th><th>Health</th><th>Playbook</th><th>Email language</th><th>Signals</th><th>Risk</th><th>Status</th><th></th></tr>`+
-    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr data-case="${c.id}"><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.dormant?'<span class="d">—</span>':`<span class="llmtag" style="background:#efe9fb">${LANGS[c.lang]}</span>`}</td>
-    <td>${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</td><td><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></td>
-    <td><span class="st ${c.state}">${c.state}</span>${c.reason?`<div class="d bad" style="color:var(--red)">↩ ${esc(c.reason)}</div>`:""}</td>
-    <td>${c.dormant?"":`<button class=\"b tl\" data-open=\"${c.id}\">Draft →</button>`}</td></tr>`).join("");
+/* ── nav ── */
+function nav(){
+  const p=count("pending"),items=[["home","⌂","Home",""],["accounts","☰","Accounts",cases.length],["approvals","✓","Approvals",p],["sent","➤","Sent",cases.filter(c=>c.state==="approved").length]];
+  const act=view==="record"?"accounts":view;
+  $("#snav").innerHTML=items.map(([k,ic,l,n])=>`<button data-nav="${k}" class="${act===k?"on":""}"><span class="ic">${ic}</span>${l}${n!==""?`<span class="cnt ${k==="approvals"&&p?"warn":""}">${n}</span>`:""}</button>`).join("");
 }
 
-/* ══ PAGE 2 ══ */
-function approve(){
-  $("#astrip").innerHTML=
-    kpi("PENDING","GATE-1","Awaiting you",count("pending"),"drafts","human")+
-    kpi("APPROVED","TOKEN","Approved",count("approved"),"queued for Tue 09:00")+
-    kpi("HOLD","HUMAN","On hold",count("hold"),"not sent")+
-    kpi("REJECTED","→ SUP-1","Rejected",count("rejected"),"returned with reason");
+/* ── Home ── */
+function matrixHtml(){
+  let h=`<div></div>${HEALTH.map(x=>`<div class="mxh" style="color:${HC[x]}"><i style="background:${HC[x]}"></i>${x} <span class="d">${x==="Unhealthy"?"0–2":x==="Adopted"?"3–4":"5–6"}</span></div>`).join("")}`;
+  SEG.forEach(g=>{h+=`<div class="mxr"><b>${g}</b><span class="seg ${g}" style="align-self:flex-start">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+HEALTH.map(x=>{const [n,desc]=MATRIX[g][x];const ops=cases.filter(c=>c.segment===g&&healthOf(c.features)===x);return `<div class="cell ${x}"><b>${n}</b><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
+  return h+`<div class="mxr"><b>Dormant</b><span class="seg Dormant" style="align-self:flex-start">Reactive</span></div><div class="cell Dormant"><b style="display:inline">Reactive Only</b> <span class="d">No proactive touchpoints — respond to inbound requests only.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
+}
+function guideHtml(){return `<div class="gl"><div class="card"><div class="lab">Input 1 · Commercial segment</div><p class="d" style="margin:8px 0">How valuable an account is to seatOS. Set commercially and reviewed each quarter.</p>
+ <div class="gr"><span class="seg High">High</span><span>Strategic, top-value accounts. Most hands-on attention, pushed toward full adoption.</span></div>
+ <div class="gr"><span class="seg Mid">Mid</span><span>Solid mid-value accounts. Lighter touch; 3 active features is an acceptable baseline.</span></div>
+ <div class="gr"><span class="seg Low">Low</span><span>Smaller accounts served by automated motions: activation journeys, nudges, self-service.</span></div>
+ <div class="gr"><span class="seg Dormant">Dormant</span><span>Inactive or at-risk, no live engagement. Reactive only.</span></div></div>
+ <div class="card"><div class="lab">Input 2 · Product health <span style="text-transform:none;letter-spacing:0;font-weight:600;color:#cbbda6">by Weekly Active Operators</span></div><p class="d" style="margin:8px 0">Count how many of the 6 core seatOS features have a Weekly Active Operator: a real user driving that feature each week.</p>
+ <div class="gr gr3"><b class="lab">Feature count</b><b class="lab">Health</b><b class="lab">Meaning</b></div>
+ <div class="gr gr3"><b style="font-size:22px;color:var(--ink)">5–6</b><span class="hl Healthy" style="justify-self:start">Healthy</span><span>Strong adoption</span></div>
+ <div class="gr gr3"><b style="font-size:22px;color:var(--ink)">3–4</b><span class="hl Adopted" style="justify-self:start">Adopted</span><span>Acceptable / usable</span></div>
+ <div class="gr gr3"><b style="font-size:22px;color:var(--ink)">0–2</b><span class="hl Unhealthy" style="justify-self:start">Unhealthy</span><span>Low adoption</span></div></div>
+ <div class="card"><b>Why “Adopted” differs by segment:</b> 3 features is an acceptable baseline, but <b>segment sets the ambition</b>. High accounts keep pushing toward 5–6; Mid and Low shift to maintain / self-serve at 3+.</div></div>`}
+function Home(){
+  const sigs=cases.reduce((a,c)=>a+c.sig.length,0), avg=cases.length?Math.round(cases.reduce((a,c)=>a+c.risk,0)/cases.length):0;
+  const top=[...cases].sort((a,b)=>b.risk-a.risk);
+  const pend=top.filter(c=>c.state==="pending");
+  const brief=top.filter(c=>!c.dormant).slice(0,3);
+  const feed=cases.flatMap(c=>c.events.filter(e=>e.t==="Just now").map(e=>({...e,c}))).reverse().slice(0,6);
+  const kpi=(l,tag,n,d,cls,act)=>`<div class="card click ${cls}" data-kpi="${act}"><div class="lab" style="display:flex;justify-content:space-between"><span>${l}</span><span>${tag}</span></div><div class="big">${n}</div><div class="d">${d} <span class="go">view →</span></div></div>`;
+  return `<div class="ph"><div><h1>Good morning, Chris</h1><div class="sub">Week 2026-W40 · ${pend.length} draft${pend.length===1?"":"s"} waiting for your approval before Mon 09:00</div></div></div>
+  <div class="grid g4">${kpi("Signals","SQL",sigs,"detectors fired","","signals")}${kpi("Accounts","CODE",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`,"","accounts")}${kpi("Avg risk","CODE + LLM",avg,`top: ${top[0]?esc(top[0].op):"—"}`,"","risk")}${kpi("Approvals","HUMAN",pend.length,"awaiting you","human","gate")}</div>
+  <div class="grid g2" style="margin-top:18px;align-items:start">
+   <div class="grid" style="gap:18px">
+    <div class="card"><h2 class="st"><span>My tasks · review drafts</span><button class="b tl" data-nav="approvals">Open Approvals →</button></h2>
+      ${pend.length?pend.map(c=>`<div class="task"><span class="av">${initials(c.op)}</span><div class="grow"><b>${esc(c.op)}</b><span class="d">${playbookOf(c)[0]} · ${LANGS[c.lang]} · owner ${esc(ownerName(c.owner))}</span></div>${riskP(c)}<button class="b pri" data-review="${c.id}">Review</button></div>`).join(""):`<div class="d" style="padding:16px 0">All caught up — nothing waiting.</div>`}</div>
+    <div class="card"><h2 class="st"><span>AI briefing</span><span class="tg llm">✦ LLM</span></h2>
+      ${brief.map(c=>`<div class="box2" data-open="${c.id}" style="cursor:pointer"><b>${esc(c.op)}</b> ${riskP(c)} — ${esc(c.why)}</div>`).join("")||`<div class="d">No cases in view.</div>`}
+      <div class="d">Written from this week's signals; every figure is re-checked by QA before anything is sent.</div></div>
+   </div>
+   <div class="grid" style="gap:18px">
+    <div class="card"><h2 class="st"><span>Risk by account</span></h2><div class="bars">${top.map(c=>`<div class="r" data-open="${c.id}"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><b>${c.risk}</b></div>`).join("")}</div></div>
+    <div class="card"><h2 class="st"><span>Recent activity</span></h2>${feed.length?feed.map(e=>`<div class="task" data-open="${e.c.id}" style="cursor:pointer"><div class="grow"><b>${esc(e.c.op)}</b><span class="d">${esc(e.txt)}</span></div></div>`).join(""):`<div class="d">Approvals, holds and notes will show up here.</div>`}</div>
+   </div></div>
+  <details class="h" id="d-mx" ${openMx?"open":""}><summary>Playbook matrix <small>segment × product health · hidden</small></summary><div class="mx">${matrixHtml()}</div></details>
+  <details class="h" id="d-guide" ${openGuide?"open":""}><summary>How playbooks are picked <small>two inputs · hidden</small></summary>${guideHtml()}</details>`;
+}
+
+/* ── Accounts ── */
+function filtered(){
+  let L=cases.slice(); const v=acc.view;
+  if(v==="approval")L=L.filter(c=>c.state==="pending");
+  if(v==="risk")L=L.filter(c=>c.risk>=70);
+  if(v==="unhealthy")L=L.filter(c=>!c.dormant&&healthOf(c.features)==="Unhealthy");
+  if(v==="reactive")L=L.filter(c=>c.dormant);
+  const q=acc.q.trim().toLowerCase();
+  if(q)L=L.filter(c=>(c.op+" "+c.id+" "+c.owner+" "+c.contact).toLowerCase().includes(q));
+  if(acc.seg!=="All")L=L.filter(c=>c.segment===acc.seg);
+  if(acc.health!=="All")L=L.filter(c=>!c.dormant&&healthOf(c.features)===acc.health);
+  if(acc.pb!=="All")L=L.filter(c=>playbookOf(c)[0]===acc.pb);
+  if(acc.lang!=="All")L=L.filter(c=>!c.dormant&&c.lang===acc.lang);
+  const key={risk:c=>c.risk,op:c=>c.op.toLowerCase(),owner:c=>c.owner,segment:c=>c.segment,health:c=>c.dormant?-1:c.features,playbook:c=>playbookOf(c)[0],signals:c=>c.sig.length,state:c=>c.state}[acc.sort];
+  return L.sort((a,b)=>{const x=key(a),y=key(b);return (x>y?1:x<y?-1:0)*acc.dir});
+}
+function Accounts(){
+  const cnt=f=>cases.filter(f).length;
+  const views=[["all","All accounts",cases.length],["approval","Needs approval",cnt(c=>c.state==="pending")],["risk","At risk (≥70)",cnt(c=>c.risk>=70)],["unhealthy","Unhealthy",cnt(c=>!c.dormant&&healthOf(c.features)==="Unhealthy")],["reactive","Reactive only",cnt(c=>c.dormant)]];
+  const L=filtered(), pbs=[...new Set(ALLC.map(c=>playbookOf(c)[0]))];
+  const sel=(k,opts,label)=>`<select data-f="${k}"><option value="All">${label}: all</option>${opts.map(o=>`<option value="${esc(o[0])}" ${acc[k]===o[0]?"selected":""}>${esc(o[1])}</option>`).join("")}</select>`;
+  const th=(k,l)=>`<th class="s" data-sort="${k}">${l}${acc.sort===k?(acc.dir>0?" ▲":" ▼"):""}</th>`;
+  const table=`<div class="tw"><table><thead><tr>${th("op","Account")}${th("owner","Owner")}${th("segment","Segment")}${th("health","Health")}${th("playbook","Playbook")}<th>Email language</th>${th("risk","Risk")}${th("state","Status")}</tr></thead><tbody>
+   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.id} · ${esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.dormant?"—":`<span class="tg llm">${LANGS[c.lang]}</span>`}</td><td>${riskP(c)}</td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
+  const cols=[["pending","To review"],["approved","Approved"],["hold","On hold"],["rejected","Returned"],["reactive","Reactive only"]];
+  const board=`<div class="board">${cols.map(([s,l])=>{const items=L.filter(c=>c.state===s);return `<div class="col"><h3><span>${l}</span><span>${items.length}</span></h3>${items.map(c=>`<div class="kc" data-open="${c.id}"><div class="l"><b>${esc(c.op)}</b>${riskP(c)}</div><div class="d">${playbookOf(c)[0]}</div><div class="m"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}${c.dormant?"":`<span class="tg llm">${c.lang.toUpperCase()}</span>`}<span class="av" style="width:24px;height:24px;font-size:10px;margin-left:auto" title="${esc(ownerName(c.owner))}">${initials(ownerName(c.owner))}</span></div></div>`).join("")}</div>`}).join("")}</div>`;
+  return `<div class="ph"><div><h1>Accounts</h1><div class="sub">${L.length} of ${cases.length} accounts · click a row to open the record</div></div>
+    <div class="row"><button class="b ${acc.layout==="table"?"on":""}" data-layout="table">☰ Table</button><button class="b ${acc.layout==="board"?"on":""}" data-layout="board">▦ Board</button></div></div>
+  <div class="tabs">${views.map(([k,l,n])=>`<button data-accview="${k}" class="${acc.view===k?"on":""}">${l}<span class="n">${n}</span></button>`).join("")}</div>
+  <div class="tools"><input id="accq" data-q="1" placeholder="Search name, ID or owner…" value="${esc(acc.q)}">
+    ${sel("seg",SEG.concat("Dormant").map(x=>[x,x]),"Segment")}${sel("health",HEALTH.map(x=>[x,x]),"Health")}${sel("pb",pbs.map(x=>[x,x]),"Playbook")}${sel("lang",Object.entries(LANGS),"Language")}
+    <button class="b sp" data-clear="1">Clear filters</button></div>
+  ${acc.layout==="table"?table:board}`;
+}
+
+/* ── Record ── */
+function Record(){
+  const c=byId(recId); if(!c)return Accounts();
+  const pb=playbookOf(c);
+  const tabs=[["overview","Overview"],["activity","Activity",c.events.length],["email","Email"]];
+  const props=`<div class="card"><h2 class="st"><span>About this account</span></h2><div class="prop">
+    <b>Case ID</b><span>${c.id}</span><b>Owner</b><span>${esc(ownerName(c.owner))}</span><b>Contact</b><span>${esc(c.contact)}</span><b>Email</b><span style="word-break:break-all">${esc(c.email||"—")}</span>
+    <b>Segment</b><span class="seg ${c.segment}" style="justify-self:start">${c.segment}</span><b>Health</b><span>${hlOf(c)}</span>
+    <b>Features</b>${c.dormant?"<span>—</span>":`<span><div class="dots">${[1,2,3,4,5,6].map(i=>`<i class="${i<=c.features?"on":""}"></i>`).join("")}</div><span class="d">${c.features}/6 with a Weekly Active Operator</span></span>`}
+    <b>Playbook</b><span><b style="color:var(--ink)">${pb[0]}</b></span><b>Risk score</b><span>${riskP(c)}</span><b>Status</b><span class="tg st ${c.state}" style="justify-self:start">${c.state}</span>
+    <b>Email language</b><span>${c.dormant?"—":LANGS[c.lang]}</span></div></div>`;
+  let center="";
+  if(rtab==="overview")center=`<div class="card">${c.why?`<h2 class="st"><span>AI analysis</span><span class="tg llm">✦ LLM</span></h2><div class="box2">${esc(c.why)}</div><div class="box2" style="background:var(--mint)"><b>Suggested next step</b><br>${esc(c.next)}</div>`:""}
+    <h2 class="st" style="margin-top:18px"><span>Signals this week</span></h2>${c.sig.map(([d,t])=>`<div class="task"><div class="grow"><b>${esc(t)}</b><span class="d">${DET[d]} · ${d}</span></div></div>`).join("")}
+    <h2 class="st" style="margin-top:18px"><span>Playbook</span></h2><div class="box2"><b>${pb[0]}</b><br><span class="d">${pb[1]}</span></div></div>`;
+  if(rtab==="activity")center=`<div class="card"><div class="notein"><input id="notein" placeholder="Log a note about ${esc(c.op)}…"><button class="b pri" data-note="1">Add note</button></div>
+    <div class="tl">${[...c.events].reverse().map(e=>`<div class="ev ${e.k}"><div class="t">${e.t}</div>${esc(e.txt)}</div>`).join("")}</div></div>`;
+  if(rtab==="email")center=c.dormant?`<div class="card"><div class="d">Reactive only — no outreach email for this account.</div></div>`:`<div class="card"><h2 class="st"><span>Email draft</span><span class="tg llm">✦ Drafted by LLM · v${c.ver}</span></h2>${langBar(c)}
+    <div class="mail">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${esc(c.contact)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(subjOf(c))}</div><div class="draft">${esc(draftText(c))}</div>
+    ${c.note?`<div class="void">${c.note}</div>`:""}<div class="row"><button class="b pri" data-review="${c.id}">Review &amp; approve →</button><span class="d">draft_hash ${c.hash} · QA 12/12 pass</span></div></div>`;
+  const right=`<div class="grid" style="gap:16px"><div class="card"><h2 class="st"><span>Owner</span></h2><div class="task" style="border:0;padding:0"><span class="av">${initials(ownerName(c.owner))}</span><div class="grow"><b>${esc(ownerName(c.owner))}</b><span class="d">Sends from their mailbox</span></div></div></div>
+    <div class="card ${c.state==="pending"?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?"Waiting for your review before Mon 09:00.":c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.dormant?"":`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`}</div></div>`;
+  return `<div class="crumb"><button data-nav="accounts">Accounts</button> / ${esc(c.op)}</div>
+  <div class="rh"><span class="av">${initials(c.op)}</span><div><h1 style="margin:0">${esc(c.op)}</h1><div class="row" style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="tg st ${c.state}">${c.state}</span>${riskP(c)}</div></div>
+    <div class="row" style="margin-left:auto">${c.dormant?"":`<button class="b pri" data-review="${c.id}">Review draft</button>`}<button class="b" data-rtab="activity">Log note</button></div></div>
+  <div class="tabs">${tabs.map(([k,l,n])=>`<button data-rtab="${k}" class="${rtab===k?"on":""}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>
+  <div class="rl">${props}<div>${center}</div>${right}</div>`;
+}
+const langBar=c=>`<div class="langbar"><span class="lb">Email language</span>${Object.entries(LANGS).map(([k,v])=>`<button class="b ${k===c.lang?"on":""}" data-lang="${k}" data-c="${c.id}" ${c.gen?"disabled":""}>${v}</button>`).join("")}</div>`;
+
+/* ── Approvals ── */
+function Approvals(){
   const pbs=[...new Set(rev.map(c=>playbookOf(c)[0]))];
-  if(playF!=="All"&&!pbs.includes(playF))playF="All";
-  $("#playbar").innerHTML=["All",...pbs].map(p=>`<button class="b ${p===playF?"on":""}" data-pf="${p}">${p}${p==="All"?"":` <span class="d" style="font-size:11px">${rev.filter(c=>playbookOf(c)[0]===p).length}</span>`}</button>`).join("")+
-    (playF!=="All"&&rev.some(c=>playbookOf(c)[0]===playF&&c.state==="pending")?`<button class="b ap" data-bulk="1" style="margin-left:8px">Approve all ${playF} (${rev.filter(c=>playbookOf(c)[0]===playF&&c.state==="pending").length})</button>`:"");
-  const vis=rev.filter(c=>playF==="All"||playbookOf(c)[0]===playF);
+  if(apr.pb!=="All"&&!pbs.includes(apr.pb))apr.pb="All";
+  const vis=rev.filter(c=>apr.pb==="All"||playbookOf(c)[0]===apr.pb);
   if(!vis.find(c=>c.id===cur)&&vis[0])cur=vis[0].id;
-  $("#queue").innerHTML=vis.map(c=>`<button class="qi ${c.id===cur?"on":""}" data-cur="${c.id}"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></div><div class="l2"><span>${esc(ownerName(c.owner))} · ${c.segment} · ${healthOf(c.features)} · ${c.lang.toUpperCase()}</span><span class="st ${c.state}">${c.state}</span></div></button>`).join("")||`<div class="empty">no cases</div>`;
-  const c=cases.find(x=>x.id===cur);
-  $("#detail").innerHTML=!c?`<div class="empty">select a case</div>`:`
-   <div class="box ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"border-color:var(--ok)":""}">
-    <div class="tag"><span>${c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span>${c.state.toUpperCase()}</span></div>
-    <div class="t" style="font-size:18px">${esc(c.op)}</div>
-    <div style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span> <span class="hl ${healthOf(c.features)}">${healthOf(c.features)} · ${c.features}/6</span> <span class="chip" style="margin-left:4px"><b>${playbookOf(c)[0]}</b></span></div>
-    <div style="margin-top:8px">${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
-    ${c.editing||c.rejecting?"":`<div class="langbar"><span class="lb">Email language</span>${Object.entries(LANGS).map(([k,v])=>`<button class="b ${k===c.lang?"on":""}" data-lang="${k}" ${c.gen?"disabled":""}>${v}</button>`).join("")}</div>`}
-    <div class="mail" style="margin-top:10px">To: ${esc(c.owner)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(subjOf(c))}</div>
+  const c=vis.find(x=>x.id===cur);
+  const bulkN=rev.filter(x=>playbookOf(x)[0]===apr.pb&&x.state==="pending").length;
+  const strip=[["Pending",count("pending"),"pending"],["Approved",count("approved"),"approved"],["On hold",count("hold"),"hold"],["Returned",count("rejected"),"rejected"]];
+  const detail=!c?`<div class="card d">Select a case.</div>`:`<div class="card ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"box-shadow:inset 0 0 0 2px var(--ok)":""}">
+    <div class="lab" style="display:flex;justify-content:space-between"><span>${c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span class="tg st ${c.state}">${c.state}</span></div>
+    <h2 style="font-size:22px;margin:6px 0"><span data-open="${c.id}" style="cursor:pointer">${esc(c.op)}</span></h2>
+    <div class="row"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="chip" style="margin:0"><b>${playbookOf(c)[0]}</b></span>${c.sig.map(([,t])=>`<span class="chip" style="margin:0">${esc(t)}</span>`).join("")}</div>
+    ${c.editing||c.rejecting?"":langBar(c)}
+    <div class="mail" style="margin-top:12px">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${esc(c.contact)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(subjOf(c))}</div>
     ${c.editing?`<textarea id="ta">${esc(draftText(c))}</textarea>`:`<div class="draft">${esc(draftText(c))}</div>`}
     <div class="d">draft_hash ${c.hash} · QA 12/12 pass · token TTL 72h</div>
     ${c.note?`<div class="void">${c.note}</div>`:""}
-    ${(c.rejecting||c.editing)?"":`
-    <div class="llmbar">${c.gen?`<span class="gen">✦ Writing the new version…</span>`:`<span class="llmtag">✦ Drafted by LLM · v${c.ver}</span>`}
+    ${c.rejecting||c.editing?"":`<div class="row" style="margin-top:12px">${c.gen?`<span class="gen">✦ Writing the new version…</span>`:`<span class="tg llm">✦ Drafted by LLM · v${c.ver}</span>`}
       <button class="b" data-a="regen" ${c.gen?"disabled":""}>Regenerate</button><button class="b ${c.mods.short?"on":""}" data-a="shorter" ${c.gen?"disabled":""}>Shorter</button><button class="b ${c.mods.warm?"on":""}" data-a="warmer" ${c.gen?"disabled":""}>Warmer</button><button class="b ${c.mods.direct?"on":""}" data-a="direct" ${c.gen?"disabled":""}>More direct</button></div>`}
-    ${c.reason?`<div class="d" style="color:var(--red);margin-top:6px">rejected — “${esc(c.reason)}” (returned to SUP-1)</div>`:""}
-    <div class="acts" style="margin-top:14px">
-    ${c.rejecting?`<input class="f" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
-     :c.editing?`<button class="b ap" data-a="save">Save &amp; approve</button><button class="b" data-a="cancel">Cancel</button>`
-     :`<button class="b ap" data-a="approve">Approve to send</button><button class="b" data-a="edit">Edit</button><button class="b" data-a="hold">Hold</button><button class="b rj" data-a="reject">Reject</button>`}
-    </div></div>`;
-  $("#outs").innerHTML=[["OUT-1","Retention","operator-specific"],["OUT-2","Adoption","feature gap"],["OUT-3","Commercial","fare position"]].map(([o,t,d])=>kpi(o,"CODE",t,queued(o),`queued · ${d}`)).join("");
-  $("#log").textContent=sendLog.length?"send_log — case · token · hash · message_id · outcome\n"+sendLog.map(r=>`${r.case} · tok_${r.tok} · ${r.hash} · — · queued Tue 09:00 (${r.out})`).join("\n"):"send_log — nothing approved yet";
+    ${c.reason?`<div class="void">Returned to triage — “${esc(c.reason)}”</div>`:""}
+    <div class="row" style="margin-top:16px">${c.rejecting?`<input class="inp" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
+      :c.editing?`<button class="b pri" data-a="save">Save &amp; approve</button><button class="b" data-a="cancel">Cancel</button>`
+      :`<button class="b pri" data-a="approve">Approve to send</button><button class="b" data-a="edit">Edit</button><button class="b" data-a="hold">Hold</button><button class="b rj" data-a="reject">Reject</button>`}</div></div>`;
+  return `<div class="ph"><div><h1>Approvals</h1><div class="sub">GATE-1 · review the draft, then approve to send Tue 09:00 · QA passed 12/12</div></div></div>
+  <div class="grid g4" style="margin-bottom:18px">${strip.map(([l,n,s])=>`<div class="card ${s==="pending"?"human":""}"><div class="lab">${l}</div><div class="big">${n}</div></div>`).join("")}</div>
+  <div class="tools"><button class="b ${apr.pb==="All"?"on":""}" data-pf="All">All</button>${pbs.map(p=>`<button class="b ${apr.pb===p?"on":""}" data-pf="${esc(p)}">${esc(p)} <span class="d">${rev.filter(x=>playbookOf(x)[0]===p).length}</span></button>`).join("")}
+    ${apr.pb!=="All"&&bulkN?`<button class="b pri" data-bulk="1">Approve all ${esc(apr.pb)} (${bulkN})</button>`:""}</div>
+  <div class="split"><div class="q">${vis.map(x=>`<button class="qi ${x.id===cur?"on":""}" data-cur="${x.id}"><div class="l1"><b>${esc(x.op)}</b>${riskP(x)}</div><div class="l2"><span>${esc(ownerName(x.owner))} · ${x.segment} · ${healthOf(x.features)} · ${x.lang.toUpperCase()}</span><span class="tg st ${x.state}" style="padding:1px 9px">${x.state}</span></div></button>`).join("")||`<div class="d" style="padding:20px">No cases.</div>`}</div>${detail}</div>`;
 }
 
-/* ══ shell ══ */
-function render(){
-  applyOwner();
-  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+view));
-  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
-  const p=count("pending");$("#t-cnt").textContent=p||"";$("#t-cnt").style.display=p?"":"none";
-  analysis();approve();
+/* ── Sent ── */
+function Sent(){
+  const rows=sendLog.filter(r=>cases.some(c=>c.id===r.case));
+  return `<div class="ph"><div><h1>Sent</h1><div class="sub">Tue 09:00 · deterministic send · no model call</div></div></div>
+  <div class="grid g4" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">${[["OUT-1","Retention","operator-specific"],["OUT-2","Adoption","feature gap"],["OUT-3","Commercial","fare position"]].map(([o,t,d])=>`<div class="card"><div class="lab" style="display:flex;justify-content:space-between"><span>${o}</span><span>CODE</span></div><div class="d" style="margin-top:6px">${t}</div><div class="big">${queued(o)}</div><div class="d">queued · ${d}</div></div>`).join("")}</div>
+  <div class="tw"><table><thead><tr><th>Account</th><th>Case</th><th>Channel</th><th>Token</th><th>draft_hash</th><th>Outcome</th></tr></thead><tbody>
+  ${rows.map(r=>{const c=byId(r.case);return `<tr data-open="${c.id}"><td><b>${esc(c.op)}</b></td><td>${c.id}</td><td>${r.out}</td><td>tok_${r.tok}</td><td>${r.hash}</td><td><span class="tg st pending">queued Tue 09:00</span></td></tr>`}).join("")||`<tr><td colspan="6" class="d" style="padding:30px;text-align:center">Nothing approved yet.</td></tr>`}</tbody></table></div>`;
 }
-function decide(c,state,extra){
+
+/* ── shell ── */
+function render(){
+  applyOwner();nav();
+  const y=scrollY;
+  $("#main").innerHTML=({home:Home,accounts:Accounts,record:Record,approvals:Approvals,sent:Sent}[view])();
+  if(render.keep){scrollTo(0,y)}
+}
+function decide(c,state,extra,msg){
   Object.assign(c,extra||{},{state});
-  if(state==="approved")sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});
-  const nx=cases.find(x=>x.state==="pending");if(nx&&state!=="rejected"||nx)cur=nx?nx.id:cur;
+  if(state==="approved"){c.note="";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris · queued for Tue 09:00 (${LANGS[c.lang]})`)}
+  if(state==="rejected")ev(c,"bad",`Returned to triage: “${c.reason}”`);
+  if(state==="hold")ev(c,"note","Put on hold by Chris");
+  const nx=rev.find(x=>x.state==="pending");if(nx)cur=nx.id;
+  toast(msg||({approved:"Approved · queued for Tue 09:00",rejected:"Returned to triage",hold:"Put on hold"}[state]));
   render();
 }
-
-/* ── drawer ── */
-let DR=null;
-const sigsOf=c=>c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("");
-const tags=c=>`<span class="seg ${c.segment}">${c.segment}</span> `+(c.dormant?`<span class="st reactive">reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span>`);
-function openList(kind,det){
-  const byRisk=[...cases].sort((a,b)=>b.risk-a.risk);
-  if(kind==="signals")DR={type:"list",title:"Detectors fired",sub:`${cases.reduce((a,c)=>a+c.sig.length,0)} signals across ${cases.length} operators`,ids:byRisk.map(c=>c.id)};
-  if(kind==="cases")DR={type:"list",title:"Cases",sub:`${rev.length} outreach · ${cases.length-rev.length} reactive`,ids:byRisk.map(c=>c.id)};
-  if(kind==="risk")DR={type:"list",title:"Risk by operator",sub:`average ${Math.round(cases.reduce((a,c)=>a+c.risk,0)/cases.length)} · highest first`,ids:byRisk.map(c=>c.id)};
-  if(kind==="gate")DR={type:"list",title:"Awaiting you",sub:`${count("pending")} drafts at GATE-1`,ids:byRisk.filter(c=>c.state==="pending").map(c=>c.id),go:1};
-  if(kind==="det")DR={type:"list",title:`${DET[det]} · ${det}`,sub:"operators where this detector fired",ids:byRisk.filter(c=>c.sig.some(([d])=>d===det)).map(c=>c.id),det};
-  drawer();
-}
-function drawer(){
-  const ov=$("#ov"),dr=$("#drawer");
-  ov.classList.toggle("on",!!DR);dr.classList.toggle("on",!!DR);
-  if(!DR){return}
-  if(DR.type==="list"){
-    const items=DR.ids.map(id=>cases.find(c=>c.id===id));
-    dr.innerHTML=`<div class="dh"><div><div class="k">${DR.sub}</div><h3>${DR.title}</h3></div><button class="x" data-dclose="1" aria-label="Close">✕</button></div>`+
-     (items.map(c=>`<div class="li" data-case="${c.id}" tabindex="0"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span></div>
-       <div class="l2">${tags(c)} <span class="d">· ${playbookOf(c)[0]}</span></div>
-       <div class="l2">${(DR.det?c.sig.filter(([d])=>d===DR.det):c.sig).map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</div></div>`).join("")||`<div class="d">nothing here</div>`)+
-     (DR.go?`<div class="dfoot"><button class="b ap" data-v="approve">Go to Draft &amp; Approve →</button></div>`:"");
-  }else{
-    const c=cases.find(x=>x.id===DR.id), pb=playbookOf(c);
-    dr.innerHTML=`<div class="dh"><div><div class="k">${c.id}${DR.back?` · <button class="b" data-dback="1" style="padding:2px 9px;font-size:11px">← ${esc(DR.back)}</button>`:""}</div><h3>${esc(c.op)}</h3><div style="margin-top:8px">${tags(c)} <span class="risk ${c.risk>70?"hi":""}">risk ${c.risk}</span> <span class="st ${c.state}">${c.state}</span></div></div><button class="x" data-dclose="1" aria-label="Close">✕</button></div>
-     ${c.why?`<div class="ds">AI analysis <span class="llmtag" style="margin-left:6px;text-transform:none;letter-spacing:0">✦ LLM</span></div><div class="dbox">${esc(c.why)}<div style="margin-top:8px"><b>Suggested next step:</b> ${esc(c.next)}</div></div>`:""}
-     <div class="ds">Playbook</div>
-     <div class="dbox"><b style="font-size:16px">${pb[0]}</b> <div class="d" style="margin-top:4px">${pb[1]}</div></div>
-     <div class="ds">Product health</div>
-     <div class="dbox">${c.dormant?"No live engagement — reactive only.":`<div class="dots">${[1,2,3,4,5,6].map(i=>`<i class="${i<=c.features?"on":""}"></i>`).join("")}</div>${c.features}/6 core features have a Weekly Active Operator`}</div>
-     <div class="ds">Signals</div>
-     <div class="dbox">${c.sig.map(([d,t])=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span>${esc(t)}</span><span class="d">${DET[d]} · ${d}</span></div>`).join("")}</div>
-     <div class="ds">Account</div>
-     <div class="dbox kvs"><b>Owner</b><span>${esc(c.owner)}</span><b>Email</b><span>${esc(c.email||"—")}</span><b>Email type</b><span>${c.play} → ${PLAY_OUT[c.play]}</span></div>
-     ${c.dormant?"":`<div class="ds">Draft</div><div class="dbox"><span class="llmtag" style="margin-bottom:6px;display:inline-block">${LANGS[c.lang]}</span><br><b>${esc(subjOf(c))}</b><div style="white-space:pre-wrap;margin-top:6px;color:#5d554b">${esc(draftText(c))}</div><div class="d" style="margin-top:8px;font-size:12px">draft_hash ${c.hash} · QA 12/12 pass</div></div>
-     <div class="dfoot"><button class="b ap" data-open="${c.id}">Open draft &amp; approve →</button></div>`}`;
-  }
-  dr.scrollTop=0;
-}
-addEventListener("keydown",e=>{
-  if(e.key==="Escape"&&DR){DR=null;drawer()}
-  if(e.key==="Enter"){const k=e.target.closest&&e.target.closest("[data-kpi],[data-case]");if(k&&k.tagName!=="BUTTON")k.click()}
-});
-
-function llmApply(c,fn){
-  if(c.gen)return;
-  c.gen=true;render();
-  setTimeout(()=>{
-    fn(c);c.hash=rid();c.ver++;c.gen=false;
-    if(c.state==="approved"){const i=sendLog.findIndex(r=>r.case===c.id);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again."}
+function llmApply(c,fn,what){
+  if(c.gen)return;c.gen=true;render();
+  setTimeout(()=>{fn(c);c.hash=rid();c.ver++;c.gen=false;
+    if(c.state==="approved"){const i=sendLog.findIndex(r=>r.case===c.id);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again.";ev(c,"bad","Approval voided: draft changed")}
     else c.note="";
-    render();
-  },700);
+    ev(c,"ai",what);render();},700);
 }
 function llmRewrite(c,mode){
-  llmApply(c,c=>{
-    c.custom[c.lang]="";
-    if(mode==="regen")c.alt=((c.alt||0)+1)%3;
-    else c.mods[{shorter:"short",warmer:"warm",direct:"direct"}[mode]]=!c.mods[{shorter:"short",warmer:"warm",direct:"direct"}[mode]];
-  });
+  const k={shorter:"short",warmer:"warm",direct:"direct"}[mode];
+  llmApply(c,c=>{c.custom[c.lang]="";if(mode==="regen")c.alt=((c.alt||0)+1)%3;else c.mods[k]=!c.mods[k]},mode==="regen"?"AI regenerated the draft":`AI rewrote the draft (${mode})`);
 }
-document.addEventListener("click",e=>{
-  if(!e.target.closest("button")||e.target.closest("button").dataset.dclose||e.target.closest("button").dataset.dback){
-    if(e.target.closest("[data-dclose]")){DR=null;return drawer()}
-    if(e.target.closest("[data-dback]")){DR=DR.prev||null;return drawer()}
-    const k=e.target.closest("[data-kpi]");if(k){return openList(k.dataset.kpi)}
-    const dt=e.target.closest("[data-det]");if(dt){return openList("det",dt.dataset.det)}
-    const cs=e.target.closest("[data-case]");if(cs){DR={type:"case",id:cs.dataset.case,back:DR&&DR.type==="list"?DR.title:null,prev:DR&&DR.type==="list"?DR:null};return drawer()}
-    return}
+function openRecord(id,tab){view="record";recId=id;rtab=tab||"overview";$("#gres").style.display="none";$("#gsearch").value="";scrollTo(0,0);render()}
 
-  const t=e.target.closest("button");if(!t)return;
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-nav],[data-open],[data-review],[data-kpi],[data-sort],[data-accview],[data-layout],[data-clear],[data-rtab],[data-note],[data-pf],[data-bulk],[data-cur],[data-lang],[data-a]");
+  if(!t){if(!e.target.closest(".search"))$("#gres").style.display="none";return}
   const D=t.dataset;
-  if(D.v){DR=null;drawer();view=D.v;scrollTo(0,0);return render()}
-  if(D.wao){$("#waonote").textContent="WAO report is not connected yet — this will open the account's Weekly Active Operators view.";return}
-  if(D.sf){sigF=D.sf;return render()}
-  if(D.lang){const c=cases.find(x=>x.id===cur);if(c&&D.lang!==c.lang)llmApply(c,c=>{c.lang=D.lang});return}
-  if(D.pf){playF=D.pf;return render()}
+  if(D.nav){view=D.nav;scrollTo(0,0);return render()}
+  if(D.open)return openRecord(D.open);
+  if(D.review){cur=D.review;apr.pb="All";view="approvals";scrollTo(0,0);return render()}
+  if(D.kpi){const k=D.kpi;if(k==="gate"){view="approvals"}else{view="accounts";acc.view=k==="risk"?"risk":"all"}scrollTo(0,0);return render()}
+  if(D.sort){if(acc.sort===D.sort)acc.dir*=-1;else{acc.sort=D.sort;acc.dir=D.sort==="op"||D.sort==="owner"?1:-1}return render()}
+  if(D.accview){acc.view=D.accview;return render()}
+  if(D.layout){acc.layout=D.layout;return render()}
+  if(D.clear){acc={...acc,view:"all",q:"",seg:"All",health:"All",pb:"All",lang:"All"};return render()}
+  if(D.rtab){rtab=D.rtab;return render()}
+  if(D.note){const i=$("#notein"),v=i.value.trim();if(!v)return;const c=byId(recId);ev(c,"note","Note · "+v);toast("Note added");return render()}
+  if(D.pf){apr.pb=D.pf;return render()}
+  if(D.bulk){rev.filter(c=>playbookOf(c)[0]===apr.pb&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris (bulk · ${apr.pb})`)});toast(`Approved all ${apr.pb}`);return render()}
   if(D.cur){cur=D.cur;return render()}
-  if(D.open){DR=null;drawer();cur=D.open;playF="All";view="approve";scrollTo(0,0);return render()}
-  if(D.bulk){rev.filter(c=>playbookOf(c)[0]===playF&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash})});return render()}
-  const c=cases.find(x=>x.id===cur);if(!c||!D.a)return;
+  if(D.lang){const c=byId(D.c||cur);if(c&&D.lang!==c.lang)llmApply(c,c=>{c.lang=D.lang},`AI rewrote the draft in ${LANGS[D.lang]}`);return}
+  const c=byId(cur);if(!c||!D.a)return;
   switch(D.a){
    case"regen":case"shorter":case"warmer":case"direct":return llmRewrite(c,D.a);
-   case"approve":c.note="";return decide(c,"approved");
+   case"approve":return decide(c,"approved");
    case"hold":return decide(c,"hold");
    case"reject":c.rejecting=true;return render();
    case"rejno":c.rejecting=false;return render();
    case"rejgo":c.rejecting=false;return decide(c,"rejected",{reason:$("#rj").value||"no reason"});
    case"edit":c.editing=true;return render();
    case"cancel":c.editing=false;return render();
-   case"save":c.custom[c.lang]=$("#ta").value;c.hash=rid();c.editing=false;return decide(c,"approved");
+   case"save":c.custom[c.lang]=$("#ta").value;c.hash=rid();c.editing=false;ev(c,"note","Draft edited by Chris");return decide(c,"approved");
   }
 });
+document.addEventListener("change",e=>{
+  const s=e.target.closest("select[data-f]");if(s){acc[s.dataset.f]=s.value;render()}
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="accq"){const p=e.target.selectionStart;acc.q=e.target.value;render();const i=$("#accq");i.focus();i.setSelectionRange(p,p)}
+  if(e.target.id==="gsearch"){
+    const q=e.target.value.trim().toLowerCase(),r=$("#gres");
+    if(!q){r.style.display="none";return}
+    const m=ALLC.filter(c=>(c.op+" "+c.id+" "+c.contact+" "+c.owner).toLowerCase().includes(q));
+    r.innerHTML=m.map(c=>`<div class="it" data-open="${c.id}"><span><b>${esc(c.op)}</b> <span class="d">${c.id}</span></span><span class="d">${playbookOf(c)[0]}</span></div>`).join("")||`<div class="it d">No accounts found</div>`;
+    r.style.display="block";
+  }
+});
+document.addEventListener("toggle",e=>{if(e.target.id==="d-mx")openMx=e.target.open;if(e.target.id==="d-guide")openGuide=e.target.open},true);
 (function(){
   const sel=$("#ownersel"),owners=[...new Set(ALLC.map(c=>c.owner))];
   sel.innerHTML=`<option value="All">All owners (${ALLC.length})</option>`+owners.map(o=>`<option value="${esc(o)}">${esc(ownerName(o))} (${ALLC.filter(c=>c.owner===o).length})</option>`).join("");
-  sel.addEventListener("change",()=>{ownerF=sel.value;sel.parentNode.classList.toggle("on",ownerF!=="All");DR=null;drawer();playF="All";render()});
+  sel.addEventListener("change",()=>{ownerF=sel.value;sel.parentNode.classList.toggle("on",ownerF!=="All");acc.view="all";apr.pb="All";render()});
 })();
 render();
+
 </script>
 </body>
 </html>
