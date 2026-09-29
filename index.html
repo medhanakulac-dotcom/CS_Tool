@@ -206,7 +206,6 @@ body.nosb .topbar{padding-left:24px}
     <header class="topbar">
       <button class="sbbtn" data-sb="1" id="sbtop" title="Show / hide sidebar" aria-label="Toggle sidebar">☰</button>
       <div class="search"><input id="gsearch" placeholder="Search accounts…" autocomplete="off"><div id="gres"></div></div>
-      <label class="ownerf"><span>Owner</span><select id="ownersel"></select></label>
       <span class="week" id="srcbadge">Week 2026-W40 · run_manifest ok</span>
     </header>
     <main id="main"></main>
@@ -356,8 +355,10 @@ ALLC.forEach(c=>{c.noSend=!!c.dormant||hOf(c)==="Healthy";if(!c.dormant&&hOf(c)=
 const AUTO_GEN=["Automated Activation","Reactive Only"];
 ALLC.forEach(c=>{c.drafted=!c.noSend&&AUTO_GEN.includes(playbookOf(c)[0]);if(c.drafted)c.events.push({t:"Mon 02:30",k:"sys",txt:"Draft auto-generated ("+playbookOf(c)[0]+")"})});
 const isQ=c=>c.state==="pending"&&c.drafted;
-let cases=ALLC, rev=ALLC.filter(c=>!c.noSend&&c.drafted&&c.state!=="closed"), ownerF="All";
-function applyOwner(){cases=ownerF==="All"?ALLC:ALLC.filter(c=>c.owner===ownerF);rev=cases.filter(c=>!c.noSend&&c.drafted&&c.state!=="closed")}
+let cases=ALLC, rev=ALLC.filter(c=>!c.noSend&&c.drafted&&c.state!=="closed");
+const OWNERS=[...new Set(ALLC.map(c=>c.owner))].sort((a,b)=>ALLC.filter(c=>c.owner===b).length-ALLC.filter(c=>c.owner===a).length);
+const ownerOpts=(list,sel)=>`<option value="All">Owner: all</option>`+OWNERS.map(o=>[o,list.filter(c=>c.owner===o).length]).filter(x=>x[1]||x[0]===sel).map(([o,n])=>`<option value="${esc(o)}" ${sel===o?"selected":""}>${esc(ownerName(o))} (${n})</option>`).join("");
+function applyOwner(){cases=ALLC;rev=cases.filter(c=>!c.noSend&&c.drafted&&c.state!=="closed")}
 const byId=id=>ALLC.find(c=>c.id===id);
 const count=s=>cases.filter(c=>c.state===s).length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
@@ -366,8 +367,9 @@ const HC={Unhealthy:"#cc3f6e",Adopted:"#c98a2b",Healthy:"#3f9a5b"};
 const hlOf=c=>c.dormant?`<span class="tg">Reactive</span>`:`<span class="hl ${hOf(c)}">${hOf(c)}</span>`;
 const prio=c=>({High:0,Mid:1,Low:2,Dormant:3}[c.segment])*10+({Unhealthy:0,Adopted:1,Healthy:2}[hOf(c)]);
 const byPrio=(a,b)=>prio(a)-prio(b)||a.op.localeCompare(b.op);
-let view="home", recId=null, rtab="overview", cur="C-101", apr={pb:"All"};
-let acc={view:"all",q:"",seg:"All",health:"All",pb:"All",lang:"All",sort:"prio",dir:1,layout:"table"};
+let view="home", recId=null, rtab="overview", cur="C-101", apr={pb:"All",owner:"All"};
+const aprList=()=>rev.filter(c=>(apr.pb==="All"||playbookOf(c)[0]===apr.pb)&&(apr.owner==="All"||c.owner===apr.owner));
+let acc={view:"all",q:"",owner:"All",seg:"All",health:"All",pb:"All",lang:"All",sort:"prio",dir:1,layout:"table"};
 let openMx=false, openGuide=false;
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),2200)}
 
@@ -429,6 +431,7 @@ function filtered(){
   if(v==="healthy")L=L.filter(c=>c.state==="healthy");
   const q=acc.q.trim().toLowerCase();
   if(q)L=L.filter(c=>(c.op+" "+c.id+" "+c.owner+" "+c.contact).toLowerCase().includes(q));
+  if(acc.owner!=="All")L=L.filter(c=>c.owner===acc.owner);
   if(acc.seg!=="All")L=L.filter(c=>c.segment===acc.seg);
   if(acc.health!=="All")L=L.filter(c=>!c.dormant&&hOf(c)===acc.health);
   if(acc.pb!=="All")L=L.filter(c=>playbookOf(c)[0]===acc.pb);
@@ -450,7 +453,7 @@ function Accounts(){
     <div class="row"><button class="b ${acc.layout==="table"?"on":""}" data-layout="table">☰ Table</button><button class="b ${acc.layout==="board"?"on":""}" data-layout="board">▦ Board</button></div></div>
   <div class="tabs">${views.map(([k,l,n])=>`<button data-accview="${k}" class="${acc.view===k?"on":""}">${l}<span class="n">${n}</span></button>`).join("")}</div>
   <div class="tools"><input id="accq" data-q="1" placeholder="Search name, ID or owner…" value="${esc(acc.q)}">
-    ${sel("seg",SEG.concat("Dormant").map(x=>[x,x]),"Segment")}${sel("health",HEALTH.map(x=>[x,x]),"Health")}${sel("pb",pbs.map(x=>[x,x]),"Playbook")}${sel("lang",Object.entries(LANGS),"Language")}
+    <select data-f="owner">${ownerOpts(cases,acc.owner)}</select>${sel("seg",SEG.concat("Dormant").map(x=>[x,x]),"Segment")}${sel("health",HEALTH.map(x=>[x,x]),"Health")}${sel("pb",pbs.map(x=>[x,x]),"Playbook")}${sel("lang",Object.entries(LANGS),"Language")}
     <button class="b sp" data-clear="1">Clear filters</button></div>
   ${acc.layout==="table"?table:board}`;
 }
@@ -509,12 +512,13 @@ const langBar=c=>`<div class="langbar"><span class="lb">Email language</span>${O
 
 /* ── Approvals ── */
 function Approvals(){
-  const pbs=[...new Set(rev.map(c=>playbookOf(c)[0]))];
+  const revO=rev.filter(c=>apr.owner==="All"||c.owner===apr.owner);
+  const pbs=[...new Set(revO.map(c=>playbookOf(c)[0]))];
   if(apr.pb!=="All"&&!pbs.includes(apr.pb))apr.pb="All";
-  const vis=rev.filter(c=>apr.pb==="All"||playbookOf(c)[0]===apr.pb);
+  const vis=aprList();
   if(!vis.find(c=>c.id===cur)&&vis[0])cur=vis[0].id;
   const c=vis.find(x=>x.id===cur);
-  const bulkN=rev.filter(x=>playbookOf(x)[0]===apr.pb&&x.state==="pending").length;
+  const bulkN=aprList().filter(x=>x.state==="pending").length;
   const strip=[["Pending",cases.filter(isQ).length,"pending"],["Approved",count("approved"),"approved"],["On hold",count("hold"),"hold"],["Returned",count("rejected"),"rejected"]];
   const detail=!c?`<div class="card d">Select a case.</div>`:`<div class="card ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"box-shadow:inset 0 0 0 2px var(--ok)":""}">
     <div class="lab" style="display:flex;justify-content:space-between"><span>${c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span class="tg st ${c.state}">${c.state}</span></div>
@@ -536,7 +540,8 @@ function Approvals(){
       :`<button class="b pri" data-a="approve">Approve to send</button><button class="b" data-a="edit">Edit</button><button class="b" data-a="hold">Hold</button><button class="b rj" data-a="reject">Reject</button><button class="b" data-a="close" title="Remove this case from the queue">Close case</button>`}</div></div>`;
   return `<div class="ph"><div><h1>Approvals</h1><div class="sub">GATE-1 · review the draft, then approve to send Tue 09:00 · ${(()=>{const n=cases.filter(c=>!c.noSend&&!c.drafted).length;return n?n+" account"+(n===1?"":"s")+" have no draft yet (generate from Accounts) · ":""})()} ${LIVE?"QA has not run on live data":"QA passed 12/12"}</div></div></div>
   <div class="grid g4" style="margin-bottom:18px">${strip.map(([l,n,s])=>`<div class="card ${s==="pending"?"human":""}"><div class="lab">${l}</div><div class="big">${n}</div></div>`).join("")}</div>
-  <div class="tools"><button class="b ${apr.pb==="All"?"on":""}" data-pf="All">All</button>${pbs.map(p=>`<button class="b ${apr.pb===p?"on":""}" data-pf="${esc(p)}">${esc(p)} <span class="d">${rev.filter(x=>playbookOf(x)[0]===p).length}</span></button>`).join("")}
+  <div class="tools"><button class="b ${apr.pb==="All"?"on":""}" data-pf="All">All</button>${pbs.map(p=>`<button class="b ${apr.pb===p?"on":""}" data-pf="${esc(p)}">${esc(p)} <span class="d">${revO.filter(x=>playbookOf(x)[0]===p).length}</span></button>`).join("")}
+    <select data-fa="owner">${ownerOpts(rev,apr.owner)}</select>
     ${apr.pb!=="All"&&bulkN?`<button class="b pri" data-bulk="1">Approve all ${esc(apr.pb)} (${bulkN})</button>`:""}</div>
   <div class="split"><div class="q" id="queue">${vis.map(x=>`<button class="qi ${x.id===cur?"on":""}" data-cur="${x.id}"><div class="l1"><b>${esc(x.op)}</b></div><div class="l2"><span>${esc(ownerName(x.owner))} · ${x.segment} · ${hOf(x)} · ${x.lang.toUpperCase()}</span><span class="tg st ${x.state}" style="padding:1px 9px">${x.state}</span></div></button>`).join("")||`<div class="d" style="padding:20px">No cases.</div>`}</div><div class="detail" id="detail">${detail}</div></div>`;
 }
@@ -578,7 +583,7 @@ function decide(c,state,extra,msg){
   if(state==="rejected")ev(c,"bad",`Returned to triage: “${c.reason}”`);
   if(state==="hold")ev(c,"note","Put on hold by Chris");
   if(state==="closed"){for(let i=sendLog.length-1;i>=0;i--)if(sendLog[i].case===c.id)sendLog.splice(i,1);ev(c,"note","Case closed by Chris (removed from the queue)")}
-  const lst=rev.filter(x=>apr.pb==="All"||playbookOf(x)[0]===apr.pb),ci=lst.findIndex(x=>x.id===c.id),nx=lst.slice(ci+1).find(x=>x.state==="pending")||lst.find(x=>x.state==="pending")||rev.find(x=>x.state==="pending");if(nx)cur=nx.id;
+  const lst=aprList(),ci=lst.findIndex(x=>x.id===c.id),nx=lst.slice(ci+1).find(x=>x.state==="pending")||lst.find(x=>x.state==="pending")||rev.find(x=>x.state==="pending");if(nx)cur=nx.id;
   toast(msg||({approved:"Approved · queued for Tue 09:00",rejected:"Returned to triage",hold:"Put on hold",closed:"Case closed · removed from the queue"}[state]));
   render();
 }
@@ -663,12 +668,12 @@ document.addEventListener("click",e=>{
   if(D.sort){if(acc.sort===D.sort)acc.dir*=-1;else{acc.sort=D.sort;acc.dir=D.sort==="op"||D.sort==="owner"?1:-1}return render()}
   if(D.accview){acc.view=D.accview;return render()}
   if(D.layout){acc.layout=D.layout;return render()}
-  if(D.clear){acc={...acc,view:"all",q:"",seg:"All",health:"All",pb:"All",lang:"All"};return render()}
+  if(D.clear){acc={...acc,view:"all",q:"",owner:"All",seg:"All",health:"All",pb:"All",lang:"All"};return render()}
   if(D.rtab){rtab=D.rtab;return render()}
   if(D.note){const i=$("#notein"),v=i.value.trim();if(!v)return;const c=byId(recId);const e={t:"Just now",k:"note",txt:"Note · "+v,raw:v,sync:"local"};c.events.push(e);render();sendNoteToHubSpot(c,e).then(ok=>{toast(ok?"Note added · sent to HubSpot":e.sync==="failed"?"Note added · could not send to HubSpot":"Note added · not sent (HubSpot not connected)");render()});return}
   if(D.resync!==undefined){const c=byId(recId),e=c.events[+D.resync];if(e&&e.raw)sendNoteToHubSpot(c,e).then(ok=>{toast(ok?"Sent to HubSpot":"Still could not send");render()});return}
   if(D.pf){apr.pb=D.pf;return render()}
-  if(D.bulk){rev.filter(c=>playbookOf(c)[0]===apr.pb&&c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris (bulk · ${apr.pb})`)});toast(`Approved all ${apr.pb}`);return render()}
+  if(D.bulk){aprList().filter(c=>c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris (bulk · ${apr.pb})`)});toast(`Approved all ${apr.pb}${apr.owner!=="All"?" · "+ownerName(apr.owner):""}`);return render()}
   if(D.cur){cur=D.cur;render();if(innerWidth<=1000){const d=$("#detail");if(d)d.scrollIntoView({block:"start"})}return}
   if(D.lang){const c=byId(D.c||cur);if(c&&D.lang!==c.lang)llmApply(c,c=>{c.lang=D.lang},`AI rewrote the draft in ${LANGS[D.lang]}`);return}
   const c=byId(cur);if(!c||!D.a)return;
@@ -687,6 +692,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("change",e=>{
   const s=e.target.closest("select[data-f]");if(s){acc[s.dataset.f]=s.value;render()}
+  const a=e.target.closest("select[data-fa]");if(a){apr[a.dataset.fa]=a.value;render()}
 });
 document.addEventListener("input",e=>{
   if(e.target.id==="regprompt"){const c=byId(cur);if(c)c.promptDraft=e.target.value}
@@ -700,11 +706,7 @@ document.addEventListener("input",e=>{
   }
 });
 document.addEventListener("toggle",e=>{if(e.target.id==="d-mx")openMx=e.target.open;if(e.target.id==="d-guide")openGuide=e.target.open},true);
-(function(){
-  const sel=$("#ownersel"),owners=[...new Set(ALLC.map(c=>c.owner))];
-  sel.innerHTML=`<option value="All">All owners (${ALLC.length})</option>`+owners.map(o=>`<option value="${esc(o)}">${esc(ownerName(o))} (${ALLC.filter(c=>c.owner===o).length})</option>`).join("");
-  sel.addEventListener("change",()=>{ownerF=sel.value;sel.parentNode.classList.toggle("on",ownerF!=="All");acc.view="all";apr.pb="All";render()});
-})();
+
 if(LIVE){const b=$("#srcbadge");b.innerHTML=`<span class="tg" style="background:#e6f6ec;color:#3f9a5b">● HubSpot live data</span> &nbsp;${esc(HS_META.portal)} · pulled ${HS_META.pulledAt} · ${ALLC.length} accounts`}
 render();
 </script>
