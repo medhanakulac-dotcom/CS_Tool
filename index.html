@@ -181,16 +181,17 @@ body.nosb .topbar{padding-left:24px}
       <button class="sbbtn" data-sb="1" id="sbtop" title="Show / hide sidebar" aria-label="Toggle sidebar">☰</button>
       <div class="search"><input id="gsearch" placeholder="Search accounts…" autocomplete="off"><div id="gres"></div></div>
       <label class="ownerf"><span>Owner</span><select id="ownersel"></select></label>
-      <span class="week">Week 2026-W40 · run_manifest ok</span>
+      <span class="week" id="srcbadge">Week 2026-W40 · run_manifest ok</span>
     </header>
     <main id="main"></main>
   </div>
 </div>
 <div id="toast"></div>
+<script src="hubspot-data.js"></script>
 <script>
 const rid=()=>Math.random().toString(16).slice(2,10);
 const PLAY_OUT={Retention:"OUT-1",Adoption:"OUT-2",Commercial:"OUT-3"};
-const DET={"Volume":"ANL-1","Route peer":"ANL-2","Fare index":"ANL-3","Adoption":"ANL-4"};
+const DET={"HubSpot health":"CRM-1","HubSpot activity":"CRM-2","Volume":"ANL-1","Route peer":"ANL-2","Fare index":"ANL-3","Adoption":"ANL-4"};
 const SEG=["High","Mid","Low"], HEALTH=["Unhealthy","Adopted","Healthy"];
 const healthOf=f=>f>=5?"Healthy":f>=3?"Adopted":"Unhealthy";
 const MATRIX={
@@ -198,7 +199,9 @@ const MATRIX={
  Mid:{Unhealthy:["Adoption Push","Improve adoption."],Adopted:["Maintain / Light Push","Acceptable baseline — light push on remaining features."],Healthy:["Maintain","Maintain engagement."]},
  Low:{Unhealthy:["Automated Activation","Automated activation sequence."],Adopted:["Self-Service / Nudge","Self-serve, with the occasional automated nudge."],Healthy:["Self-Service","Self-service engagement."]}
 };
-const playbookOf=c=>c.segment==="Dormant"?["Reactive Only","No proactive touchpoints — respond to inbound requests only."]:MATRIX[c.segment][healthOf(c.features)];
+const hOf=c=>c.hs?c.hs.health:hOf(c);
+const LIVE=!!window.HS_ACCOUNTS;
+const playbookOf=c=>c.segment==="Dormant"?["Reactive Only","No proactive touchpoints — respond to inbound requests only."]:MATRIX[c.segment][hOf(c)];
 const ALLC=[
  {id:"C-101",op:"Aero Nusantara",segment:"High",features:1,owner:"Rina P.",email:"rina@aero-nusantara.example",play:"Retention",risk:87,sig:[["Volume","Volume −23% WoW"],["Route peer","Route peer −11 pts"]]},
  {id:"C-102",op:"Blue Kestrel Air",segment:"High",features:4,owner:"Tom W.",email:"tom@bluekestrel.example",play:"Commercial",risk:74,sig:[["Fare index","Fare index 1.18 vs peer median"]]},
@@ -266,29 +269,60 @@ Object.assign(LP.vi,{meet:"Vì đây là ưu tiên của chúng tôi, chúng tô
 Object.assign(LP.id,{meet:"Karena ini menjadi prioritas kami, kami ingin menjadwalkan sesi 20 menit minggu ini untuk meninjau data bersama dan menyepakati rencana pemulihan. Fitur di atas dapat diaktifkan dari pengaturan akun sebelum kita berbicara.",directMeet:"Mohon informasikan waktu yang sesuai minggu ini untuk sesi 20 menit.",recoHead:"Fitur yang kami sarankan untuk diaktifkan:",close:"Anda dapat mengaktifkannya dari pengaturan akun, atau cukup balas email ini dan kami akan mengaktifkannya untuk Anda.",direct:"Cukup balas “ya” dan kami akan mengaktifkannya."});
 const DEFAULT_LANG={"C-101":"id","C-102":"th","C-103":"vi","C-104":"id","C-105":"th"};
 function draftText(c){
-  if(c.dormant||!EM[c.id])return "";
+  if(c.dormant||(!EM[c.id]&&!c.hs))return "";
   if(c.custom&&c.custom[c.lang])return c.custom[c.lang];
-  const P=EM[c.id][c.lang],L=LP[c.lang],m=c.mods||{};
+  const P=EM[c.id]?EM[c.id][c.lang]:genP(c),L=LP[c.lang],m=c.mods||{};
   const greet=P.greet+(m.warm?" "+L.warm:"");
   const pts=(m.short?P.pts.slice(0,1):P.pts).map(x=>"• "+x).join("\n");
-  const feats=(RECO[c.id]||[]);
+  const feats=(RECO[c.id]||(c.hs?RECO_HS[hOf(c)]:[])||[]);
   const recs=(m.short?feats.slice(0,1):feats).map((k,i)=>`${i+1}. ${FEATN[k]} — ${FEAT[c.lang][k]}`).join("\n");
   const call=playbookOf(c)[0]==="Rescue";
   const ask=m.direct?(call?L.directMeet:L.direct):(P.ask||(call?L.meet:L.close));
   const sign=m.warm?L.warmSign:(c.alt?L.signs[c.alt%3]:P.sign);
   return [greet,P.intro,pts,L.recoHead+"\n"+recs,ask,sign].join("\n\n");
 }
-const subjOf=c=>c.dormant||!EM[c.id]?"":EM[c.id][c.lang].subj;
+const subjOf=c=>c.dormant||(!EM[c.id]&&!c.hs)?"":(EM[c.id]?EM[c.id][c.lang].subj:genP(c).subj);
 
 ALLC.forEach(c=>{[c.why,c.next]=WHY[c.id]||["",""];c.ver=1;c.lang=DEFAULT_LANG[c.id]||"en";c.mods={};c.custom={};c.alt=0});
 
 /* ═════════ CRM logic ═════════ */
 const $=s=>document.querySelector(s), esc=s=>String(s==null?"":s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
 const OWN={"C-101":"Dewi A.","C-102":"Nok S.","C-103":"Linh T.","C-104":"Dewi A.","C-105":"Nok S."};
-ALLC.forEach(c=>{c.contact=c.owner;c.owner=OWN[c.id]||"—";c.note="";c.notes=[];
+
+/* ═════════ HubSpot live data ═════════ */
+const COUNTRY_LANG={Thailand:"th",Vietnam:"vi",Indonesia:"id"};
+const HMAP={Unhealthy:"Unhealthy",Watchlist:"Adopted",Healthy:"Healthy"};
+const RECO_HS={Unhealthy:["Invitations","WeeklyReport","VolumeTrend"],Adopted:["Bundling","ScheduledReports"],Healthy:["ScheduledReports"]};
+const daysSince=d=>d?Math.max(0,Math.round((new Date("2026-09-29")-new Date(d))/864e5)):null;
+const GEN={
+ en:{subj:"Getting more from seatOS",greet:n=>`Hello ${n} team,`,intro:"We reviewed your seatOS account as part of our weekly customer review.",pts:{Unhealthy:["Weekly usage across your team looks lower than we would like to see.","A few features that fit how you work are not switched on yet."],Adopted:["Your team uses seatOS regularly, and there is room to get more from it.","A few features that fit how you work are not switched on yet."],Healthy:["Your team is getting strong value from seatOS."]},sign:"Best regards,\nChris"},
+ th:{subj:"ใช้ประโยชน์จาก seatOS ให้มากขึ้น",greet:n=>`เรียนทีมงาน ${n},`,intro:"ทีม seatOS ได้ตรวจสอบบัญชีของคุณตามรอบทบทวนลูกค้าประจำสัปดาห์",pts:{Unhealthy:["การใช้งานรายสัปดาห์ของทีมคุณดูต่ำกว่าที่เราอยากเห็น","ยังมีฟีเจอร์ที่เหมาะกับการทำงานของคุณซึ่งยังไม่ได้เปิดใช้"],Adopted:["ทีมของคุณใช้ seatOS อย่างสม่ำเสมอ และยังมีโอกาสใช้ประโยชน์ได้มากขึ้น","ยังมีฟีเจอร์ที่เหมาะกับการทำงานของคุณซึ่งยังไม่ได้เปิดใช้"],Healthy:["ทีมของคุณได้รับประโยชน์จาก seatOS เป็นอย่างดี"]},sign:"ขอแสดงความนับถือ\nChris"},
+ vi:{subj:"Khai thác seatOS hiệu quả hơn",greet:n=>`Kính gửi đội ngũ ${n},`,intro:"Đội ngũ seatOS đã xem xét tài khoản của bạn trong đợt rà soát khách hàng hằng tuần.",pts:{Unhealthy:["Mức sử dụng hằng tuần của đội ngũ bạn có vẻ thấp hơn mức chúng tôi mong muốn.","Vẫn còn một số tính năng phù hợp với cách bạn làm việc nhưng chưa được bật."],Adopted:["Đội ngũ của bạn sử dụng seatOS đều đặn và vẫn còn dư địa để khai thác thêm.","Vẫn còn một số tính năng phù hợp với cách bạn làm việc nhưng chưa được bật."],Healthy:["Đội ngũ của bạn đang nhận được nhiều giá trị từ seatOS."]},sign:"Trân trọng,\nChris"},
+ id:{subj:"Manfaatkan seatOS lebih optimal",greet:n=>`Yth. Tim ${n},`,intro:"Tim seatOS telah meninjau akun Anda dalam tinjauan pelanggan mingguan kami.",pts:{Unhealthy:["Penggunaan mingguan tim Anda tampak lebih rendah dari yang kami harapkan.","Masih ada beberapa fitur yang sesuai dengan cara kerja Anda tetapi belum diaktifkan."],Adopted:["Tim Anda menggunakan seatOS secara rutin dan masih ada ruang untuk memanfaatkannya lebih jauh.","Masih ada beberapa fitur yang sesuai dengan cara kerja Anda tetapi belum diaktifkan."],Healthy:["Tim Anda mendapatkan nilai yang kuat dari seatOS."]},sign:"Hormat kami,\nChris"}
+};
+function genP(c){const g=GEN[c.lang];return {subj:g.subj,greet:g.greet(c.op),intro:g.intro,pts:g.pts[hOf(c)],sign:g.sign}}
+function hydrateHS(a){
+  const health=HMAP[a.hh]||"Unhealthy",dormant=a.seg==="Dormant",d0=a.deals[0],dd=daysSince(a.note||a.mod);
+  const c={id:"D-"+a.id,hsid:a.hsid,op:a.op,segment:a.seg,features:null,owner:a.owner==="Unassigned"?"—":a.owner,contact:"",email:"",dormant:dormant?1:0,
+    play:health==="Unhealthy"?"Retention":health==="Adopted"?"Adoption":"Commercial",
+    hs:{health,raw:a.hh,country:a.country,pipe:d0.pipe,stage:d0.stage,amount:a.amount,created:a.created,mod:a.mod,note:a.note,deals:a.deals,url:"https://app.hubspot.com/contacts/48205146/record/0-3/"+a.hsid}};
+  c.sig=[["HubSpot health","Health status: "+a.hh]];
+  if(dd!=null&&dd>14)c.sig.push(["HubSpot activity",`No note logged in ${dd} days`]);
+  if(d0.pipe==="Customer Adoption Pipeline")c.sig.push(["HubSpot health",`Adoption project · ${d0.stage}`]);
+  c.risk=Math.max(1,Math.min(99,({Unhealthy:65,Adopted:40,Healthy:10}[health])+({High:20,Mid:10,Low:0,Dormant:-5}[a.seg])+(dd>30?10:dd>14?5:0)));
+  c.state=dormant?"reactive":"pending";c.hash=rid();c.ver=1;c.lang=COUNTRY_LANG[a.country]||"en";c.mods={};c.custom={};c.alt=0;c.note="";
+  const pb=playbookOf(c)[0];
+  c.why=`${a.op}${a.country?" ("+a.country+")":""} is a ${a.seg} account with health status “${a.hh}” in HubSpot, currently at “${d0.stage}” in ${d0.pipe}.`+(dd!=null?` The last note was logged ${dd} day${dd===1?"":"s"} ago.`:"")+` Playbook: ${pb}.`;
+  c.next=dormant?"Do not reach out; respond only if they contact us.":pb==="Rescue"?"Rescue play: book a 20-minute call this week and recommend "+RECO_HS[health].map(k=>FEATN[k]).join(", ")+".":"Recommend "+RECO_HS[health].map(k=>FEATN[k]).join(", ")+".";
+  c.events=[{t:a.created,k:"sys",txt:"Deal created in HubSpot"}].concat(a.note?[{t:a.note,k:"note",txt:"Last note logged in HubSpot"}]:[],[{t:a.mod,k:"sys",txt:"Deal last modified in HubSpot"},{t:"Mon 02:00",k:"sys",txt:dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${pb} (${a.seg} + ${health})`}],dormant?[]:[{t:"Mon 02:30",k:"sys",txt:`Draft generated from template in ${LANGS[c.lang]}`}]);
+  return c;
+}
+if(LIVE){ALLC.length=0;HS_ACCOUNTS.forEach(a=>ALLC.push(hydrateHS(a)))}
+
+if(!LIVE)ALLC.forEach(c=>{c.contact=c.owner;c.owner=OWN[c.id]||"—";c.note="";c.notes=[];
   c.events=[{t:"Mon 01:00",k:"sys",txt:"Weekly data extracted · manifest gate passed"}].concat(
     c.sig.map(([d,t])=>({t:"Mon 01:30",k:"signal",txt:`Signal · ${DET[d]} ${d}: ${t}`})),
-    [{t:"Mon 02:00",k:"sys",txt:c.dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${playbookOf(c)[0]} (${c.segment} + ${healthOf(c.features)})`}],
+    [{t:"Mon 02:00",k:"sys",txt:c.dormant?"Case created · Reactive Only (no outreach)":`Case created · playbook ${playbookOf(c)[0]} (${c.segment} + ${hOf(c)})`}],
     c.dormant?[]:[{t:"Mon 02:30",k:"ai",txt:`AI drafted the email in ${LANGS[c.lang]}`},{t:"Mon 03:30",k:"qa",txt:"QA passed · 12 / 12 checks"}])});
 const ownerName=o=>o==="—"?"Unassigned":o;
 const initials=n=>n.split(/[\s.]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase();
@@ -300,7 +334,7 @@ const count=s=>cases.filter(c=>c.state===s).length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
 const ev=(c,k,txt)=>c.events.push({t:"Just now",k,txt});
 const HC={Unhealthy:"#cc3f6e",Adopted:"#c98a2b",Healthy:"#3f9a5b"};
-const hlOf=c=>c.dormant?`<span class="tg">Reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span>`;
+const hlOf=c=>c.dormant?`<span class="tg">Reactive</span>`:`<span class="hl ${hOf(c)}">${hOf(c)}</span>`;
 const riskP=c=>`<span class="risk ${c.risk>70?"hi":""}">${c.risk}</span>`;
 let view="home", recId=null, rtab="overview", cur="C-101", apr={pb:"All"};
 let acc={view:"all",q:"",seg:"All",health:"All",pb:"All",lang:"All",sort:"risk",dir:-1,layout:"table"};
@@ -317,8 +351,8 @@ function nav(){
 /* ── Home ── */
 function matrixHtml(){
   let h=`<div></div>${HEALTH.map(x=>`<div class="mxh" style="color:${HC[x]}"><i style="background:${HC[x]}"></i>${x} <span class="d">${x==="Unhealthy"?"0–2":x==="Adopted"?"3–4":"5–6"}</span></div>`).join("")}`;
-  SEG.forEach(g=>{h+=`<div class="mxr"><b>${g}</b><span class="seg ${g}" style="align-self:flex-start">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+HEALTH.map(x=>{const [n,desc]=MATRIX[g][x];const ops=cases.filter(c=>c.segment===g&&healthOf(c.features)===x);return `<div class="cell ${x}"><b>${n}</b><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
-  return h+`<div class="mxr"><b>Dormant</b><span class="seg Dormant" style="align-self:flex-start">Reactive</span></div><div class="cell Dormant"><b style="display:inline">Reactive Only</b> <span class="d">No proactive touchpoints — respond to inbound requests only.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
+  SEG.forEach(g=>{h+=`<div class="mxr"><b>${g}</b><span class="seg ${g}" style="align-self:flex-start">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+HEALTH.map(x=>{const [n,desc]=MATRIX[g][x];const ops=cases.filter(c=>c.segment===g&&hOf(c)===x);return `<div class="cell ${x}"><b>${n}</b><div class="d">${desc}</div><div class="ops">${ops.slice(0,4).map(c=>`<span>${esc(c.op)}</span>`).join("")}${ops.length>4?`<span>+${ops.length-4} more</span>`:""}<span style="background:transparent;color:var(--mute)">${ops.length?ops.length+" account"+(ops.length===1?"":"s"):""}</span></div></div>`}).join("")});
+  return h+`<div class="mxr"><b>Dormant</b><span class="seg Dormant" style="align-self:flex-start">Reactive</span></div><div class="cell Dormant"><b style="display:inline">Reactive Only</b> <span class="d">No proactive touchpoints — respond to inbound requests only.</span> <span class="ops"><span>${cases.filter(c=>c.dormant).length} account${cases.filter(c=>c.dormant).length===1?"":"s"}</span></span></div>`;
 }
 function guideHtml(){return `<div class="gl"><div class="card"><div class="lab">Input 1 · Commercial segment</div><p class="d" style="margin:8px 0">How valuable an account is to seatOS. Set commercially and reviewed each quarter.</p>
  <div class="gr"><span class="seg High">High</span><span>Strategic, top-value accounts. Most hands-on attention, pushed toward full adoption.</span></div>
@@ -339,17 +373,17 @@ function Home(){
   const feed=cases.flatMap(c=>c.events.filter(e=>e.t==="Just now").map(e=>({...e,c}))).reverse().slice(0,6);
   const kpi=(l,tag,n,d,cls,act)=>`<div class="card click ${cls}" data-kpi="${act}"><div class="lab" style="display:flex;justify-content:space-between"><span>${l}</span><span>${tag}</span></div><div class="big">${n}</div><div class="d">${d} <span class="go">view →</span></div></div>`;
   return `<div class="ph"><div><h1>Good morning, Chris</h1><div class="sub">Week 2026-W40 · ${pend.length} draft${pend.length===1?"":"s"} waiting for your approval before Mon 09:00</div></div></div>
-  <div class="grid g4">${kpi("Signals","SQL",sigs,"detectors fired","","signals")}${kpi("Accounts","CODE",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`,"","accounts")}${kpi("Avg risk","CODE + LLM",avg,`top: ${top[0]?esc(top[0].op):"—"}`,"","risk")}${kpi("Approvals","HUMAN",pend.length,"awaiting you","human","gate")}</div>
+  <div class="grid g4">${kpi("Signals",LIVE?"HUBSPOT":"SQL",sigs,LIVE?"signals from HubSpot fields":"detectors fired","","signals")}${kpi("Accounts","CODE",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`,"","accounts")}${kpi("Avg risk",LIVE?"CODE":"CODE + LLM",avg,`top: ${top[0]?esc(top[0].op):"—"}`,"","risk")}${kpi("Approvals","HUMAN",pend.length,"awaiting you","human","gate")}</div>
   <div class="grid g2" style="margin-top:18px;align-items:start">
    <div class="grid" style="gap:18px">
     <div class="card"><h2 class="st"><span>My tasks · review drafts</span><button class="b tl" data-nav="approvals">Open Approvals →</button></h2>
-      ${pend.length?pend.map(c=>`<div class="task"><span class="av">${initials(c.op)}</span><div class="grow"><b>${esc(c.op)}</b><span class="d">${playbookOf(c)[0]} · ${LANGS[c.lang]} · owner ${esc(ownerName(c.owner))}</span></div>${riskP(c)}<button class="b pri" data-review="${c.id}">Review</button></div>`).join(""):`<div class="d" style="padding:16px 0">All caught up — nothing waiting.</div>`}</div>
-    <div class="card"><h2 class="st"><span>AI briefing</span><span class="tg llm">✦ LLM</span></h2>
+      ${pend.length?pend.slice(0,8).map(c=>`<div class="task"><span class="av">${initials(c.op)}</span><div class="grow"><b>${esc(c.op)}</b><span class="d">${playbookOf(c)[0]} · ${LANGS[c.lang]} · owner ${esc(ownerName(c.owner))}</span></div>${riskP(c)}<button class="b pri" data-review="${c.id}">Review</button></div>`).join("")+(pend.length>8?`<div class="d" style="padding:12px 4px">+ ${pend.length-8} more in Approvals</div>`:""):`<div class="d" style="padding:16px 0">All caught up — nothing waiting.</div>`}</div>
+    <div class="card"><h2 class="st"><span>${LIVE?"Summary":"AI briefing"}</span><span class="tg llm">${LIVE?"rule-based":"✦ LLM"}</span></h2>
       ${brief.map(c=>`<div class="box2" data-open="${c.id}" style="cursor:pointer"><b>${esc(c.op)}</b> ${riskP(c)} — ${esc(c.why)}</div>`).join("")||`<div class="d">No cases in view.</div>`}
-      <div class="d">Written from this week's signals; every figure is re-checked by QA before anything is sent.</div></div>
+      <div class="d">${LIVE?"Generated by rules from HubSpot fields (segment, health status, stage, last note). No LLM or QA has run on this data yet.":"Written from this week's signals; every figure is re-checked by QA before anything is sent."}</div></div>
    </div>
    <div class="grid" style="gap:18px">
-    <div class="card"><h2 class="st"><span>Risk by account</span></h2><div class="bars">${top.map(c=>`<div class="r" data-open="${c.id}"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><b>${c.risk}</b></div>`).join("")}</div></div>
+    <div class="card"><h2 class="st"><span>Risk by account</span><span class="d">top 8 of ${top.length}</span></h2><div class="bars">${top.slice(0,8).map(c=>`<div class="r" data-open="${c.id}"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><b>${c.risk}</b></div>`).join("")}</div></div>
     <div class="card"><h2 class="st"><span>Recent activity</span></h2>${feed.length?feed.map(e=>`<div class="task" data-open="${e.c.id}" style="cursor:pointer"><div class="grow"><b>${esc(e.c.op)}</b><span class="d">${esc(e.txt)}</span></div></div>`).join(""):`<div class="d">Approvals, holds and notes will show up here.</div>`}</div>
    </div></div>
   <details class="h" id="d-mx" ${openMx?"open":""}><summary>Playbook matrix <small>segment × product health · hidden</small></summary><div class="mx">${matrixHtml()}</div></details>
@@ -361,25 +395,25 @@ function filtered(){
   let L=cases.slice(); const v=acc.view;
   if(v==="approval")L=L.filter(c=>c.state==="pending");
   if(v==="risk")L=L.filter(c=>c.risk>=70);
-  if(v==="unhealthy")L=L.filter(c=>!c.dormant&&healthOf(c.features)==="Unhealthy");
+  if(v==="unhealthy")L=L.filter(c=>!c.dormant&&hOf(c)==="Unhealthy");
   if(v==="reactive")L=L.filter(c=>c.dormant);
   const q=acc.q.trim().toLowerCase();
   if(q)L=L.filter(c=>(c.op+" "+c.id+" "+c.owner+" "+c.contact).toLowerCase().includes(q));
   if(acc.seg!=="All")L=L.filter(c=>c.segment===acc.seg);
-  if(acc.health!=="All")L=L.filter(c=>!c.dormant&&healthOf(c.features)===acc.health);
+  if(acc.health!=="All")L=L.filter(c=>!c.dormant&&hOf(c)===acc.health);
   if(acc.pb!=="All")L=L.filter(c=>playbookOf(c)[0]===acc.pb);
   if(acc.lang!=="All")L=L.filter(c=>!c.dormant&&c.lang===acc.lang);
-  const key={risk:c=>c.risk,op:c=>c.op.toLowerCase(),owner:c=>c.owner,segment:c=>c.segment,health:c=>c.dormant?-1:c.features,playbook:c=>playbookOf(c)[0],signals:c=>c.sig.length,state:c=>c.state}[acc.sort];
+  const key={risk:c=>c.risk,op:c=>c.op.toLowerCase(),owner:c=>c.owner,segment:c=>c.segment,health:c=>c.dormant?-1:({Unhealthy:0,Adopted:1,Healthy:2}[hOf(c)]),playbook:c=>playbookOf(c)[0],signals:c=>c.sig.length,state:c=>c.state}[acc.sort];
   return L.sort((a,b)=>{const x=key(a),y=key(b);return (x>y?1:x<y?-1:0)*acc.dir});
 }
 function Accounts(){
   const cnt=f=>cases.filter(f).length;
-  const views=[["all","All accounts",cases.length],["approval","Needs approval",cnt(c=>c.state==="pending")],["risk","At risk (≥70)",cnt(c=>c.risk>=70)],["unhealthy","Unhealthy",cnt(c=>!c.dormant&&healthOf(c.features)==="Unhealthy")],["reactive","Reactive only",cnt(c=>c.dormant)]];
+  const views=[["all","All accounts",cases.length],["approval","Needs approval",cnt(c=>c.state==="pending")],["risk","At risk (≥70)",cnt(c=>c.risk>=70)],["unhealthy","Unhealthy",cnt(c=>!c.dormant&&hOf(c)==="Unhealthy")],["reactive","Reactive only",cnt(c=>c.dormant)]];
   const L=filtered(), pbs=[...new Set(ALLC.map(c=>playbookOf(c)[0]))];
   const sel=(k,opts,label)=>`<select data-f="${k}"><option value="All">${label}: all</option>${opts.map(o=>`<option value="${esc(o[0])}" ${acc[k]===o[0]?"selected":""}>${esc(o[1])}</option>`).join("")}</select>`;
   const th=(k,l)=>`<th class="s" data-sort="${k}">${l}${acc.sort===k?(acc.dir>0?" ▲":" ▼"):""}</th>`;
-  const table=`<div class="tw"><table><thead><tr>${th("op","Account")}${th("owner","Owner")}${th("segment","Segment")}${th("health","Health")}${th("playbook","Playbook")}<th>Email language</th>${th("risk","Risk")}${th("state","Status")}</tr></thead><tbody>
-   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.id} · ${esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.dormant?"—":`<span class="tg llm">${LANGS[c.lang]}</span>`}</td><td>${riskP(c)}</td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
+  const table=`<div class="tw"><table><thead><tr>${th("op","Account")}${th("owner","Owner")}${th("segment","Segment")}${th("health","Health")}${th("playbook","Playbook")}<th>Lang</th>${th("risk","Risk")}${th("state","Status")}</tr></thead><tbody>
+   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.id}${c.hs?" · "+esc(c.hs.country):" · "+esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant||c.hs?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.dormant?"—":`<span class="tg llm" title="${LANGS[c.lang]}">${c.lang.toUpperCase()}</span>`}</td><td>${riskP(c)}</td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
   const cols=[["pending","To review"],["approved","Approved"],["hold","On hold"],["rejected","Returned"],["reactive","Reactive only"]];
   const board=`<div class="board">${cols.map(([s,l])=>{const items=L.filter(c=>c.state===s);return `<div class="col"><h3><span>${l}</span><span>${items.length}</span></h3>${items.map(c=>`<div class="kc" data-open="${c.id}"><div class="l"><b>${esc(c.op)}</b>${riskP(c)}</div><div class="d">${playbookOf(c)[0]}</div><div class="m"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}${c.dormant?"":`<span class="tg llm">${c.lang.toUpperCase()}</span>`}<span class="av" style="width:24px;height:24px;font-size:10px;margin-left:auto" title="${esc(ownerName(c.owner))}">${initials(ownerName(c.owner))}</span></div></div>`).join("")}</div>`}).join("")}</div>`;
   return `<div class="ph"><div><h1>Accounts</h1><div class="sub">${L.length} of ${cases.length} accounts · click a row to open the record</div></div>
@@ -397,21 +431,22 @@ function Record(){
   const pb=playbookOf(c);
   const tabs=[["overview","Overview"],["activity","Activity",c.events.length],["email","Email"]];
   const props=`<div class="card"><h2 class="st"><span>About this account</span></h2><div class="prop">
-    <b>Case ID</b><span>${c.id}</span><b>Owner</b><span>${esc(ownerName(c.owner))}</span><b>Contact</b><span>${esc(c.contact)}</span><b>Email</b><span style="word-break:break-all">${esc(c.email||"—")}</span>
+    <b>Case ID</b><span>${c.id}</span><b>Owner</b><span>${esc(ownerName(c.owner))}</span>${c.hs?`<b>Country</b><span>${esc(c.hs.country||"—")}</span><b>Deal amount</b><span>${c.hs.amount!=null?"$"+c.hs.amount.toLocaleString():"—"}</span>`:`<b>Contact</b><span>${esc(c.contact)}</span><b>Email</b><span style="word-break:break-all">${esc(c.email||"—")}</span>`}
     <b>Segment</b><span class="seg ${c.segment}" style="justify-self:start">${c.segment}</span><b>Health</b><span>${hlOf(c)}</span>
-    <b>Features</b>${c.dormant?"<span>—</span>":`<span><div class="dots">${[1,2,3,4,5,6].map(i=>`<i class="${i<=c.features?"on":""}"></i>`).join("")}</div><span class="d">${c.features}/6 with a Weekly Active Operator</span></span>`}
+    <b>${c.hs?"HubSpot health":"Features"}</b>${c.hs?`<span>${esc(c.hs.raw)}</span>`:c.dormant?"<span>—</span>":`<span><div class="dots">${[1,2,3,4,5,6].map(i=>`<i class="${i<=c.features?"on":""}"></i>`).join("")}</div><span class="d">${c.features}/6 with a Weekly Active Operator</span></span>`}
     <b>Playbook</b><span><b style="color:var(--ink)">${pb[0]}</b></span><b>Risk score</b><span>${riskP(c)}</span><b>Status</b><span class="tg st ${c.state}" style="justify-self:start">${c.state}</span>
     <b>Email language</b><span>${c.dormant?"—":LANGS[c.lang]}</span></div></div>`;
   let center="";
-  if(rtab==="overview")center=`<div class="card">${c.why?`<h2 class="st"><span>AI analysis</span><span class="tg llm">✦ LLM</span></h2><div class="box2">${esc(c.why)}</div><div class="box2" style="background:var(--mint)"><b>Suggested next step</b><br>${esc(c.next)}</div>`:""}
+  if(rtab==="overview")center=`<div class="card">${c.why?`<h2 class="st"><span>${LIVE?"Summary":"AI analysis"}</span><span class="tg llm">${LIVE?"rule-based":"✦ LLM"}</span></h2><div class="box2">${esc(c.why)}</div><div class="box2" style="background:var(--mint)"><b>Suggested next step</b><br>${esc(c.next)}</div>`:""}
     <h2 class="st" style="margin-top:18px"><span>Signals this week</span></h2>${c.sig.map(([d,t])=>`<div class="task"><div class="grow"><b>${esc(t)}</b><span class="d">${DET[d]} · ${d}</span></div></div>`).join("")}
     <h2 class="st" style="margin-top:18px"><span>Playbook</span></h2><div class="box2"><b>${pb[0]}</b><br><span class="d">${pb[1]}</span></div></div>`;
   if(rtab==="activity")center=`<div class="card"><div class="notein"><input id="notein" placeholder="Log a note about ${esc(c.op)}…"><button class="b pri" data-note="1">Add note</button></div>
     <div class="tl">${[...c.events].reverse().map(e=>`<div class="ev ${e.k}"><div class="t">${e.t}</div>${esc(e.txt)}</div>`).join("")}</div></div>`;
-  if(rtab==="email")center=c.dormant?`<div class="card"><div class="d">Reactive only — no outreach email for this account.</div></div>`:`<div class="card"><h2 class="st"><span>Email draft</span><span class="tg llm">✦ Drafted by LLM · v${c.ver}</span></h2>${langBar(c)}
-    <div class="mail">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${esc(c.contact)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(subjOf(c))}</div><div class="draft">${esc(draftText(c))}</div>
-    ${c.note?`<div class="void">${c.note}</div>`:""}<div class="row"><button class="b pri" data-review="${c.id}">Review &amp; approve →</button><span class="d">draft_hash ${c.hash} · QA 12/12 pass</span></div></div>`;
-  const right=`<div class="grid" style="gap:16px"><div class="card"><h2 class="st"><span>Owner</span></h2><div class="task" style="border:0;padding:0"><span class="av">${initials(ownerName(c.owner))}</span><div class="grow"><b>${esc(ownerName(c.owner))}</b><span class="d">Sends from their mailbox</span></div></div></div>
+  if(rtab==="email")center=c.dormant?`<div class="card"><div class="d">Reactive only — no outreach email for this account.</div></div>`:`<div class="card"><h2 class="st"><span>Email draft</span><span class="tg llm">${LIVE?"Template draft · v"+c.ver:"✦ Drafted by LLM · v"+c.ver}</span></h2>${langBar(c)}
+    <div class="mail">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${toLine(c)}<br>Subject: ${esc(subjOf(c))}</div><div class="draft">${esc(draftText(c))}</div>
+    ${c.note?`<div class="void">${c.note}</div>`:""}<div class="row"><button class="b pri" data-review="${c.id}">Review &amp; approve →</button><span class="d">draft_hash ${c.hash} · ${LIVE?"QA not run":"QA 12/12 pass"}</span></div></div>`;
+  const dealsCard=c.hs?`<div class="card"><h2 class="st"><span>HubSpot deals</span><span class="d">${c.hs.deals.length}</span></h2>${c.hs.deals.map(d=>`<div class="task"><div class="grow"><b>${esc(d.pipe)}</b><span class="d">${esc(d.stage)}${d.amount!=null?" · $"+d.amount.toLocaleString():""}</span></div><a href="https://app.hubspot.com/contacts/48205146/record/0-3/${d.id}" target="_blank" rel="noopener" class="b tl" style="text-decoration:none">Open ↗</a></div>`).join("")}</div>`:"";
+  const right=`<div class="grid" style="gap:16px">${dealsCard}<div class="card"><h2 class="st"><span>Owner</span></h2><div class="task" style="border:0;padding:0"><span class="av">${initials(ownerName(c.owner))}</span><div class="grow"><b>${esc(ownerName(c.owner))}</b><span class="d">Sends from their mailbox</span></div></div></div>
     <div class="card ${c.state==="pending"?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?"Waiting for your review before Mon 09:00.":c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.dormant?"":`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`}</div></div>`;
   return `<div class="crumb"><button data-nav="accounts">Accounts</button> / ${esc(c.op)}</div>
   <div class="rh"><span class="av">${initials(c.op)}</span><div><h1 style="margin:0">${esc(c.op)}</h1><div class="row" style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="tg st ${c.state}">${c.state}</span>${riskP(c)}</div></div>
@@ -419,6 +454,7 @@ function Record(){
   <div class="tabs">${tabs.map(([k,l,n])=>`<button data-rtab="${k}" class="${rtab===k?"on":""}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>
   <div class="rl">${props}<div>${center}</div>${right}</div>`;
 }
+const toLine=c=>c.hs?`<i>contact not synced from HubSpot yet</i>`:`${esc(c.contact)} &lt;${esc(c.email)}&gt;`;
 const langBar=c=>`<div class="langbar"><span class="lb">Email language</span>${Object.entries(LANGS).map(([k,v])=>`<button class="b ${k===c.lang?"on":""}" data-lang="${k}" data-c="${c.id}" ${c.gen?"disabled":""}>${v}</button>`).join("")}</div>`;
 
 /* ── Approvals ── */
@@ -435,21 +471,21 @@ function Approvals(){
     <h2 style="font-size:22px;margin:6px 0"><span data-open="${c.id}" style="cursor:pointer">${esc(c.op)}</span></h2>
     <div class="row"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="chip" style="margin:0"><b>${playbookOf(c)[0]}</b></span>${playbookOf(c)[0]==="Rescue"?`<span class="chip" style="margin:0;background:var(--amber-bg);color:var(--amber)">📞 Requests a call</span>`:""}${c.sig.map(([,t])=>`<span class="chip" style="margin:0">${esc(t)}</span>`).join("")}</div>
     ${c.editing||c.rejecting?"":langBar(c)}
-    <div class="mail" style="margin-top:12px">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${esc(c.contact)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(subjOf(c))}</div>
+    <div class="mail" style="margin-top:12px">From: ${esc(ownerName(c.owner))}'s mailbox<br>To: ${toLine(c)}<br>Subject: ${esc(subjOf(c))}</div>
     ${c.editing?`<textarea id="ta">${esc(draftText(c))}</textarea>`:`<div class="draft">${esc(draftText(c))}</div>`}
-    <div class="d">draft_hash ${c.hash} · QA 12/12 pass · token TTL 72h</div>
+    <div class="d">draft_hash ${c.hash} · ${LIVE?"QA not run":"QA 12/12 pass"} · token TTL 72h</div>
     ${c.note?`<div class="void">${c.note}</div>`:""}
-    ${c.rejecting||c.editing?"":`<div class="row" style="margin-top:12px">${c.gen?`<span class="gen">✦ Writing the new version…</span>`:`<span class="tg llm">✦ Drafted by LLM · v${c.ver}</span>`}
+    ${c.rejecting||c.editing?"":`<div class="row" style="margin-top:12px">${c.gen?`<span class="gen">${LIVE?"Rewriting…":"✦ Writing the new version…"}</span>`:`<span class="tg llm">${LIVE?"Template draft · v"+c.ver:"✦ Drafted by LLM · v"+c.ver}</span>`}
       <button class="b" data-a="regen" ${c.gen?"disabled":""}>Regenerate</button><button class="b ${c.mods.short?"on":""}" data-a="shorter" ${c.gen?"disabled":""}>Shorter</button><button class="b ${c.mods.warm?"on":""}" data-a="warmer" ${c.gen?"disabled":""}>Warmer</button><button class="b ${c.mods.direct?"on":""}" data-a="direct" ${c.gen?"disabled":""}>More direct</button></div>`}
     ${c.reason?`<div class="void">Returned to triage — “${esc(c.reason)}”</div>`:""}
     <div class="row" style="margin-top:16px">${c.rejecting?`<input class="inp" id="rj" placeholder="Reason (goes back to SUP-1)" style="flex:1;min-width:200px"><button class="b rj" data-a="rejgo">Confirm reject</button><button class="b" data-a="rejno">Cancel</button>`
       :c.editing?`<button class="b pri" data-a="save">Save &amp; approve</button><button class="b" data-a="cancel">Cancel</button>`
       :`<button class="b pri" data-a="approve">Approve to send</button><button class="b" data-a="edit">Edit</button><button class="b" data-a="hold">Hold</button><button class="b rj" data-a="reject">Reject</button>`}</div></div>`;
-  return `<div class="ph"><div><h1>Approvals</h1><div class="sub">GATE-1 · review the draft, then approve to send Tue 09:00 · QA passed 12/12</div></div></div>
+  return `<div class="ph"><div><h1>Approvals</h1><div class="sub">GATE-1 · review the draft, then approve to send Tue 09:00 · ${LIVE?"QA has not run on live data":"QA passed 12/12"}</div></div></div>
   <div class="grid g4" style="margin-bottom:18px">${strip.map(([l,n,s])=>`<div class="card ${s==="pending"?"human":""}"><div class="lab">${l}</div><div class="big">${n}</div></div>`).join("")}</div>
   <div class="tools"><button class="b ${apr.pb==="All"?"on":""}" data-pf="All">All</button>${pbs.map(p=>`<button class="b ${apr.pb===p?"on":""}" data-pf="${esc(p)}">${esc(p)} <span class="d">${rev.filter(x=>playbookOf(x)[0]===p).length}</span></button>`).join("")}
     ${apr.pb!=="All"&&bulkN?`<button class="b pri" data-bulk="1">Approve all ${esc(apr.pb)} (${bulkN})</button>`:""}</div>
-  <div class="split"><div class="q">${vis.map(x=>`<button class="qi ${x.id===cur?"on":""}" data-cur="${x.id}"><div class="l1"><b>${esc(x.op)}</b>${riskP(x)}</div><div class="l2"><span>${esc(ownerName(x.owner))} · ${x.segment} · ${healthOf(x.features)} · ${x.lang.toUpperCase()}</span><span class="tg st ${x.state}" style="padding:1px 9px">${x.state}</span></div></button>`).join("")||`<div class="d" style="padding:20px">No cases.</div>`}</div>${detail}</div>`;
+  <div class="split"><div class="q">${vis.map(x=>`<button class="qi ${x.id===cur?"on":""}" data-cur="${x.id}"><div class="l1"><b>${esc(x.op)}</b>${riskP(x)}</div><div class="l2"><span>${esc(ownerName(x.owner))} · ${x.segment} · ${hOf(x)} · ${x.lang.toUpperCase()}</span><span class="tg st ${x.state}" style="padding:1px 9px">${x.state}</span></div></button>`).join("")||`<div class="d" style="padding:20px">No cases.</div>`}</div>${detail}</div>`;
 }
 
 /* ── Sent ── */
@@ -544,8 +580,8 @@ document.addEventListener("toggle",e=>{if(e.target.id==="d-mx")openMx=e.target.o
   sel.innerHTML=`<option value="All">All owners (${ALLC.length})</option>`+owners.map(o=>`<option value="${esc(o)}">${esc(ownerName(o))} (${ALLC.filter(c=>c.owner===o).length})</option>`).join("");
   sel.addEventListener("change",()=>{ownerF=sel.value;sel.parentNode.classList.toggle("on",ownerF!=="All");acc.view="all";apr.pb="All";render()});
 })();
+if(LIVE){const b=$("#srcbadge");b.innerHTML=`<span class="tg" style="background:#e6f6ec;color:#3f9a5b">● HubSpot live data</span> &nbsp;${esc(HS_META.portal)} · pulled ${HS_META.pulledAt} · ${ALLC.length} accounts`}
 render();
-
 </script>
 </body>
 </html>

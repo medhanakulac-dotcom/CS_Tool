@@ -1,0 +1,3 @@
+# real customer data pulled from HubSpot: never commit
+hubspot-data.js
+*.local.html
