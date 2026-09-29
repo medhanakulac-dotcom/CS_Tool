@@ -208,6 +208,32 @@ body{background:#f5f0e9;font-size:16px}
 .callout .k{font:800 15px var(--sans);letter-spacing:.11em;color:#3aa593;margin-bottom:12px}
 .callout b{color:var(--ink)}
 @media(max-width:900px){.card{padding:26px 22px}.seglist .row{grid-template-columns:1fr}.mx{grid-template-columns:90px repeat(3,minmax(190px,1fr))}.sec{font-size:21px}}
+
+/* ── tidy first page ── */
+.page{max-width:1120px}
+.sec{font-size:22px;margin:44px 0 18px}
+.sec i{font-size:16px;padding:7px 12px;border-radius:12px}
+.card{border-radius:28px;padding:28px 32px}
+.card p{font-size:16px;line-height:1.7}
+.card .lab{font-size:12px}
+.seglist .row{grid-template-columns:130px 1fr;padding:16px 0}
+.seglist .row p{font-size:15px}
+.seglist .seg{font-size:16px;padding:7px 16px}
+.wao{font-size:15px;padding:12px 20px;border-radius:16px}
+.ft th{font-size:12px}.ft td{font-size:16px;padding:14px 24px 14px 0}.ft td.big{font-size:26px;width:110px}.ft .hl{font-size:16px;padding:6px 16px}
+.mxp{font-size:15px}
+.mx{gap:12px;grid-template-columns:150px repeat(3,minmax(0,1fr))}
+.mxhead{font-size:16px}.mxhead small{font-size:14px}
+.mx .rh{padding:18px 20px;border-radius:22px}.mx .rh b{font-size:21px}.mx .rh .seg{font-size:12px}
+.mx .cell{padding:20px 22px;min-height:120px;border-radius:22px}
+.mx .cell b{font-size:19px}.mx .cell .mono{font-size:13.5px!important}.mx .cell .d{font-size:14px}
+.callout{font-size:15.5px;line-height:1.75;padding:22px 30px;border-radius:28px}
+details.guide>summary{cursor:pointer;list-style:none}
+details.guide>summary::-webkit-details-marker{display:none}
+details.guide>summary .r::after{content:"▾";margin-left:6px}
+details.guide[open]>summary .r::after{content:"▴"}
+details.guide>summary::after{order:1}
+@media(max-width:900px){.mx{grid-template-columns:80px repeat(3,minmax(170px,1fr));overflow-x:auto;padding-bottom:6px}}
 </style>
 </head>
 <body>
@@ -235,7 +261,16 @@ body{background:#f5f0e9;font-size:16px}
         <div class="d" style="margin-top:8px">ANL-1 Volume · ANL-2 Route peer · ANL-3 Fare index · ANL-4 Adoption</div></div>
     </div>
 
-    <h2 class="sec"><i>02</i>The two inputs that pick a playbook</h2>
+    <h2 class="sec"><i>02</i>Cases<span class="r">one per operator, ranked by risk_score</span></h2>
+    <div class="wrapt"><table id="casetable"></table></div>
+  <h2 class="sec"><i>03</i>Playbook matrix<span class="r">segment × product health</span></h2>
+    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different cadence depending on segment value. A <b>High + Unhealthy</b> account gets a weekly Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
+    <div class="mx" id="matrix"></div>
+    <h2 class="sec"><i>04</i>Signals<span class="r bar" id="sigfilter"></span></h2>
+    <div class="wrapt"><table id="sigtable"></table></div>
+
+    <details class="guide"><summary class="sec"><i>05</i>How playbooks are picked<span class="r">two inputs · tap to expand</span></summary>
+
     <div class="grid g2" style="gap:28px;align-items:start">
       <div class="card">
         <div class="lab">Input 1 · Commercial segment</div>
@@ -259,16 +294,11 @@ body{background:#f5f0e9;font-size:16px}
       </div>
     </div>
 
-    <h2 class="sec"><i>03</i>The Playbook Matrix</h2>
-    <p class="mxp">Read across a row to see how the motion intensifies as health drops. Read down a column to see how the same health state gets a very different cadence depending on segment value. A <b>High + Unhealthy</b> account gets a weekly Rescue, while a <b>Low + Unhealthy</b> account gets an automated journey — same problem, proportional effort. The goal is always to move accounts left-to-right: Unhealthy → Adopted → Healthy.</p>
-    <div class="mx" id="matrix"></div>
-    <div class="callout" style="margin-top:22px"><div class="k">WHY “ADOPTED” MEANS DIFFERENT THINGS BY SEGMENT</div>We recognize <b>3-feature adoption as an acceptable Product Health baseline</b> — but <b>Commercial Segment determines the level of ambition</b>. For a High-value account, 3 features means the account is usable, but not yet strategic enough for growth, so its playbook keeps pushing toward 5–6 features. Mid and Low accounts, by contrast, are treated as acceptable at 3+ features and shift into maintain / self-serve motions.</div>
+    
+<div class="callout" style="margin-top:28px"><div class="k">WHY “ADOPTED” MEANS DIFFERENT THINGS BY SEGMENT</div>We recognize <b>3-feature adoption as an acceptable Product Health baseline</b> — but <b>Commercial Segment determines the level of ambition</b>. For a High-value account, 3 features means the account is usable, but not yet strategic enough for growth, so its playbook keeps pushing toward 5–6 features. Mid and Low accounts, by contrast, are treated as acceptable at 3+ features and shift into maintain / self-serve motions.</div>
 
-    <h2 class="sec"><i>04</i>Signals<span class="r bar" id="sigfilter"></span></h2>
-    <div class="wrapt"><table id="sigtable"></table></div>
-
-    <h2 class="sec"><i>05</i>Cases<span class="r">one per operator, ranked by risk_score</span></h2>
-    <div class="wrapt"><table id="casetable"></table></div>
+    
+</details>
   </section>
 
   <!-- ══════ PAGE 2 : DRAFT & APPROVE ══════ -->
