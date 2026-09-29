@@ -67,7 +67,7 @@ h2.st{font:800 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;col
 .seg.High{background:var(--mint);color:var(--teal)}.seg.Mid{background:var(--purplebg);color:var(--purple)}.seg.Low{background:var(--amber-bg);color:var(--amber)}.seg.Dormant{background:#ebe5db;color:#8a8178}
 .hl.Unhealthy{background:var(--pink);color:var(--red)}.hl.Adopted{background:var(--amber-bg);color:var(--amber)}.hl.Healthy{background:var(--okbg);color:var(--ok)}
 .tg{background:var(--pill);color:var(--mute)}.tg.llm{background:var(--purplebg);color:var(--purple)}
-.st.approved{background:var(--okbg);color:var(--ok)}.st.rejected{background:var(--pink);color:var(--red)}.st.pending{background:var(--amber-bg);color:var(--amber)}.st.closed{background:var(--pill);color:var(--mute)}.st.healthy{background:var(--okbg);color:var(--ok)}.st.hold,.st.reactive{background:var(--pill);color:var(--mute)}
+.st.approved{background:var(--okbg);color:var(--ok)}.st.rejected{background:var(--pink);color:var(--red)}.st.pending{background:var(--amber-bg);color:var(--amber)}.st.expired{background:var(--pill);color:var(--mute)}.st.closed{background:var(--pill);color:var(--mute)}.st.healthy{background:var(--okbg);color:var(--ok)}.st.hold,.st.reactive{background:var(--pill);color:var(--mute)}
 .chip{font:600 12.5px var(--sans);padding:3px 11px;border-radius:999px;background:var(--bg);display:inline-block;margin:0 4px 4px 0;white-space:nowrap}
 /* tabs / toolbar */
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
@@ -185,6 +185,13 @@ body.nosb .topbar{padding-left:24px}
 .promptbox{margin-top:14px;background:#fff;border-radius:16px;padding:14px 16px}
 .promptbox .lab{font:800 11.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan);margin-bottom:6px}
 .promptbox textarea{min-height:76px;margin:0 0 10px;border-color:#cfe8e2;font-size:14px}
+.pbar{height:14px;border-radius:999px;background:var(--pill);overflow:hidden;min-width:140px}
+.pbar i{display:block;height:100%;border-radius:999px;background:#5bbfae}
+.pbar.red i{background:#e57c93}
+.big-pct{font:800 40px var(--sans);letter-spacing:-.02em;line-height:1.05}
+.lt td.n{text-align:right;font-variant-numeric:tabular-nums}
+.lt th.n{text-align:right}
+.def{font-size:13px;color:var(--mute);line-height:1.6;margin-top:14px}
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){
@@ -206,7 +213,7 @@ body.nosb .topbar{padding-left:24px}
     <header class="topbar">
       <button class="sbbtn" data-sb="1" id="sbtop" title="Show / hide sidebar" aria-label="Toggle sidebar">☰</button>
       <div class="search"><input id="gsearch" placeholder="Search accounts…" autocomplete="off"><div id="gres"></div></div>
-      <span class="week" id="srcbadge">Week 2026-W40 · run_manifest ok</span>
+      <span class="week" id="srcbadge"></span>
     </header>
     <main id="main"></main>
   </div>
@@ -354,6 +361,59 @@ ALLC.forEach(c=>{c.noSend=!!c.dormant||hOf(c)==="Healthy";if(!c.dormant&&hOf(c)=
 /* Drafts are only written when Generate is clicked, except for these playbooks */
 const AUTO_GEN=["Automated Activation","Reactive Only"];
 ALLC.forEach(c=>{c.drafted=!c.noSend&&AUTO_GEN.includes(playbookOf(c)[0]);if(c.drafted)c.events.push({t:"Mon 02:30",k:"sys",txt:"Draft auto-generated ("+playbookOf(c)[0]+")"})});
+/* ── Weekly cases ──
+   A case is one account's work for one week, and the email belongs to the case.
+   A new set of cases is created every Monday 05:00 (Asia/Bangkok, the HubSpot portal's timezone).
+   Cases still pending or on hold when the next week starts become "expired". Healthy accounts get no case.
+   This page can only do this while it is open; a real Monday-05:00 job needs a scheduler on a server (see window.CS_runMondayJob). */
+const BKK_MS=7*36e5;
+function weekKey(d){
+  const t=new Date(d.getTime()+BKK_MS-5*36e5);
+  const day=(t.getUTCDay()+6)%7,mon=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()-day);
+  const th=new Date(mon+3*864e5),y=th.getUTCFullYear(),doy=Math.floor((th.getTime()-Date.UTC(y,0,1))/864e5)+1;
+  return y+"-W"+String(Math.ceil(doy/7)).padStart(2,"0");
+}
+const nowDate=()=>window.CS_NOW?new Date(window.CS_NOW):new Date();
+let CURWK=weekKey(nowDate()),_seq=0,PREVWK=weekKey(new Date(nowDate().getTime()-7*864e5));
+const noCaseOf=c=>!c.dormant&&hOf(c)==="Healthy";
+const caseNo=wk=>wk+"-"+String(++_seq).padStart(4,"0");
+ALLC.forEach(c=>{
+  c.past=[];c.week=CURWK;c.caseId=noCaseOf(c)?null:caseNo(CURWK);
+  const e=c.events.find(x=>/^Case created/.test(x.txt));
+  if(e){e.t="Mon 05:00";e.txt=c.caseId?e.txt.replace("Case created","Case "+c.caseId+" created"):"No case this week · account is Healthy"}
+  c.events.forEach(x=>{if(x.t==="Mon 02:30")x.t="Mon 05:00"});
+});
+function archiveCase(c){
+  if(!c.caseId)return false;
+  const unfinished=c.state==="pending"||c.state==="hold",final=unfinished?"expired":c.state;
+  if(unfinished)c.events.push({t:"Mon 05:00",k:"bad",txt:"Case expired: a new week started"});
+  c.past.push({caseId:c.caseId,week:c.week,playbook:playbookOf(c)[0],state:final,lang:c.lang,ver:c.ver,drafted:c.drafted,events:c.events});
+  return unfinished;
+}
+function openCase(c,wk){
+  c.week=wk;c.caseId=noCaseOf(c)?null:caseNo(wk);
+  c.noSend=!!c.dormant||!c.caseId;
+  c.state=c.dormant?"reactive":!c.caseId?"healthy":"pending";
+  c.drafted=!c.noSend&&AUTO_GEN.includes(playbookOf(c)[0]);
+  c.hash=rid();c.ver=1;c.mods={};c.custom={};c.subj={};c.alt=0;c.note="";c.promptDraft="";c.promptNote="";
+  c.gen=false;c.generating=false;c.editing=false;c.rejecting=false;c.reason="";c.open=false;
+  const pb=playbookOf(c)[0];
+  c.events=[{t:"Mon 05:00",k:"sys",txt:!c.caseId?"No case this week · account is Healthy":pb==="Reactive Only"?`Case ${c.caseId} created · Reactive Only (no outreach)`:`Case ${c.caseId} created · playbook ${pb} (${c.segment} + ${hOf(c)})`}];
+  if(c.drafted)c.events.push({t:"Mon 05:00",k:"sys",txt:"Draft auto-generated ("+pb+")"});
+}
+function runMondayJob(when){
+  const wd=when instanceof Date?when:new Date(when),wk=weekKey(wd);
+  if(wk===CURWK)return null;
+  let expired=0,created=0;
+  ALLC.forEach(c=>{if(archiveCase(c))expired++});
+  CURWK=wk;PREVWK=weekKey(new Date(wd.getTime()-7*864e5));_seq=0;
+  ALLC.forEach(c=>{openCase(c,wk);if(c.caseId)created++});
+  cur=(rev.find(isQ)||{}).id||cur;
+  if(typeof render==="function"){render();toast(`New week ${wk}: ${created} cases created, ${expired} expired`)}
+  return {week:wk,created,expired};
+}
+window.CS_runMondayJob=runMondayJob;
+setInterval(()=>runMondayJob(nowDate()),60000);
 const isQ=c=>c.state==="pending"&&c.drafted;
 let cases=ALLC, rev=ALLC.filter(c=>!c.noSend&&c.drafted&&c.state!=="closed");
 const OWNERS=[...new Set(ALLC.map(c=>c.owner))].sort((a,b)=>ALLC.filter(c=>c.owner===b).length-ALLC.filter(c=>c.owner===a).length);
@@ -375,7 +435,7 @@ function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clea
 
 /* ── nav ── */
 function nav(){
-  const p=cases.filter(isQ).length,items=[["home","⌂","Home",""],["accounts","☰","Accounts",cases.length],["approvals","✓","Approvals",p],["sent","➤","Sent",cases.filter(c=>c.state==="approved").length]];
+  const p=cases.filter(isQ).length,items=[["home","⌂","Home",""],["accounts","☰","Accounts",cases.length],["approvals","✓","Approvals",p],["sent","➤","Sent",cases.filter(c=>c.state==="approved").length],["leader","◔","Leader dashboard",""]];
   const act=view==="record"?"accounts":view;
   $("#snav").innerHTML=items.map(([k,ic,l,n])=>`<button data-nav="${k}" class="${act===k?"on":""}"><span class="ic">${ic}</span>${l}${n!==""?`<span class="cnt ${k==="approvals"&&p?"warn":""}">${n}</span>`:""}</button>`).join("");
 }
@@ -404,7 +464,7 @@ function Home(){
   const brief=top.filter(c=>!c.noSend).slice(0,3);
   const feed=cases.flatMap(c=>c.events.filter(e=>e.t==="Just now").map(e=>({...e,c}))).reverse().slice(0,6);
   const kpi=(l,tag,n,d,cls,act)=>`<div class="card click ${cls}" data-kpi="${act}"><div class="lab" style="display:flex;justify-content:space-between"><span>${l}</span><span>${tag}</span></div><div class="big">${n}</div><div class="d">${d} <span class="go">view →</span></div></div>`;
-  return `<div class="ph"><div><h1>Good morning, Chris</h1><div class="sub">Week 2026-W40 · ${pend.length} draft${pend.length===1?"":"s"} waiting for your approval before Mon 09:00</div></div></div>
+  return `<div class="ph"><div><h1>Good morning, Chris</h1><div class="sub">Week ${CURWK} · cases created Mon 05:00 · ${pend.length} draft${pend.length===1?"":"s"} waiting for your approval before Mon 09:00</div></div></div>
   <div class="grid g4" style="grid-template-columns:repeat(3,1fr)">${kpi("Signals",LIVE?"HUBSPOT":"SQL",sigs,LIVE?"signals from HubSpot fields":"detectors fired","","signals")}${kpi("Accounts","CODE",cases.length,`${cases.filter(c=>!c.noSend).length} to email · ${cases.filter(c=>c.noSend).length} no send`,"","accounts")}${kpi("Approvals","HUMAN",pend.length,"awaiting you","human","gate")}</div>
   <div class="grid g2" style="margin-top:18px;align-items:start">
    <div class="grid" style="gap:18px">
@@ -430,7 +490,7 @@ function filtered(){
   if(v==="reactive")L=L.filter(c=>c.dormant);
   if(v==="healthy")L=L.filter(c=>c.state==="healthy");
   const q=acc.q.trim().toLowerCase();
-  if(q)L=L.filter(c=>(c.op+" "+c.id+" "+c.owner+" "+c.contact).toLowerCase().includes(q));
+  if(q)L=L.filter(c=>(c.op+" "+c.id+" "+(c.caseId||"")+" "+c.owner+" "+c.contact).toLowerCase().includes(q));
   if(acc.owner!=="All")L=L.filter(c=>c.owner===acc.owner);
   if(acc.seg!=="All")L=L.filter(c=>c.segment===acc.seg);
   if(acc.health!=="All")L=L.filter(c=>!c.dormant&&hOf(c)===acc.health);
@@ -441,13 +501,13 @@ function filtered(){
 }
 function Accounts(){
   const cnt=f=>cases.filter(f).length;
-  const views=[["all","All accounts",cases.length],["approval","Needs approval",cnt(isQ)],["unhealthy","Unhealthy",cnt(c=>!c.dormant&&hOf(c)==="Unhealthy")],["reactive","Reactive only",cnt(c=>c.dormant)],["healthy","Healthy · no send",cnt(c=>c.state==="healthy")]];
+  const views=[["all","All accounts",cases.length],["approval","Needs approval",cnt(isQ)],["unhealthy","Unhealthy",cnt(c=>!c.dormant&&hOf(c)==="Unhealthy")],["reactive","Reactive only",cnt(c=>c.dormant)],["healthy","Healthy · no case",cnt(c=>c.state==="healthy")]];
   const L=filtered(), pbs=[...new Set(ALLC.map(c=>playbookOf(c)[0]))];
   const sel=(k,opts,label)=>`<select data-f="${k}"><option value="All">${label}: all</option>${opts.map(o=>`<option value="${esc(o[0])}" ${acc[k]===o[0]?"selected":""}>${esc(o[1])}</option>`).join("")}</select>`;
   const th=(k,l)=>`<th class="s" data-sort="${k}">${l}${acc.sort===k?(acc.dir>0?" ▲":" ▼"):""}</th>`;
   const table=`<div class="tw"><table><thead><tr>${th("op","Account")}${th("owner","Owner")}${th("segment","Segment")}${th("health","Health")}${th("playbook","Playbook")}<th>Lang</th><th>Draft</th>${th("state","Status")}</tr></thead><tbody>
-   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.id}${c.hs?" · "+esc(c.hs.country):" · "+esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant||c.hs?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.noSend?"—":`<span class="tg llm" title="${LANGS[c.lang]}">${c.lang.toUpperCase()}</span>`}</td><td>${c.noSend||c.state==="closed"?"—":c.drafted?`<span class="tg">ready</span>`:`<button class="b tl" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate"}</button>`}</td><td></td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
-  const cols=[["pending","To review"],["approved","Approved"],["hold","On hold"],["rejected","Returned"],["reactive","Reactive only"],["healthy","Healthy · no send"],["closed","Closed"]];
+   ${L.map(c=>`<tr data-open="${c.id}"><td><div class="acct"><span class="av">${initials(c.op)}</span><div><b>${esc(c.op)}</b><span class="d">${c.caseId||"no case"}${c.hs?" · "+esc(c.hs.country):" · "+esc(c.contact)}</span></div></div></td><td>${esc(ownerName(c.owner))}</td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${hlOf(c)}${c.dormant||c.hs?"":` <span class="d">${c.features}/6</span>`}</td><td><b>${playbookOf(c)[0]}</b></td><td>${c.noSend?"—":`<span class="tg llm" title="${LANGS[c.lang]}">${c.lang.toUpperCase()}</span>`}</td><td>${c.noSend||c.state==="closed"?"—":c.drafted?`<span class="tg">ready</span>`:`<button class="b tl" data-gen="${c.id}" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate"}</button>`}</td><td></td><td><span class="tg st ${c.state}">${c.state}</span></td></tr>`).join("")||`<tr><td colspan="8" class="d" style="padding:30px;text-align:center">No accounts match these filters.</td></tr>`}</tbody></table></div>`;
+  const cols=[["pending","To review"],["approved","Approved"],["hold","On hold"],["rejected","Returned"],["reactive","Reactive only"],["healthy","Healthy · no case"],["closed","Closed"]];
   const board=`<div class="board">${cols.map(([s,l])=>{const items=L.filter(c=>c.state===s);return `<div class="col"><h3><span>${l}</span><span>${items.length}</span></h3>${items.map(c=>`<div class="kc" data-open="${c.id}"><div class="l"><b>${esc(c.op)}</b></div><div class="d">${playbookOf(c)[0]}</div><div class="m"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}${c.noSend?"":`<span class="tg llm">${c.lang.toUpperCase()}</span>`}<span class="av" style="width:24px;height:24px;font-size:10px;margin-left:auto" title="${esc(ownerName(c.owner))}">${initials(ownerName(c.owner))}</span></div></div>`).join("")}</div>`}).join("")}</div>`;
   return `<div class="ph"><div><h1>Accounts</h1><div class="sub">${L.length} of ${cases.length} accounts · click a row to open the record</div></div>
     <div class="row"><button class="b ${acc.layout==="table"?"on":""}" data-layout="table">☰ Table</button><button class="b ${acc.layout==="board"?"on":""}" data-layout="board">▦ Board</button></div></div>
@@ -464,7 +524,7 @@ function Record(){
   const pb=playbookOf(c);
   const tabs=[["overview","Overview"],["activity","Activity",c.events.length],["email","Email"]];
   const props=`<div class="card"><h2 class="st"><span>About this account</span></h2><div class="prop">
-    <b>Case ID</b><span>${c.id}</span><b>Owner</b><span>${esc(ownerName(c.owner))}</span>${c.hs?`<b>Country</b><span>${esc(c.hs.country||"—")}</span><b>Deal amount</b><span>${c.hs.amount!=null?"$"+c.hs.amount.toLocaleString():"—"}</span>`:`<b>Contact</b><span>${esc(c.contact)}</span><b>Email</b><span style="word-break:break-all">${esc(c.email||"—")}</span>`}
+    <b>Case</b><span>${c.caseId||"No case this week"}</span><b>Week</b><span>${c.week}</span><b>Account ID</b><span>${c.id}</span><b>Owner</b><span>${esc(ownerName(c.owner))}</span>${c.hs?`<b>Country</b><span>${esc(c.hs.country||"—")}</span><b>Deal amount</b><span>${c.hs.amount!=null?"$"+c.hs.amount.toLocaleString():"—"}</span>`:`<b>Contact</b><span>${esc(c.contact)}</span><b>Email</b><span style="word-break:break-all">${esc(c.email||"—")}</span>`}
     <b>Segment</b><span class="seg ${c.segment}" style="justify-self:start">${c.segment}</span><b>Health</b><span>${hlOf(c)}</span>
     <b>${c.hs?"HubSpot health":"Features"}</b>${c.hs?`<span>${esc(c.hs.raw)}</span>`:c.dormant?"<span>—</span>":`<span><div class="dots">${[1,2,3,4,5,6].map(i=>`<i class="${i<=c.features?"on":""}"></i>`).join("")}</div><span class="d">${c.features}/6 with a Weekly Active Operator</span></span>`}
     <b>Playbook</b><span><b style="color:var(--ink)">${pb[0]}</b></span><b>Status</b><span class="tg st ${c.state}" style="justify-self:start">${c.state}</span>
@@ -481,8 +541,10 @@ function Record(){
   const dealsCard=c.hs?`<div class="card"><h2 class="st"><span>HubSpot deals</span><span class="d">${c.hs.deals.length}</span></h2>${c.hs.deals.map(d=>`<div class="task"><div class="grow"><b>${esc(d.pipe)}</b><span class="d">${esc(d.stage)}${d.amount!=null?" · $"+d.amount.toLocaleString():""}</span></div><a href="https://app.hubspot.com/contacts/48205146/record/0-3/${d.id}" target="_blank" rel="noopener" class="b tl" style="text-decoration:none">Open ↗</a></div>`).join("")}</div>`:"";
   const chatCard=`<div class="card chat"><h2 class="st"><span>Ask about ${esc(c.op)}</span><span class="tg">${window.CS_ASSISTANT?"connected":"not connected"}</span></h2><div class="msgs" id="msgs">${chatHtml(c)}</div><div class="chatbar"><input id="chatin" placeholder="Type your question…" autocomplete="off"><button class="send" data-send="1" aria-label="Send">➤</button></div></div>`;
   const ownerCard=`<div class="card"><h2 class="st"><span>Owner</span></h2><div class="task" style="border:0;padding:0"><span class="av">${initials(ownerName(c.owner))}</span><div class="grow"><b>${esc(ownerName(c.owner))}</b><span class="d">Sends from their mailbox</span></div></div></div>`;
-  const approvalCard=`<div class="card ${isQ(c)?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="closed"?"Case closed — removed from the queue.":c.state==="healthy"?"Healthy — nothing to send.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?(c.drafted?"Waiting for your review before Mon 09:00.":"No draft yet — click Generate draft."):c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.state==="closed"?`<button class="b" data-reopen="${c.id}" style="width:100%">Reopen case</button>`:c.noSend?"":c.drafted?`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`:`<button class="b pri" data-gen="${c.id}" style="width:100%" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}</div>`;
-  const left=`<div class="grid" style="gap:18px;min-width:0">${props}${dealsCard}${ownerCard}${approvalCard}</div>`;
+  const approvalCard=`<div class="card ${isQ(c)?"human":""}"><h2 class="st"><span>Approval</span></h2><div class="tg st ${c.state}" style="font-size:13px">${c.state}</div><p class="d" style="margin:10px 0">${c.dormant?"No outreach for reactive accounts.":c.state==="closed"?"Case closed — removed from the queue.":c.state==="healthy"?"No case this week — the account is Healthy.":c.state==="approved"?"Queued for Tue 09:00.":c.state==="pending"?(c.drafted?"Waiting for your review before Mon 09:00.":"No draft yet — click Generate draft."):c.state==="hold"?"On hold — will not be sent.":"Returned to triage with a reason."}</p>${c.state==="closed"?`<button class="b" data-reopen="${c.id}" style="width:100%">Reopen case</button>`:c.noSend?"":c.drafted?`<button class="b pri" data-review="${c.id}" style="width:100%">Open in Approvals →</button>`:`<button class="b pri" data-gen="${c.id}" style="width:100%" ${c.generating?"disabled":""}>${c.generating?"Generating…":"Generate draft"}</button>`}</div>`;
+  const histRows=[...(c.caseId?[{caseId:c.caseId,week:c.week,playbook:playbookOf(c)[0],state:c.state,now:1}]:[]),...[...c.past].reverse()];
+  const histCard=`<div class="card"><h2 class="st"><span>Cases</span><span class="d">${histRows.length}</span></h2>${histRows.length?histRows.map(h=>`<div class="task"><div class="grow"><b>${h.caseId}</b><span class="d">${h.week} · ${h.playbook}${h.now?" · this week":""}</span></div><span class="tg st ${h.state}">${h.state}</span></div>`).join(""):`<div class="d">No case this week — the account is Healthy.</div>`}</div>`;
+  const left=`<div class="grid" style="gap:18px;min-width:0">${props}${dealsCard}${ownerCard}${approvalCard}${histCard}</div>`;
   const right=`<div class="grid" style="gap:18px;min-width:0"><div>${center}</div>${chatCard}</div>`;
   return `<div class="crumb"><button data-nav="accounts">Accounts</button> / ${esc(c.op)}</div>
   <div class="rh"><span class="av">${initials(c.op)}</span><div><h1 style="margin:0">${esc(c.op)}</h1><div class="row" style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="tg st ${c.state}">${c.state}</span></div></div>
@@ -521,7 +583,7 @@ function Approvals(){
   const bulkN=aprList().filter(x=>x.state==="pending").length;
   const strip=[["Pending",cases.filter(isQ).length,"pending"],["Approved",count("approved"),"approved"],["On hold",count("hold"),"hold"],["Returned",count("rejected"),"rejected"]];
   const detail=!c?`<div class="card d">Select a case.</div>`:`<div class="card ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"box-shadow:inset 0 0 0 2px var(--ok)":""}">
-    <div class="lab" style="display:flex;justify-content:space-between"><span>${c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span class="tg st ${c.state}">${c.state}</span></div>
+    <div class="lab" style="display:flex;justify-content:space-between"><span>${c.caseId||c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span class="tg st ${c.state}">${c.state}</span></div>
     <h2 style="font-size:22px;margin:6px 0"><span data-open="${c.id}" style="cursor:pointer">${esc(c.op)}</span></h2>
     <div class="row"><span class="seg ${c.segment}">${c.segment}</span>${hlOf(c)}<span class="chip" style="margin:0"><b>${playbookOf(c)[0]}</b></span>${playbookOf(c)[0]==="Rescue"?`<span class="chip" style="margin:0;background:var(--amber-bg);color:var(--amber)">📞 Requests a call</span>`:""}${c.sig.map(([,t])=>`<span class="chip" style="margin:0">${esc(t)}</span>`).join("")}</div>
     ${c.editing||c.rejecting?"":langBar(c)}
@@ -547,12 +609,59 @@ function Approvals(){
 }
 
 /* ── Sent ── */
+/* ── Leader dashboard ──
+   Counts only cases that carry email work: no Reactive Only and no Healthy (those have no email).
+   Done = approved or closed. Expired = still pending or on hold when the next week started. */
+const prevWeek=()=>PREVWK;
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+function thisWeekStats(){
+  const by={};
+  ALLC.filter(c=>c.caseId&&!c.noSend).forEach(c=>{
+    const r=by[c.owner]=by[c.owner]||{owner:c.owner,total:0,approved:0,closed:0,rejected:0,hold:0,pending:0,notDrafted:0};
+    r.total++;
+    if(c.state==="approved")r.approved++;else if(c.state==="closed")r.closed++;else if(c.state==="rejected")r.rejected++;else if(c.state==="hold")r.hold++;else{r.pending++;if(!c.drafted)r.notDrafted++}
+  });
+  return Object.values(by).map(r=>({...r,done:r.approved+r.closed})).sort((a,b)=>b.total-a.total);
+}
+function lastWeekStats(){
+  const wk=prevWeek(),by={};
+  ALLC.forEach(c=>c.past.filter(h=>h.week===wk&&h.playbook!=="Reactive Only").forEach(h=>{
+    const r=by[c.owner]=by[c.owner]||{owner:c.owner,total:0,expired:0};
+    r.total++;if(h.state==="expired")r.expired++;
+  }));
+  return {week:wk,rows:Object.values(by).sort((a,b)=>b.total-a.total)};
+}
+function Leader(){
+  const tw=thisWeekStats(),lw=lastWeekStats();
+  const sum=(rows,k)=>rows.reduce((a,r)=>a+r[k],0);
+  const T=sum(tw,"total"),D=sum(tw,"done");
+  const LT=sum(lw.rows,"total"),LE=sum(lw.rows,"expired");
+  const own=o=>`<div class="acct"><span class="av">${initials(ownerName(o))}</span><b>${esc(ownerName(o))}</b></div>`;
+  return `<div class="ph"><div><h1>Leader dashboard</h1><div class="sub">Completion by owner · this week ${CURWK} · last week ${lw.week}</div></div></div>
+  <h2 class="sec" style="margin-top:8px"><i>01</i>This week<span class="r">${CURWK}</span></h2>
+  <div class="grid g4" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+    <div class="card"><div class="lab">Team completed</div><div class="big-pct">${pct(D,T)}%</div><div class="d">${D} of ${T} cases</div></div>
+    <div class="card"><div class="lab">Still open</div><div class="big-pct">${T-D}</div><div class="d">pending, on hold or returned</div></div>
+    <div class="card"><div class="lab">Not drafted yet</div><div class="big-pct">${sum(tw,"notDrafted")}</div><div class="d">need Generate before review</div></div>
+  </div>
+  <div class="tw"><table class="lt"><thead><tr><th>Owner</th><th>Completed</th><th class="n">%</th><th class="n">Done / Total</th><th class="n">Approved</th><th class="n">Closed</th><th class="n">Returned</th><th class="n">On hold</th><th class="n">Pending</th></tr></thead><tbody>
+  ${tw.map(r=>`<tr><td>${own(r.owner)}</td><td><div class="pbar"><i style="width:${pct(r.done,r.total)}%"></i></div></td><td class="n"><b>${pct(r.done,r.total)}%</b></td><td class="n">${r.done} / ${r.total}</td><td class="n">${r.approved}</td><td class="n">${r.closed}</td><td class="n">${r.rejected}</td><td class="n">${r.hold}</td><td class="n">${r.pending}</td></tr>`).join("")||`<tr><td colspan="9" class="d" style="padding:30px;text-align:center">No cases this week.</td></tr>`}
+  </tbody></table></div>
+  <h2 class="sec"><i>02</i>Last week<span class="r">${lw.week} · expired</span></h2>
+  ${lw.rows.length?`<div class="grid g4" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px">
+    <div class="card"><div class="lab">Team expired</div><div class="big-pct">${pct(LE,LT)}%</div><div class="d">${LE} of ${LT} cases</div></div>
+    <div class="card"><div class="lab">Finished in time</div><div class="big-pct">${pct(LT-LE,LT)}%</div><div class="d">${LT-LE} of ${LT} cases</div></div></div>
+  <div class="tw"><table class="lt"><thead><tr><th>Owner</th><th>Expired</th><th class="n">%</th><th class="n">Expired / Total</th></tr></thead><tbody>
+  ${lw.rows.map(r=>`<tr><td>${own(r.owner)}</td><td><div class="pbar red"><i style="width:${pct(r.expired,r.total)}%"></i></div></td><td class="n"><b>${pct(r.expired,r.total)}%</b></td><td class="n">${r.expired} / ${r.total}</td></tr>`).join("")}
+  </tbody></table></div>`:`<div class="card"><div class="d">No cases from last week (${lw.week}) yet. Last week's numbers appear after the next Monday 05:00, when this week's unfinished cases become expired.</div></div>`}
+  <div class="def"><b>How it is counted.</b> Only cases with email work count: Reactive Only and Healthy accounts have no email, so they are left out. <b>Done</b> = approved or closed. <b>Returned</b> (rejected) and <b>on hold</b> are not done. <b>Expired</b> = still pending or on hold when the new week started. Percentages are per owner.</div>`;
+}
 function Sent(){
   const rows=sendLog.filter(r=>cases.some(c=>c.id===r.case));
   return `<div class="ph"><div><h1>Sent</h1><div class="sub">Tue 09:00 · deterministic send · no model call</div></div></div>
   <div class="grid g4" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">${[["OUT-1","Retention","operator-specific"],["OUT-2","Adoption","feature gap"],["OUT-3","Commercial","fare position"]].map(([o,t,d])=>`<div class="card"><div class="lab" style="display:flex;justify-content:space-between"><span>${o}</span><span>CODE</span></div><div class="d" style="margin-top:6px">${t}</div><div class="big">${queued(o)}</div><div class="d">queued · ${d}</div></div>`).join("")}</div>
   <div class="tw"><table><thead><tr><th>Account</th><th>Case</th><th>Channel</th><th>Token</th><th>draft_hash</th><th>Outcome</th></tr></thead><tbody>
-  ${rows.map(r=>{const c=byId(r.case);return `<tr data-open="${c.id}"><td><b>${esc(c.op)}</b></td><td>${c.id}</td><td>${r.out}</td><td>tok_${r.tok}</td><td>${r.hash}</td><td><span class="tg st pending">queued Tue 09:00</span></td></tr>`}).join("")||`<tr><td colspan="6" class="d" style="padding:30px;text-align:center">Nothing approved yet.</td></tr>`}</tbody></table></div>`;
+  ${rows.map(r=>{const c=byId(r.case);return `<tr data-open="${c.id}"><td><b>${esc(c.op)}</b></td><td>${r.caseId||c.id}</td><td>${r.out}</td><td>tok_${r.tok}</td><td>${r.hash}</td><td><span class="tg st pending">queued Tue 09:00</span></td></tr>`}).join("")||`<tr><td colspan="6" class="d" style="padding:30px;text-align:center">Nothing approved yet.</td></tr>`}</tbody></table></div>`;
 }
 
 /* ── shell ── */
@@ -563,9 +672,9 @@ function fitPanels(){
   document.querySelectorAll(".q,.detail").forEach(e=>{e.style.maxHeight=wide?h+"px":""});
 }
 function render(){
-  applyOwner();nav();
+  applyOwner();nav();paintBadge();
   const y=scrollY,q0=$("#queue"),qt=q0?q0.scrollTop:null,d0=$("#detail"),dt=d0?d0.scrollTop:0,same=_lastCur===cur;
-  $("#main").innerHTML=({home:Home,accounts:Accounts,record:Record,approvals:Approvals,sent:Sent}[view])();
+  $("#main").innerHTML=({home:Home,accounts:Accounts,record:Record,approvals:Approvals,sent:Sent,leader:Leader}[view])();
   scrollTo(0,y);
   if(view==="approvals"){
     fitPanels();
@@ -579,10 +688,10 @@ addEventListener("scroll",()=>{if(view==="approvals")fitPanels()},{passive:true}
 addEventListener("resize",()=>{if(view==="approvals")fitPanels()});
 function decide(c,state,extra,msg){
   Object.assign(c,extra||{},{state});
-  if(state==="approved"){c.note="";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris · queued for Tue 09:00 (${LANGS[c.lang]})`)}
+  if(state==="approved"){c.note="";sendLog.push({case:c.id,caseId:c.caseId,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris · queued for Tue 09:00 (${LANGS[c.lang]})`)}
   if(state==="rejected")ev(c,"bad",`Returned to triage: “${c.reason}”`);
   if(state==="hold")ev(c,"note","Put on hold by Chris");
-  if(state==="closed"){for(let i=sendLog.length-1;i>=0;i--)if(sendLog[i].case===c.id)sendLog.splice(i,1);ev(c,"note","Case closed by Chris (removed from the queue)")}
+  if(state==="closed"){for(let i=sendLog.length-1;i>=0;i--)if(sendLog[i].caseId===c.caseId)sendLog.splice(i,1);ev(c,"note","Case closed by Chris (removed from the queue)")}
   const lst=aprList(),ci=lst.findIndex(x=>x.id===c.id),nx=lst.slice(ci+1).find(x=>x.state==="pending")||lst.find(x=>x.state==="pending")||rev.find(x=>x.state==="pending");if(nx)cur=nx.id;
   toast(msg||({approved:"Approved · queued for Tue 09:00",rejected:"Returned to triage",hold:"Put on hold",closed:"Case closed · removed from the queue"}[state]));
   render();
@@ -590,7 +699,7 @@ function decide(c,state,extra,msg){
 function llmApply(c,fn,what){
   if(c.gen)return;c.gen=true;render();
   setTimeout(()=>{fn(c);c.hash=rid();c.ver++;c.gen=false;
-    if(c.state==="approved"){const i=sendLog.findIndex(r=>r.case===c.id);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again.";ev(c,"bad","Approval voided: draft changed")}
+    if(c.state==="approved"){const i=sendLog.findIndex(r=>r.caseId===c.caseId);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again.";ev(c,"bad","Approval voided: draft changed")}
     else c.note="";
     ev(c,"ai",what);render();},700);
 }
@@ -612,7 +721,7 @@ async function regenWithPrompt(){
     if(!body)throw new Error("empty response");
     c.custom[c.lang]=String(body);c.subj=c.subj||{};if(r&&r.subject)c.subj[c.lang]=String(r.subject);
     c.hash=rid();c.ver++;
-    if(c.state==="approved"){const i=sendLog.findIndex(x=>x.case===c.id);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again.";ev(c,"bad","Approval voided: draft changed")}else c.note="";
+    if(c.state==="approved"){const i=sendLog.findIndex(x=>x.caseId===c.caseId);if(i>-1)sendLog.splice(i,1);c.state="pending";c.note="Draft changed after approval — the approval token no longer matches, so it needs approval again.";ev(c,"bad","Approval voided: draft changed")}else c.note="";
     ev(c,"ai","AI rewrote the draft from a prompt: “"+(instr.length>80?instr.slice(0,80)+"…":instr)+"”");
     c.promptDraft="";toast("Draft rewritten");
   }catch(e){c.promptNote="The email AI returned an error: "+(e&&e.message?e.message:e)}
@@ -673,7 +782,7 @@ document.addEventListener("click",e=>{
   if(D.note){const i=$("#notein"),v=i.value.trim();if(!v)return;const c=byId(recId);const e={t:"Just now",k:"note",txt:"Note · "+v,raw:v,sync:"local"};c.events.push(e);render();sendNoteToHubSpot(c,e).then(ok=>{toast(ok?"Note added · sent to HubSpot":e.sync==="failed"?"Note added · could not send to HubSpot":"Note added · not sent (HubSpot not connected)");render()});return}
   if(D.resync!==undefined){const c=byId(recId),e=c.events[+D.resync];if(e&&e.raw)sendNoteToHubSpot(c,e).then(ok=>{toast(ok?"Sent to HubSpot":"Still could not send");render()});return}
   if(D.pf){apr.pb=D.pf;return render()}
-  if(D.bulk){aprList().filter(c=>c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris (bulk · ${apr.pb})`)});toast(`Approved all ${apr.pb}${apr.owner!=="All"?" · "+ownerName(apr.owner):""}`);return render()}
+  if(D.bulk){aprList().filter(c=>c.state==="pending").forEach(c=>{c.state="approved";sendLog.push({case:c.id,caseId:c.caseId,out:PLAY_OUT[c.play],tok:rid(),hash:c.hash});ev(c,"ok",`Approved by Chris (bulk · ${apr.pb})`)});toast(`Approved all ${apr.pb}${apr.owner!=="All"?" · "+ownerName(apr.owner):""}`);return render()}
   if(D.cur){cur=D.cur;render();if(innerWidth<=1000){const d=$("#detail");if(d)d.scrollIntoView({block:"start"})}return}
   if(D.lang){const c=byId(D.c||cur);if(c&&D.lang!==c.lang)llmApply(c,c=>{c.lang=D.lang},`AI rewrote the draft in ${LANGS[D.lang]}`);return}
   const c=byId(cur);if(!c||!D.a)return;
@@ -700,14 +809,14 @@ document.addEventListener("input",e=>{
   if(e.target.id==="gsearch"){
     const q=e.target.value.trim().toLowerCase(),r=$("#gres");
     if(!q){r.style.display="none";return}
-    const m=ALLC.filter(c=>(c.op+" "+c.id+" "+c.contact+" "+c.owner).toLowerCase().includes(q));
-    r.innerHTML=m.map(c=>`<div class="it" data-open="${c.id}"><span><b>${esc(c.op)}</b> <span class="d">${c.id}</span></span><span class="d">${playbookOf(c)[0]}</span></div>`).join("")||`<div class="it d">No accounts found</div>`;
+    const m=ALLC.filter(c=>(c.op+" "+c.id+" "+(c.caseId||"")+" "+c.contact+" "+c.owner).toLowerCase().includes(q));
+    r.innerHTML=m.map(c=>`<div class="it" data-open="${c.id}"><span><b>${esc(c.op)}</b> <span class="d">${c.caseId||c.id}</span></span><span class="d">${playbookOf(c)[0]}</span></div>`).join("")||`<div class="it d">No accounts found</div>`;
     r.style.display="block";
   }
 });
 document.addEventListener("toggle",e=>{if(e.target.id==="d-mx")openMx=e.target.open;if(e.target.id==="d-guide")openGuide=e.target.open},true);
 
-if(LIVE){const b=$("#srcbadge");b.innerHTML=`<span class="tg" style="background:#e6f6ec;color:#3f9a5b">● HubSpot live data</span> &nbsp;${esc(HS_META.portal)} · pulled ${HS_META.pulledAt} · ${ALLC.length} accounts`}
+function paintBadge(){const b=$("#srcbadge");b.innerHTML=LIVE?`<span class="tg" style="background:#e6f6ec;color:#3f9a5b">● HubSpot live data</span> &nbsp;Week ${CURWK} · ${esc(HS_META.portal)} · pulled ${HS_META.pulledAt} · ${ALLC.length} accounts`:`Week ${CURWK} · run_manifest ok`}
 render();
 </script>
 </body>
