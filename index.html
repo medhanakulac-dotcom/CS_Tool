@@ -51,7 +51,7 @@ tr:last-child td{border-bottom:0}
 .risk{font:11px var(--mono);border-radius:22px;padding:1px 9px;background:var(--pill);white-space:nowrap}
 .risk.hi{background:var(--amber-bg);color:var(--amber)}
 .st{font:11px var(--mono);border-radius:22px;padding:1px 9px;border:1.5px solid var(--line);white-space:nowrap}
-.st.approved{border-color:var(--ok);color:var(--ok)}.st.rejected{border:1.5px dashed var(--red);color:var(--red)}.st.hold{color:var(--mute)}.st.pending{border-color:var(--amber);color:var(--amber)}
+.st.approved{border-color:var(--ok);color:var(--ok)}.st.rejected{border:1.5px dashed var(--red);color:var(--red)}.st.hold{color:var(--mute)}.st.reactive{color:var(--mute);border-style:dashed}.st.pending{border-color:var(--amber);color:var(--amber)}
 .b{font:12px var(--mono);border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:5px 11px;cursor:pointer}
 .b:hover{border-color:var(--ink)}
 .b.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -80,6 +80,27 @@ textarea,input.f{width:100%;font:13.5px var(--sans);background:var(--bg);color:v
 input.f{border-color:var(--red);margin:0}textarea{min-height:170px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .log{background:var(--pill);border-radius:6px;padding:12px 14px;font:12px var(--mono);white-space:pre-wrap;word-break:break-all;margin-top:12px}
+.seg{font:11px var(--mono);border-radius:6px;padding:2px 9px;font-weight:700;white-space:nowrap;display:inline-block}
+.seg.High{background:color-mix(in srgb,var(--teal) 16%,var(--bg));color:var(--teal)}
+.seg.Mid{background:color-mix(in srgb,#7a5cf0 16%,var(--bg));color:#7a5cf0}
+.seg.Low{background:var(--amber-bg);color:var(--amber)}
+.seg.Dormant{background:var(--pill);color:var(--mute)}
+.hl{font:11px var(--mono);border-radius:6px;padding:2px 9px;font-weight:700;white-space:nowrap;display:inline-block}
+.hl.Unhealthy{background:color-mix(in srgb,var(--red) 14%,var(--bg));color:var(--red)}
+.hl.Adopted{background:var(--amber-bg);color:var(--amber)}
+.hl.Healthy{background:color-mix(in srgb,var(--ok) 14%,var(--bg));color:var(--ok)}
+.mx{display:grid;grid-template-columns:110px repeat(3,1fr);gap:8px}
+.mx .ch{font:700 12px var(--mono);padding:4px 6px}
+.mx .rh{border:1.5px solid var(--line);border-radius:4px;padding:10px;display:flex;flex-direction:column;gap:4px;justify-content:center}
+.mx .cell{border-radius:4px;padding:10px 12px;min-height:96px;border:1.5px solid transparent}
+.mx .cell.Unhealthy{background:color-mix(in srgb,var(--red) 9%,var(--bg))}.mx .cell.Adopted{background:var(--amber-bg)}.mx .cell.Healthy{background:color-mix(in srgb,var(--ok) 9%,var(--bg))}
+.mx .cell.Dormant{background:var(--pill);grid-column:2/5;min-height:0}
+.mx .cell b{display:block;font-size:14px}.mx .cell.Unhealthy b{color:var(--red)}.mx .cell.Adopted b{color:var(--amber)}.mx .cell.Healthy b{color:var(--ok)}
+.mx .cell .ops{margin-top:8px}
+.mx .cell .ops span{font:11px var(--mono);background:var(--bg);border:1.5px solid var(--line);border-radius:22px;padding:1px 8px;margin:0 4px 4px 0;display:inline-block;color:var(--ink)}
+@media(max-width:900px){.mx{grid-template-columns:70px repeat(3,minmax(150px,1fr));overflow-x:auto}}
+.callout{border:1.5px solid var(--line);border-left:5px solid var(--teal);border-radius:4px;padding:14px 18px;font-size:13.5px}
+.callout .k{font:700 11px var(--mono);letter-spacing:.06em;color:var(--teal);margin-bottom:6px}
 .view{display:none}.view.on{display:block}
 .empty{color:var(--mute);font:12px var(--mono);padding:30px;text-align:center}
 </style>
@@ -108,6 +129,10 @@ input.f{border-color:var(--red);margin:0}textarea{min-height:170px}
       <div class="box"><div class="tag"><span>DETECTORS</span><span>SQL</span></div><div class="bars" id="detbars" style="margin-top:8px"></div>
         <div class="d" style="margin-top:8px">ANL-1 Volume · ANL-2 Route peer · ANL-3 Fare index · ANL-4 Adoption</div></div>
     </div>
+
+    <h2><span>Playbook matrix — commercial segment × product health</span><span class="d">features with a Weekly Active Operator: 0–2 · 3–4 · 5–6</span></h2>
+    <div class="mx" id="matrix"></div>
+    <div class="callout" style="margin-top:14px"><div class="k">WHY “ADOPTED” MEANS DIFFERENT THINGS BY SEGMENT</div>3-feature adoption is an acceptable Product Health baseline — but <b>Commercial Segment determines the level of ambition</b>. For a High account, 3 features is usable but not yet strategic, so the playbook keeps pushing toward 5–6. Mid and Low accounts are acceptable at 3+ and shift into maintain / self-serve motions.</div>
 
     <h2><span>Signals</span><span class="bar" id="sigfilter"></span></h2>
     <div class="wrapt"><table id="sigtable"></table></div>
@@ -140,16 +165,26 @@ const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>]/g,m=>({"&"
 const rid=()=>Math.random().toString(16).slice(2,10);
 const PLAY_OUT={Retention:"OUT-1",Adoption:"OUT-2",Commercial:"OUT-3"};
 const DET={"Volume":"ANL-1","Route peer":"ANL-2","Fare index":"ANL-3","Adoption":"ANL-4"};
+const SEG=["High","Mid","Low"], HEALTH=["Unhealthy","Adopted","Healthy"];
+const healthOf=f=>f>=5?"Healthy":f>=3?"Adopted":"Unhealthy";
+const MATRIX={
+ High:{Unhealthy:["Rescue","Weekly","Move Unhealthy → Adopted → Healthy."],Adopted:["Push to Healthy","Every 2 weeks","Move Adopted → Healthy."],Healthy:["Grow","Monthly","Expand value and partnership."]},
+ Mid:{Unhealthy:["Adoption Push","Every 2 weeks","Improve adoption."],Adopted:["Maintain / Light Push","Monthly","Acceptable baseline — light push on remaining features."],Healthy:["Maintain","Quarterly","Maintain engagement."]},
+ Low:{Unhealthy:["Automated Activation","4-week journey","Automated activation sequence."],Adopted:["Self-Service / Nudge","Monthly","Self-serve, with the occasional automated nudge."],Healthy:["Self-Service","Monthly","Monthly self-service engagement."]}
+};
+const playbookOf=c=>c.segment==="Dormant"?["Reactive Only","Inbound only","No proactive touchpoints — respond to inbound requests only."]:MATRIX[c.segment][healthOf(c.features)];
 const cases=[
- {id:"C-101",op:"Aero Nusantara",owner:"Rina P.",email:"rina@aero-nusantara.example",play:"Retention",risk:87,sig:[["Volume","Volume −23% WoW"],["Route peer","Route peer −11 pts"]],subject:"Booking drop on your top routes",draft:"Hi Rina,\n\nBookings on your top three routes dropped 23% week over week, while the market on the same routes moved −4%. Could we find 20 minutes this week to look at what changed?\n\nChris"},
- {id:"C-102",op:"Blue Kestrel Air",owner:"Tom W.",email:"tom@bluekestrel.example",play:"Commercial",risk:74,sig:[["Fare index","Fare index 1.18 vs peer median"]],subject:"Fare position on CNX–BKK",draft:"Hi Tom,\n\nYour average fare on CNX–BKK sits 18% above the peer median this week. Here is the breakdown by fare class, and two options we could test.\n\nChris"},
- {id:"C-103",op:"Coral Jet",owner:"Mei L.",email:"mei@coraljet.example",play:"Adoption",risk:61,sig:[["Adoption","WAO 12%"],["Adoption","2 features unused"]],subject:"Getting more from ancillary bundling",draft:"Hi Mei,\n\nOnly 12% of your agents used ancillary bundling last week. Teams that switch it on see a lift in attach rate — happy to walk through setup.\n\nChris"},
- {id:"C-104",op:"Delta Meridian",owner:"Sam K.",email:"sam@deltameridian.example",play:"Retention",risk:55,sig:[["Volume","Volume −14% WoW"]],subject:"Quick check-in on this week's volume",draft:"Hi Sam,\n\nA quick note on the 14% dip in volume this week. Anything on your side we should know about?\n\nChris"},
- {id:"C-105",op:"Ember Wings",owner:"Lia T.",email:"lia@emberwings.example",play:"Adoption",risk:42,sig:[["Adoption","WAO 21%"]],subject:"Two features worth trying",draft:"Hi Lia,\n\nA short guide to the two features your team hasn't tried yet is attached.\n\nChris"}
-].map(c=>({...c,state:"pending",hash:rid()}));
+ {id:"C-101",op:"Aero Nusantara",segment:"High",features:1,owner:"Rina P.",email:"rina@aero-nusantara.example",play:"Retention",risk:87,sig:[["Volume","Volume −23% WoW"],["Route peer","Route peer −11 pts"]],subject:"Booking drop on your top routes",draft:"Hi Rina,\n\nBookings on your top three routes dropped 23% week over week, while the market on the same routes moved −4%. Could we find 20 minutes this week to look at what changed?\n\nChris"},
+ {id:"C-102",op:"Blue Kestrel Air",segment:"High",features:4,owner:"Tom W.",email:"tom@bluekestrel.example",play:"Commercial",risk:74,sig:[["Fare index","Fare index 1.18 vs peer median"]],subject:"Fare position on CNX–BKK",draft:"Hi Tom,\n\nYour average fare on CNX–BKK sits 18% above the peer median this week. Here is the breakdown by fare class, and two options we could test.\n\nChris"},
+ {id:"C-103",op:"Coral Jet",segment:"Mid",features:2,owner:"Mei L.",email:"mei@coraljet.example",play:"Adoption",risk:61,sig:[["Adoption","WAO 12%"],["Adoption","2 features unused"]],subject:"Getting more from ancillary bundling",draft:"Hi Mei,\n\nOnly 12% of your agents used ancillary bundling last week. Teams that switch it on see a lift in attach rate — happy to walk through setup.\n\nChris"},
+ {id:"C-104",op:"Delta Meridian",segment:"Mid",features:3,owner:"Sam K.",email:"sam@deltameridian.example",play:"Retention",risk:55,sig:[["Volume","Volume −14% WoW"]],subject:"Quick check-in on this week's volume",draft:"Hi Sam,\n\nA quick note on the 14% dip in volume this week. Anything on your side we should know about?\n\nChris"},
+ {id:"C-105",op:"Ember Wings",segment:"Low",features:3,owner:"Lia T.",email:"lia@emberwings.example",play:"Adoption",risk:42,sig:[["Adoption","WAO 21%"]],subject:"Two features worth trying",draft:"Hi Lia,\n\nA short guide to the two features your team hasn't tried yet is attached.\n\nChris"},
+ {id:"C-106",op:"Fjord Air",segment:"Dormant",features:0,owner:"—",email:"",play:"Retention",risk:30,sig:[["Volume","No bookings in 6 weeks"]],subject:"",draft:"",dormant:1}
+].map(c=>({...c,state:c.dormant?"reactive":"pending",hash:rid()}));
 const sendLog=[];
 let view="analysis", sigF="All", playF="All", cur="C-101";
 
+const rev=cases.filter(c=>!c.dormant);
 const count=s=>cases.filter(c=>c.state===s).length;
 const queued=o=>cases.filter(c=>c.state==="approved"&&PLAY_OUT[c.play]===o).length;
 const kpi=(tag,kind,title,n,desc,cls="")=>`<div class="box ${cls}"><div class="tag"><span>${tag}</span><span>${kind}</span></div><div class="d" style="margin-top:6px">${title}</div><div class="n">${n}</div><div class="d">${desc}</div></div>`;
@@ -160,20 +195,26 @@ function analysis(){
   const avg=Math.round(cases.reduce((a,c)=>a+c.risk,0)/cases.length);
   $("#kpis").innerHTML=
     kpi("SIGNALS","SQL","Detectors fired",sigs.length,"across 4 detectors")+
-    kpi("OPERATORS","CODE","At risk",cases.length,"one case each")+
+    kpi("OPERATORS","CODE","Cases",cases.length,`${rev.length} outreach · ${cases.length-rev.length} reactive`)+
     kpi("RISK","CODE + LLM","Average risk score",avg,`top: ${cases[0].op}`)+
     kpi("GATE-1","HUMAN","Awaiting you",count("pending"),"drafts to approve","human");
+  let mxh=`<div></div>${HEALTH.map(h=>`<div class="ch"><span class="hl ${h}">${h}</span> <span class="d">${h==="Unhealthy"?"0–2":h==="Adopted"?"3–4":"5–6"}</span></div>`).join("")}`;
+  SEG.forEach(g=>{mxh+=`<div class="rh"><span class="seg ${g}">${g}</span><span class="d">${{High:"Top priority",Mid:"Standard",Low:"Automated"}[g]}</span></div>`+
+    HEALTH.map(h=>{const [n,cad,desc]=MATRIX[g][h];const ops=cases.filter(c=>c.segment===g&&healthOf(c.features)===h);
+    return `<div class="cell ${h}"><b>${n}</b><div class="mono" style="font-size:11.5px;font-weight:700">⏱ ${cad}</div><div class="d">${desc}</div><div class="ops">${ops.map(c=>`<span>${esc(c.op)}</span>`).join("")}</div></div>`}).join("")});
+  mxh+=`<div class="rh"><span class="seg Dormant">Dormant</span><span class="d">Reactive</span></div><div class="cell Dormant"><b style="color:var(--ink);display:inline">Reactive Only</b> <span class="d">No proactive touchpoints — respond to inbound requests only, regardless of health.</span> <span class="ops">${cases.filter(c=>c.dormant).map(c=>`<span>${esc(c.op)}</span>`).join("")}</span></div>`;
+  $("#matrix").innerHTML=mxh;
   $("#riskbars").innerHTML=[...cases].sort((a,b)=>b.risk-a.risk).map(c=>`<div class="r"><span>${esc(c.op)}</span><div class="tr"><div class="fl ${c.risk>70?"hi":""}" style="width:${c.risk}%"></div></div><span class="mono">${c.risk}</span></div>`).join("");
   const mx=Math.max(...Object.keys(DET).map(d=>sigs.filter(s=>s.d===d).length));
   $("#detbars").innerHTML=Object.keys(DET).map(d=>{const n=sigs.filter(s=>s.d===d).length;return `<div class="r"><span>${d}</span><div class="tr"><div class="fl" style="width:${n/mx*100}%"></div></div><span class="mono">${n}</span></div>`}).join("");
   $("#sigfilter").innerHTML=["All",...Object.keys(DET)].map(d=>`<button class="b ${d===sigF?"on":""}" data-sf="${d}">${d}</button>`).join("");
   $("#sigtable").innerHTML=`<tr><th>Operator</th><th>Detector</th><th>Signal</th><th>Risk</th></tr>`+
     sigs.filter(s=>sigF==="All"||s.d===sigF).sort((a,b)=>b.c.risk-a.c.risk).map(s=>`<tr><td><b>${esc(s.c.op)}</b></td><td class="mono">${DET[s.d]} · ${s.d}</td><td>${esc(s.t)}</td><td><span class="risk ${s.c.risk>70?"hi":""}">${s.c.risk}</span></td></tr>`).join("");
-  $("#casetable").innerHTML=`<tr><th>#</th><th>Operator</th><th>Owner</th><th>Play</th><th>Signals</th><th>Risk</th><th>Status</th><th></th></tr>`+
-    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td>${esc(c.owner)}</td><td class="mono">${c.play}</td>
+  $("#casetable").innerHTML=`<tr><th>#</th><th>Operator</th><th>Segment</th><th>Health</th><th>Playbook</th><th>Signals</th><th>Risk</th><th>Status</th><th></th></tr>`+
+    [...cases].sort((a,b)=>b.risk-a.risk).map((c,i)=>`<tr><td class="mono">${i+1}</td><td><b>${esc(c.op)}</b><div class="d">${c.id}</div></td><td><span class="seg ${c.segment}">${c.segment}</span></td><td>${c.dormant?`<span class="d">n/a — reactive</span>`:`<span class="hl ${healthOf(c.features)}">${healthOf(c.features)}</span><div class="d">${c.features}/6 features</div>`}</td><td><b>${playbookOf(c)[0]}</b><div class="d">⏱ ${playbookOf(c)[1]}</div></td>
     <td>${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</td><td><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></td>
     <td><span class="st ${c.state}">${c.state}</span>${c.reason?`<div class="d bad" style="color:var(--red)">↩ ${esc(c.reason)}</div>`:""}</td>
-    <td><button class="b tl" data-open="${c.id}">Draft →</button></td></tr>`).join("");
+    <td>${c.dormant?"":`<button class=\"b tl\" data-open=\"${c.id}\">Draft →</button>`}</td></tr>`).join("");
 }
 
 /* ══ PAGE 2 ══ */
@@ -185,15 +226,16 @@ function approve(){
     kpi("REJECTED","→ SUP-1","Rejected",count("rejected"),"returned with reason");
   $("#playbar").innerHTML=["All","Retention","Adoption","Commercial"].map(p=>`<button class="b ${p===playF?"on":""}" data-pf="${p}">${p}</button>`).join("")+
     (playF!=="All"&&cases.some(c=>c.play===playF&&c.state==="pending")?`<button class="b ap" data-bulk="1" style="margin-left:8px">Approve all ${playF} (${cases.filter(c=>c.play===playF&&c.state==="pending").length})</button>`:"");
-  const vis=cases.filter(c=>playF==="All"||c.play===playF);
+  const vis=rev.filter(c=>playF==="All"||c.play===playF);
   if(!vis.find(c=>c.id===cur)&&vis[0])cur=vis[0].id;
-  $("#queue").innerHTML=vis.map(c=>`<button class="qi ${c.id===cur?"on":""}" data-cur="${c.id}"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></div><div class="l2"><span>${c.id} · ${c.play}</span><span class="st ${c.state}">${c.state}</span></div></button>`).join("")||`<div class="empty">no cases</div>`;
+  $("#queue").innerHTML=vis.map(c=>`<button class="qi ${c.id===cur?"on":""}" data-cur="${c.id}"><div class="l1"><b>${esc(c.op)}</b><span class="risk ${c.risk>70?"hi":""}">${c.risk}</span></div><div class="l2"><span>${c.id} · ${c.segment} · ${healthOf(c.features)}</span><span class="st ${c.state}">${c.state}</span></div></button>`).join("")||`<div class="empty">no cases</div>`;
   const c=cases.find(x=>x.id===cur);
   $("#detail").innerHTML=!c?`<div class="empty">select a case</div>`:`
    <div class="box ${c.state==="approved"?"":"human"}" style="${c.state==="approved"?"border-color:var(--ok)":""}">
-    <div class="tag"><span>${c.id} · ${c.play} → ${PLAY_OUT[c.play]}</span><span>${c.state.toUpperCase()}</span></div>
+    <div class="tag"><span>${c.id} · ${c.play} email → ${PLAY_OUT[c.play]}</span><span>${c.state.toUpperCase()}</span></div>
     <div class="t" style="font-size:18px">${esc(c.op)}</div>
-    <div style="margin-top:6px">${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
+    <div style="margin-top:6px"><span class="seg ${c.segment}">${c.segment}</span> <span class="hl ${healthOf(c.features)}">${healthOf(c.features)} · ${c.features}/6</span> <span class="chip" style="margin-left:4px"><b>${playbookOf(c)[0]}</b> · ⏱ ${playbookOf(c)[1]}</span></div>
+    <div style="margin-top:8px">${c.sig.map(([,t])=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
     <div class="mail" style="margin-top:10px">To: ${esc(c.owner)} &lt;${esc(c.email)}&gt;<br>Subject: ${esc(c.subject)}</div>
     ${c.editing?`<textarea id="ta">${esc(c.draft)}</textarea>`:`<div class="draft">${esc(c.draft)}</div>`}
     <div class="d">draft_hash ${c.hash} · QA 12/12 pass · token TTL 72h</div>
