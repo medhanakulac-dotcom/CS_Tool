@@ -12,22 +12,22 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
 button,input,select,textarea{font-family:inherit}
-.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
-.side{background:#fff;border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
-.brand{font:800 18px var(--sans);letter-spacing:-.02em;padding:0 10px}
+.app{min-height:100vh}
+.brand{font:800 18px var(--sans);letter-spacing:-.02em;white-space:nowrap;flex:none}
 .brand small{display:block;font:500 12px var(--sans);color:var(--tan);letter-spacing:0}
-#snav{margin-top:22px;display:flex;flex-direction:column;gap:4px}
-#snav button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:12px;padding:10px 12px;font:600 14.5px var(--sans);color:#6f665c;cursor:pointer}
+#snav{display:flex;gap:4px;margin-left:8px}
+#snav button{display:flex;align-items:center;gap:12px;white-space:nowrap;background:none;border:0;border-radius:12px;padding:9px 12px;font:600 14.5px var(--sans);color:#6f665c;cursor:pointer}
 #snav button:hover{background:var(--bg)}
 #snav button.on{background:var(--mint);color:var(--teal)}
 #snav .ic{width:20px;text-align:center;font-size:16px}
-#snav .cnt{margin-left:auto;font:700 11px var(--sans);border-radius:999px;padding:1px 8px;background:var(--pill);color:var(--mute)}
+#snav .cnt{font:700 11px var(--sans);border-radius:999px;padding:1px 8px;background:var(--pill);color:var(--mute)}
 #snav .cnt.warn{background:var(--amber);color:#fff}
-.me{margin-top:auto;display:flex;gap:10px;align-items:center;padding:10px;border-top:1px solid var(--line)}
+.me{margin-left:0;flex:none}
 .av{width:34px;height:34px;border-radius:50%;background:var(--mint);color:var(--teal);display:inline-flex;align-items:center;justify-content:center;font:800 13px var(--sans);flex:none}
-.me b{display:block;font-size:14px}.me span{font-size:12px;color:var(--mute)}
-.topbar{display:flex;align-items:center;gap:16px;padding:14px 32px;position:sticky;top:0;background:var(--bg);z-index:8}
-.search{position:relative;flex:1;max-width:520px}
+@media(max-width:1050px){.topbar{flex-wrap:wrap}#snav{order:5;width:100%;margin:0;overflow-x:auto}.search{max-width:none}}
+@media(max-width:1250px){.week{display:none}.me{margin-left:auto}.brand small{display:none}#snav{margin-left:0}#snav button{padding:9px 9px;gap:8px}.topbar{gap:10px;padding:12px 20px}.search{min-width:120px}}
+.topbar{display:flex;align-items:center;gap:16px;padding:12px 32px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:8}
+.search{position:relative;flex:1;max-width:340px;min-width:160px}
 .search input{width:100%;border:0;background:#fff;border-radius:14px;padding:11px 16px 11px 40px;font-size:14px;box-shadow:var(--shadow);outline:none}
 .search input:focus{box-shadow:0 0 0 2px #cfe8e2}
 .search::before{content:"⌕";position:absolute;left:15px;top:8px;font-size:18px;color:var(--tan)}
@@ -37,7 +37,7 @@ button,input,select,textarea{font-family:inherit}
 .ownerf{display:flex;align-items:center;gap:8px;font:800 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--tan)}
 .ownerf select{font:600 14px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:#fff;border:0;border-radius:12px;padding:9px 14px;box-shadow:var(--shadow);cursor:pointer}
 .ownerf.on select{background:var(--mint);color:var(--teal)}
-.week{font-size:12.5px;color:var(--tan);margin-left:auto;white-space:nowrap}
+.week{font-size:12.5px;color:var(--tan);margin-left:auto;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
 main{padding:8px 32px 80px;max-width:1240px}
 h1{font-size:28px;letter-spacing:-.02em;margin:6px 0 2px}
 .sub{font-size:13.5px;color:var(--mute)}
@@ -151,13 +151,8 @@ details.h>summary small{font:500 13px var(--sans);color:var(--mute)}
 .gl{display:grid;grid-template-columns:1fr;gap:14px}
 .gr{display:grid;grid-template-columns:100px 1fr;gap:14px;align-items:center;padding:10px 0;border-top:1px solid #f0e9de;font-size:14px;color:#5d554b}
 .gr3{grid-template-columns:100px 130px 1fr}
-body.nosb .app{grid-template-columns:minmax(0,1fr)}
-body.nosb .side{display:none}
 .sbbtn{border:0;background:#fff;box-shadow:var(--shadow);border-radius:12px;width:40px;height:40px;font-size:18px;color:#6f665c;cursor:pointer;flex:none}
 .sbbtn:hover{background:var(--mint);color:var(--teal)}
-.brandrow{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.brandrow .sbbtn{width:32px;height:32px;font-size:14px;box-shadow:none;background:var(--bg)}
-body.nosb .topbar{padding-left:24px}
 .chat .msgs{height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;background:var(--bg);margin-bottom:12px}
 .chat .m{padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.55;max-width:82%;white-space:pre-wrap;word-break:break-word}
 .chat .m.u{background:var(--teal);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
@@ -202,9 +197,7 @@ body.nosb .topbar{padding-left:24px}
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font:600 14px var(--sans);opacity:0;pointer-events:none;transition:.25s;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){
- .app{grid-template-columns:minmax(0,1fr)}
- .side{position:static;height:auto;flex-direction:column;padding:12px}
- #snav{flex-direction:row;overflow-x:auto;margin-top:10px}.me{display:none}
+ #snav{order:5;width:100%;margin:0;overflow-x:auto}.search{order:3;max-width:none}.me{display:none}
  .grid.g4{grid-template-columns:minmax(0,1fr)!important}.mx{grid-template-columns:84px repeat(3,minmax(0,1fr))}.mxh{font-size:11px;padding:0}
  .topbar{padding:12px 16px;flex-wrap:wrap}main{padding:8px 16px 60px}.week{display:none}
 }
@@ -212,19 +205,14 @@ body.nosb .topbar{padding-left:24px}
 </head>
 <body>
 <div class="app">
-  <aside class="side">
-    <div class="brandrow"><div class="brand">CS Tool<small>customer success</small></div><button class="sbbtn" data-sb="1" title="Hide sidebar" aria-label="Hide sidebar">«</button></div>
+  <header class="topbar">
+    <div class="brand">CS Tool<small>customer success</small></div>
     <nav id="snav"></nav>
-    <div class="me"><span class="av">C</span><div><b>Chris</b><span>Customer Success lead</span></div></div>
-  </aside>
-  <div>
-    <header class="topbar">
-      <button class="sbbtn" data-sb="1" id="sbtop" title="Show / hide sidebar" aria-label="Toggle sidebar">☰</button>
-      <div class="search"><input id="gsearch" placeholder="Search accounts…" autocomplete="off"><div id="gres"></div></div>
-      <span class="week" id="srcbadge"></span>
-    </header>
-    <main id="main"></main>
-  </div>
+    <div class="search"><input id="gsearch" placeholder="Search accounts…" autocomplete="off"><div id="gres"></div></div>
+    <span class="week" id="srcbadge"></span>
+    <span class="av me" title="Chris · Customer Success lead">C</span>
+  </header>
+  <main id="main"></main>
 </div>
 <div id="toast"></div>
 <script src="hubspot-data.js"></script>
@@ -752,10 +740,7 @@ function llmRewrite(c,mode){
   const k={shorter:"short",warmer:"warm",direct:"direct"}[mode];
   llmApply(c,c=>{c.custom[c.lang]="";if(mode==="regen")c.alt=((c.alt||0)+1)%3;else c.mods[k]=!c.mods[k]},mode==="regen"?"AI regenerated the draft":`AI rewrote the draft (${mode})`);
 }
-function setSb(hide){document.body.classList.toggle("nosb",hide);try{localStorage.setItem("cs.sb",hide?"1":"0")}catch(e){}$("#sbtop").title=hide?"Show sidebar":"Hide sidebar"}
-try{if(localStorage.getItem("cs.sb")==="1")setSb(true)}catch(e){}
-addEventListener("keydown",e=>{if(e.target&&e.target.id==="chatin"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();return}
-  if((e.key==="\\"||e.key==="[")&&!/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||"")))setSb(!document.body.classList.contains("nosb"))});
+addEventListener("keydown",e=>{if(e.target&&e.target.id==="chatin"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();return}});
 function genDraft(id){const c=byId(id);if(!c||c.drafted||c.generating||c.noSend)return;c.generating=true;render();setTimeout(()=>{c.generating=false;c.drafted=true;c.events.push({t:"Just now",k:"ai",txt:"Draft generated (Generate clicked)"});toast("Draft generated · "+c.op);render()},700)}
 /* ── Log note → HubSpot ──
    To push notes to HubSpot automatically, define before this script runs:
@@ -785,7 +770,6 @@ document.addEventListener("click",e=>{
   if(D.regprompt)return regenWithPrompt();
   if(D.gen)return genDraft(D.gen);
   if(D.send)return sendChat();
-  if(D.sb)return setSb(!document.body.classList.contains("nosb"));
   if(D.nav){view=D.nav;scrollTo(0,0);return render()}
   if(D.open)return openRecord(D.open);
   if(D.review){cur=D.review;apr.pb="All";view="approvals";scrollTo(0,0);return render()}
